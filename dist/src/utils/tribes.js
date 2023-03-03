@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
+exports.addNewSubscriptionForProxy = exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.publish = exports.subscribe = exports.addExtraHost = exports.printTribesClients = exports.getTribeOwnersChatByUUID = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("../grpc/lightning");
@@ -29,6 +29,8 @@ const config = (0, config_1.loadConfig)();
 // {pubkey: {host: Client} }
 const clients = {};
 const optz = { qos: 0 };
+// XPUB RESPONSE FROM PROXY
+let XPUB_RES;
 // this runs at relay startup
 function connect(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -583,6 +585,7 @@ function proxy_hd_client(onMessage) {
                     if (!(xpub_res === null || xpub_res === void 0 ? void 0 : xpub_res.xpub) || !(xpub_res === null || xpub_res === void 0 ? void 0 : xpub_res.pubkey)) {
                         throw 'Could not get xpub key or pubkey';
                     }
+                    XPUB_RES = xpub_res;
                     const xpub = xpub_res.xpub;
                     const pubkey = xpub_res.pubkey;
                     // console.log(pubkey)
@@ -638,7 +641,7 @@ function proxy_hd_client(onMessage) {
                                         if (!routeHint) {
                                             throw `Invalid route hint: ${c.routeHint}`;
                                         }
-                                        const index = yield (0, interfaces_1.txIndexFromChannelId)(routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length));
+                                        const index = yield (0, interfaces_1.txIndexFromChannelId)(parseRouteHint(routeHint));
                                         yield hdSubscribe(c.publicKey, index, cl);
                                     }
                                 }
@@ -709,40 +712,50 @@ function subscribeAndCheck(client, topic) {
         }
     });
 }
-// cl.subscribe(
-//   `${c.publicKey}/INDEX_${index}`,
-//   function (err, granted) {
-//     if (err)
-//       sphinxLogger.error(
-//         `error subscribing ${err}`,
-//         logging.Tribes
-//       )
-//     else {
-//       const qos = granted[0].qos
-//       console.log(granted)
-//       if ([0, 1, 2].includes(qos)) {
-//         sphinxLogger.info(
-//           `subscribed! ${c.publicKey}/INDEX_${index}`,
-//           logging.Tribes
-//         )
-//         resolve(cl)
-//       } else {
-//         console.warn('subscribe error!')
-//       }
-//     }
-//   }
-// )
 function subscribeProxyRootTenant(host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const nonProxyTenant = (yield models_1.models.Contact.findOne({
                 where: { isOwner: true, id: 1 },
             }));
+            console.log(nonProxyTenant.dataValues);
             yield lazyClient(nonProxyTenant.publicKey, host, onMessage);
         }
         catch (error) {
             throw 'Error subscribing proxy root tenant';
         }
     });
+}
+function addNewSubscriptionForProxy(owner) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            if (XPUB_RES) {
+                const host = getHost();
+                if (clients[XPUB_RES.xpub] &&
+                    clients[XPUB_RES.xpub][host] &&
+                    clients[XPUB_RES.xpub][host].connected) {
+                    const client = clients[XPUB_RES.xpub][host];
+                    if (!owner.routeHint) {
+                        throw `Invalid route hint: ${owner.routeHint}`;
+                    }
+                    const index = yield (0, interfaces_1.txIndexFromChannelId)(parseRouteHint(owner.routeHint));
+                    yield hdSubscribe(owner.publicKey, index, client);
+                }
+                else {
+                    throw 'MQTT Client was not found';
+                }
+            }
+            else {
+                throw 'XPUB is not available';
+            }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error([error, logger_1.logging.Tribes]);
+        }
+    });
+}
+exports.addNewSubscriptionForProxy = addNewSubscriptionForProxy;
+function parseRouteHint(routeHint) {
+    return routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length);
 }
 //# sourceMappingURL=tribes.js.map

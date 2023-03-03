@@ -29,6 +29,9 @@ const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
 
 const optz: IClientSubscribeOptions = { qos: 0 }
 
+// XPUB RESPONSE FROM PROXY
+let XPUB_RES: { xpub: string; pubkey: string } | undefined
+
 // this runs at relay startup
 export async function connect(
   onMessage: (topic: string, message: Buffer) => void
@@ -661,6 +664,7 @@ function proxy_hd_client(
         if (!xpub_res?.xpub || !xpub_res?.pubkey) {
           throw 'Could not get xpub key or pubkey'
         }
+        XPUB_RES = xpub_res
         const xpub = xpub_res.xpub
         const pubkey = xpub_res.pubkey
         // console.log(pubkey)
@@ -716,10 +720,7 @@ function proxy_hd_client(
                   throw `Invalid route hint: ${c.routeHint}`
                 }
                 const index = await txIndexFromChannelId(
-                  routeHint.substring(
-                    routeHint.indexOf(':') + 1,
-                    routeHint.length
-                  )
+                  parseRouteHint(routeHint)
                 )
 
                 await hdSubscribe(c.publicKey, index, cl)
@@ -784,30 +785,6 @@ function subscribeAndCheck(client: mqtt.Client, topic: string) {
   })
 }
 
-// cl.subscribe(
-//   `${c.publicKey}/INDEX_${index}`,
-//   function (err, granted) {
-//     if (err)
-//       sphinxLogger.error(
-//         `error subscribing ${err}`,
-//         logging.Tribes
-//       )
-//     else {
-//       const qos = granted[0].qos
-//       console.log(granted)
-//       if ([0, 1, 2].includes(qos)) {
-//         sphinxLogger.info(
-//           `subscribed! ${c.publicKey}/INDEX_${index}`,
-//           logging.Tribes
-//         )
-//         resolve(cl)
-//       } else {
-//         console.warn('subscribe error!')
-//       }
-//     }
-//   }
-// )
-
 async function subscribeProxyRootTenant(
   host: string,
   onMessage?: (topic: string, message: Buffer) => void
@@ -816,8 +793,41 @@ async function subscribeProxyRootTenant(
     const nonProxyTenant = (await models.Contact.findOne({
       where: { isOwner: true, id: 1 },
     })) as ContactRecord
+    console.log(nonProxyTenant.dataValues)
     await lazyClient(nonProxyTenant.publicKey, host, onMessage)
   } catch (error) {
     throw 'Error subscribing proxy root tenant'
   }
+}
+
+export async function addNewSubscriptionForProxy(owner: Contact) {
+  try {
+    if (XPUB_RES) {
+      const host = getHost()
+      if (
+        clients[XPUB_RES.xpub] &&
+        clients[XPUB_RES.xpub][host] &&
+        clients[XPUB_RES.xpub][host].connected
+      ) {
+        const client = clients[XPUB_RES.xpub][host]
+        if (!owner.routeHint) {
+          throw `Invalid route hint: ${owner.routeHint}`
+        }
+        const index = await txIndexFromChannelId(
+          parseRouteHint(owner.routeHint)
+        )
+        await hdSubscribe(owner.publicKey, index, client)
+      } else {
+        throw 'MQTT Client was not found'
+      }
+    } else {
+      throw 'XPUB is not available'
+    }
+  } catch (error) {
+    sphinxLogger.error([error, logging.Tribes])
+  }
+}
+
+function parseRouteHint(routeHint) {
+  return routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length)
 }
