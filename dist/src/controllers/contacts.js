@@ -27,8 +27,6 @@ const moment = require("moment");
 const rsa = require("../crypto/rsa");
 const cert_1 = require("../utils/cert");
 const chatTribes_1 = require("./chatTribes");
-const config_1 = require("../utils/config");
-const config = (0, config_1.loadConfig)();
 const getContacts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -244,12 +242,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 isAdmin = false;
                 yield joinDefaultTribes(owner, theAdmin);
             }
-            if (config.proxy_hd_keys) {
-                tribes.addNewSubscriptionForProxy(owner);
-            }
-            else {
-                tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
-            }
+            tribes.newSubscription(owner, network.receiveMqttMessage);
         }
         if (isAdmin) {
             logger_1.sphinxLogger.info('Admin signing up!!!');

@@ -228,7 +228,8 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
                             if (mqttTopic)
                                 checkIfAutoConfirm(opts.data, ownerID);
                         }
-                    });
+                    }, ownerID === 1 // first user doesn't use xpub auth
+                    );
                 }
                 else {
                     yield LND.keysendMessage(Object.assign(Object.assign({}, opts), { data }), ownerPubkey);

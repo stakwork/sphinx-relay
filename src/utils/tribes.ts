@@ -4,18 +4,10 @@ import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
-import {
-  Contact,
-  Chat,
-  models,
-  sequelize,
-  ChatRecord,
-  ContactRecord,
-} from '../models'
+import { Contact, models, sequelize, ChatRecord } from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy, getProxyXpub } from './proxy'
-import { Op } from 'sequelize'
 import { logging, sphinxLogger } from './logger'
 import type { Tribe } from '../models/ts/tribe'
 import { sleep, asyncForEach } from '../helpers'
@@ -30,7 +22,8 @@ const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
 const optz: IClientSubscribeOptions = { qos: 0 }
 
 // XPUB RESPONSE FROM PROXY
-let XPUB_RES: { xpub: string; pubkey: string } | undefined
+type XpubRes = { xpub: string; pubkey: string }
+let XPUB_RES: XpubRes | undefined
 
 // this runs at relay startup
 export async function connect(
@@ -39,43 +32,47 @@ export async function connect(
   initAndSubscribeTopics(onMessage)
 }
 
-export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
-  const isOwner = isProxy() ? "'t'" : '1'
+async function initAndSubscribeTopics(
+  onMessage: (topic: string, message: Buffer) => void
+): Promise<void> {
+  const host = getHost()
   try {
-    const r = (await sequelize.query(
-      `
-      SELECT sphinx_chats.* FROM sphinx_chats
-      INNER JOIN sphinx_contacts
-      ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
-      AND sphinx_contacts.is_owner = ${isOwner}
-      AND sphinx_contacts.id = sphinx_chats.tenant
-      AND sphinx_chats.uuid = '${uuid}'`,
-      {
-        model: models.Chat,
-        mapToModel: true, // pass true here if you have any mapped fields
+    const allOwners: Contact[] = (await models.Contact.findAll({
+      where: { isOwner: true },
+    })) as Contact[]
+    if (!(allOwners && allOwners.length)) return
+    asyncForEach(allOwners, async (c) => {
+      if (c.publicKey && c.publicKey.length === 66) {
+        const firstUser = c.id === 1
+        const cl = await lazyClient(c.publicKey, host, onMessage, firstUser)
+        await specialSubscribe(cl, c)
+        // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
-    )) as ChatRecord[]
-    // console.log('=> getTribeOwnersChatByUUID r:', r)
-    return r && r[0] && r[0].dataValues
+    })
   } catch (e) {
-    sphinxLogger.error(e)
+    sphinxLogger.error(`TRIBES ERROR ${e}`)
   }
 }
 
 async function initializeClient(
   pubkey: string,
   host: string,
-  onMessage?: (topic: string, message: Buffer) => void
+  onMessage?: (topic: string, message: Buffer) => void,
+  xpubres?: XpubRes
 ): Promise<mqtt.Client> {
   return new Promise(async (resolve) => {
     let connected = false
     async function reconnect() {
       try {
-        const pwd = await genSignedTimestamp(pubkey)
+        let signer = pubkey
+        if (xpubres && xpubres.pubkey) signer = xpubres.pubkey
+        const pwd = await genSignedTimestamp(signer)
         if (connected) return
         const url = mqttURL(host)
+        let username = pubkey
+        if (xpubres && xpubres.xpub) username = xpubres.xpub
         const cl = mqtt.connect(url, {
-          username: pubkey,
+          username: username,
           password: pwd,
           reconnectPeriod: 0, // dont auto reconnect
         })
@@ -84,22 +81,22 @@ async function initializeClient(
           // first check if its already connected to this host (in case it takes a long time)
           connected = true
           if (
-            clients[pubkey] &&
-            clients[pubkey][host] &&
-            clients[pubkey][host].connected
+            clients[username] &&
+            clients[username][host] &&
+            clients[username][host].connected
           ) {
-            resolve(clients[pubkey][host])
+            resolve(clients[username][host])
             return
           }
           sphinxLogger.info(`connected!`, logging.Tribes)
-          if (!clients[pubkey]) clients[pubkey] = {}
-          clients[pubkey][host] = cl // ADD TO MAIN STATE
+          if (!clients[username]) clients[username] = {}
+          clients[username][host] = cl // ADD TO MAIN STATE
           cl.on('close', function (e) {
             sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
             // setTimeout(() => reconnect(), 2000);
             connected = false
-            if (clients[pubkey] && clients[pubkey][host]) {
-              delete clients[pubkey][host]
+            if (clients[username] && clients[username][host]) {
+              delete clients[username][host]
             }
           })
           cl.on('error', function (e) {
@@ -109,14 +106,7 @@ async function initializeClient(
             // console.log("============>>>>> GOT A MSG", topic, message)
             if (onMessage) onMessage(topic, message)
           })
-          cl.subscribe(`${pubkey}/#`, function (err) {
-            if (err)
-              sphinxLogger.error(`error subscribing ${err}`, logging.Tribes)
-            else {
-              sphinxLogger.info(`subscribed! ${pubkey}/#`, logging.Tribes)
-              resolve(cl)
-            }
-          })
+          resolve(cl)
         })
       } catch (e) {
         sphinxLogger.error(`error initializing ${e}`, logging.Tribes)
@@ -131,77 +121,100 @@ async function initializeClient(
   })
 }
 
+async function proxyXpub(): Promise<XpubRes> {
+  if (XPUB_RES && XPUB_RES.pubkey && XPUB_RES.pubkey) return XPUB_RES
+  const xpub_res = await getProxyXpub()
+  XPUB_RES = xpub_res
+  return xpub_res
+}
+
 async function lazyClient(
   pubkey: string,
   host: string,
-  onMessage?: (topic: string, message: Buffer) => void
+  onMessage?: (topic: string, message: Buffer) => void,
+  isFirstUser?: boolean
 ): Promise<mqtt.Client> {
-  if (
-    clients[pubkey] &&
-    clients[pubkey][host] &&
-    clients[pubkey][host].connected
-  ) {
-    return clients[pubkey][host]
+  let username = pubkey
+  let xpubres: XpubRes | undefined
+  // "first user" is the pubkey of the lightning node behind proxy
+  // they DO NOT use the xpub auth
+  if (config.proxy_hd_keys && !isFirstUser) {
+    xpubres = await proxyXpub()
+    // set the username to be the xpub
+    if (xpubres?.xpub) username = xpubres?.xpub
   }
-  const cl = await initializeClient(pubkey, host, onMessage)
+  if (
+    clients[username] &&
+    clients[username][host] &&
+    clients[username][host].connected
+  ) {
+    return clients[username][host]
+  }
+  const cl = await initializeClient(pubkey, host, onMessage, xpubres)
   return cl
 }
 
-async function initAndSubscribeTopics(
-  onMessage: (topic: string, message: Buffer) => void
-): Promise<void> {
-  const host = getHost()
-  try {
-    if (isProxy()) {
-      if (config.proxy_hd_keys) {
-        await proxy_hd_client(onMessage)
-      } else {
-        const allOwners: Contact[] = (await models.Contact.findAll({
-          where: { isOwner: true },
-        })) as Contact[]
-        if (!(allOwners && allOwners.length)) return
-        asyncForEach(allOwners, async (c) => {
-          if (c.publicKey && c.publicKey.length === 66) {
-            await lazyClient(c.publicKey, host, onMessage)
-            await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
-          }
-        })
-      }
-    } else {
-      // just me
-      const info = await LND.getInfo(false)
-      await lazyClient(info.identity_pubkey, host, onMessage)
-      updateTribeStats(info.identity_pubkey)
-      subExtraHostsForTenant(1, info.identity_pubkey, onMessage) // 1 is the tenant id on non-proxy
-    }
-  } catch (e) {
-    sphinxLogger.error(`TRIBES ERROR ${e}`)
-  }
-}
-
-async function subExtraHostsForTenant(
-  tenant: number,
-  pubkey: string,
+// never from the admin
+export async function newSubscription(
+  c: Contact,
   onMessage: (topic: string, message: Buffer) => void
 ) {
   const host = getHost()
-  const externalTribes = await models.Chat.findAll({
-    where: {
-      tenant,
-      host: { [Op.ne]: host }, // not the host from config
-    },
-  })
-  if (!(externalTribes && externalTribes.length)) return
-  const usedHosts: string[] = []
-  externalTribes.forEach(async (et: Chat) => {
-    if (usedHosts.includes(et.host)) return
-    usedHosts.push(et.host) // dont do it twice
-    const client = await lazyClient(pubkey, host, onMessage)
-    client.subscribe(`${pubkey}/#`, optz, function (err) {
-      if (err) sphinxLogger.error(`subscribe error 2 ${err}`, logging.Tribes)
-    })
-  })
+  const client = await lazyClient(c.publicKey, host, onMessage)
+  specialSubscribe(client, c)
 }
+
+function specialSubscribe(cl: mqtt.Client, c: Contact) {
+  if (config.proxy_hd_keys && c.id != 1 && c.routeHint) {
+    const index = txIndexFromChannelId(parseRouteHint(c.routeHint))
+    hdSubscribe(c.publicKey, index, cl)
+  } else {
+    cl.subscribe(`${c.publicKey}/#`)
+  }
+}
+
+export async function publish(
+  topic: string,
+  msg: string,
+  ownerPubkey: string,
+  cb: () => void,
+  isFirstUser?: boolean
+): Promise<void> {
+  if (ownerPubkey.length !== 66) {
+    return sphinxLogger.warning('invalid pubkey, not 66 len')
+  }
+  const host = getHost()
+  const client = await lazyClient(ownerPubkey, host, () => {}, isFirstUser)
+  if (client)
+    client.publish(topic, msg, optz, function (err) {
+      if (err) sphinxLogger.error(`error publishing ${err}`, logging.Tribes)
+      else if (cb) cb()
+    })
+}
+
+// async function subExtraHostsForTenant(
+//   tenant: number,
+//   pubkey: string,
+//   onMessage: (topic: string, message: Buffer) => void
+// ) {
+//   const host = getHost()
+//   const externalTribes = await models.Chat.findAll({
+//     where: {
+//       tenant,
+//       host: { [Op.ne]: host }, // not the host from config
+//     },
+//   })
+//   if (!(externalTribes && externalTribes.length)) return
+//   const usedHosts: string[] = []
+//   externalTribes.forEach(async (et: Chat) => {
+//     if (usedHosts.includes(et.host)) return
+//     usedHosts.push(et.host) // dont do it twice
+//     const client = await lazyClient(pubkey, host, onMessage)
+//     client.subscribe(`${pubkey}/#`, optz, function (err) {
+//       if (err) sphinxLogger.error(`subscribe error 2 ${err}`, logging.Tribes)
+//     })
+//   })
+// }
 
 export function printTribesClients(): string {
   const ret = {}
@@ -246,65 +259,72 @@ function mqttURL(h: string) {
 }
 
 // for proxy, need to get all isOwner contacts and their owned chats
-async function updateTribeStats(myPubkey) {
-  if (isProxy()) return // skip on proxy for now?
-  const myTribes = (await models.Chat.findAll({
-    where: {
-      ownerPubkey: myPubkey,
-      deleted: false,
-    },
-  })) as Chat[]
-  await asyncForEach(myTribes, async (tribe) => {
-    try {
-      const contactIds = JSON.parse(tribe.contactIds)
-      const member_count = (contactIds && contactIds.length) || 0
-      await putstats({
-        uuid: tribe.uuid,
-        host: tribe.host,
-        member_count,
-        chatId: tribe.id,
-        owner_pubkey: myPubkey,
-      })
-    } catch (e) {
-      // dont care about the error
-    }
-  })
-  if (myTribes.length) {
-    sphinxLogger.info(
-      `updated stats for ${myTribes.length} tribes`,
-      logging.Tribes
-    )
+// async function updateTribeStats(myPubkey) {
+//   if (isProxy()) return // skip on proxy for now?
+//   const myTribes = (await models.Chat.findAll({
+//     where: {
+//       ownerPubkey: myPubkey,
+//       deleted: false,
+//     },
+//   })) as Chat[]
+//   await asyncForEach(myTribes, async (tribe) => {
+//     try {
+//       const contactIds = JSON.parse(tribe.contactIds)
+//       const member_count = (contactIds && contactIds.length) || 0
+//       await putstats({
+//         uuid: tribe.uuid,
+//         host: tribe.host,
+//         member_count,
+//         chatId: tribe.id,
+//         owner_pubkey: myPubkey,
+//       })
+//     } catch (e) {
+//       // dont care about the error
+//     }
+//   })
+//   if (myTribes.length) {
+//     sphinxLogger.info(
+//       `updated stats for ${myTribes.length} tribes`,
+//       logging.Tribes
+//     )
+//   }
+// }
+
+// export async function subscribe(
+//   topic: string,
+//   onMessage: (topic: string, message: Buffer) => void
+// ): Promise<void> {
+//   const pubkey = topic.split('/')[0]
+//   if (pubkey.length !== 66) return
+//   const host = getHost()
+//   const client = await lazyClient(pubkey, host, onMessage)
+//   if (client)
+//     client.subscribe(topic, function () {
+//       sphinxLogger.info(`added sub ${host} ${topic}`, logging.Tribes)
+//     })
+// }
+
+export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
+  const isOwner = isProxy() ? "'t'" : '1'
+  try {
+    const r = (await sequelize.query(
+      `
+      SELECT sphinx_chats.* FROM sphinx_chats
+      INNER JOIN sphinx_contacts
+      ON sphinx_chats.owner_pubkey = sphinx_contacts.public_key
+      AND sphinx_contacts.is_owner = ${isOwner}
+      AND sphinx_contacts.id = sphinx_chats.tenant
+      AND sphinx_chats.uuid = '${uuid}'`,
+      {
+        model: models.Chat,
+        mapToModel: true, // pass true here if you have any mapped fields
+      }
+    )) as ChatRecord[]
+    // console.log('=> getTribeOwnersChatByUUID r:', r)
+    return r && r[0] && r[0].dataValues
+  } catch (e) {
+    sphinxLogger.error(e)
   }
-}
-
-export async function subscribe(
-  topic: string,
-  onMessage: (topic: string, message: Buffer) => void
-): Promise<void> {
-  const pubkey = topic.split('/')[0]
-  if (pubkey.length !== 66) return
-  const host = getHost()
-  const client = await lazyClient(pubkey, host, onMessage)
-  if (client)
-    client.subscribe(topic, function () {
-      sphinxLogger.info(`added sub ${host} ${topic}`, logging.Tribes)
-    })
-}
-
-export async function publish(
-  topic: string,
-  msg: string,
-  ownerPubkey: string,
-  cb: () => void
-): Promise<void> {
-  if (ownerPubkey.length !== 66) return
-  const host = getHost()
-  const client = await lazyClient(ownerPubkey, host)
-  if (client)
-    client.publish(topic, msg, optz, function (err) {
-      if (err) sphinxLogger.error(`error publishing ${err}`, logging.Tribes)
-      else if (cb) cb()
-    })
 }
 
 // good name? made this because 2 functions used similar object pattern args
@@ -651,99 +671,6 @@ function urlBase64(buf: Buffer): string {
   return buf.toString('base64').replace(/\//g, '_').replace(/\+/g, '-')
 }
 
-function proxy_hd_client(
-  onMessage?: (topic: string, message: Buffer) => void
-): Promise<mqtt.Client> {
-  return new Promise(async (resolve) => {
-    let connected = false
-    async function reconnect() {
-      try {
-        const host = getHost()
-        const xpub_res = await getProxyXpub()
-
-        if (!xpub_res?.xpub || !xpub_res?.pubkey) {
-          throw 'Could not get xpub key or pubkey'
-        }
-        XPUB_RES = xpub_res
-        const xpub = xpub_res.xpub
-        const pubkey = xpub_res.pubkey
-        // console.log(pubkey)
-        const pwd = await genSignedTimestamp(pubkey)
-        if (connected) return
-        const url = mqttURL(host)
-        const cl = mqtt.connect(url, {
-          username: xpub,
-          password: pwd,
-          reconnectPeriod: 0, // dont auto reconnect
-        })
-        sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
-        cl.on('connect', async function () {
-          // first check if its already connected to this host (in case it takes a long time)
-          connected = true
-          if (
-            clients[xpub] &&
-            clients[xpub][host] &&
-            clients[xpub][host].connected
-          ) {
-            resolve(clients[xpub][host])
-            return
-          }
-          sphinxLogger.info(`connected!`, logging.Tribes)
-          if (!clients[xpub]) clients[xpub] = {}
-          clients[xpub][host] = cl // ADD TO MAIN STATE
-          cl.on('close', function (e) {
-            sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
-            // setTimeout(() => reconnect(), 2000);
-            connected = false
-            if (clients[xpub] && clients[xpub][host]) {
-              delete clients[xpub][host]
-            }
-          })
-          cl.on('error', function (e) {
-            sphinxLogger.error(`error:  ${e.message}`, logging.Tribes)
-          })
-          cl.on('message', function (topic, message) {
-            // console.log("============>>>>> GOT A MSG", topic, message)
-            if (onMessage) onMessage(topic, message)
-          })
-          const allOwners: Contact[] = (await models.Contact.findAll({
-            where: { isOwner: true, id: { [Op.not]: 1 } },
-          })) as Contact[]
-
-          if (!(allOwners && allOwners.length)) return
-
-          asyncForEach(allOwners, async (c) => {
-            try {
-              if (c.publicKey && c.publicKey.length === 66) {
-                let routeHint = c.routeHint
-                if (!routeHint) {
-                  throw `Invalid route hint: ${c.routeHint}`
-                }
-                const index = await txIndexFromChannelId(
-                  parseRouteHint(routeHint)
-                )
-
-                await hdSubscribe(c.publicKey, index, cl)
-              }
-            } catch (error) {
-              sphinxLogger.error([`error ${error}`, logging.Tribes])
-            }
-          })
-        })
-        await subscribeProxyRootTenant(host, onMessage)
-      } catch (error) {
-        sphinxLogger.error([`error initializing ${error}`, logging.Tribes])
-      }
-    }
-    while (true) {
-      if (!connected) {
-        reconnect()
-      }
-      await sleep(5000 + Math.round(Math.random() * 8000))
-    }
-  })
-}
-
 async function hdSubscribe(pubkey: string, index: number, client: mqtt.Client) {
   try {
     await subscribeAndCheck(client, `${pubkey}/#`)
@@ -783,49 +710,6 @@ function subscribeAndCheck(client: mqtt.Client, topic: string) {
       reject()
     }
   })
-}
-
-async function subscribeProxyRootTenant(
-  host: string,
-  onMessage?: (topic: string, message: Buffer) => void
-) {
-  try {
-    const nonProxyTenant = (await models.Contact.findOne({
-      where: { isOwner: true, id: 1 },
-    })) as ContactRecord
-
-    await lazyClient(nonProxyTenant.publicKey, host, onMessage)
-  } catch (error) {
-    throw 'Error subscribing proxy root tenant'
-  }
-}
-
-export async function addNewSubscriptionForProxy(owner: Contact) {
-  try {
-    if (XPUB_RES) {
-      const host = getHost()
-      if (
-        clients[XPUB_RES.xpub] &&
-        clients[XPUB_RES.xpub][host] &&
-        clients[XPUB_RES.xpub][host].connected
-      ) {
-        const client = clients[XPUB_RES.xpub][host]
-        if (!owner.routeHint) {
-          throw `Invalid route hint: ${owner.routeHint}`
-        }
-        const index = await txIndexFromChannelId(
-          parseRouteHint(owner.routeHint)
-        )
-        await hdSubscribe(owner.publicKey, index, client)
-      } else {
-        throw 'MQTT Client was not found'
-      }
-    } else {
-      throw 'XPUB is not available'
-    }
-  } catch (error) {
-    sphinxLogger.error([error, logging.Tribes])
-  }
 }
 
 function parseRouteHint(routeHint) {

@@ -26,9 +26,6 @@ import * as rsa from '../crypto/rsa'
 import { getAndDecryptTransportToken, getTransportKey } from '../utils/cert'
 import { Req, Res } from '../types'
 import { doJoinTribe } from './chatTribes'
-import { loadConfig } from '../utils/config'
-
-const config = loadConfig()
 
 export const getContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -264,11 +261,7 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
         isAdmin = false
         await joinDefaultTribes(owner, theAdmin)
       }
-      if (config.proxy_hd_keys) {
-        tribes.addNewSubscriptionForProxy(owner)
-      } else {
-        tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
-      }
+      tribes.newSubscription(owner, network.receiveMqttMessage)
     }
     if (isAdmin) {
       sphinxLogger.info('Admin signing up!!!')
