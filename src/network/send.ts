@@ -274,6 +274,7 @@ export function signAndSend(
 ): Promise<boolean> {
   const ownerPubkey = owner.publicKey
   const ownerID = owner.id
+  console.log("-----> signAndSend", JSON.stringify(opts))
   return new Promise(async function (resolve, reject) {
     if (!opts || typeof opts !== 'object') {
       return reject('object plz')

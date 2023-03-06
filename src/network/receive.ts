@@ -599,6 +599,8 @@ const hashCache: { [k: string]: boolean } = {}
 export async function parseKeysendInvoice(
   i: interfaces.Invoice
 ): Promise<void> {
+  console.log('-----> parseKeysendInvoice!!!')
+
   try {
     const hash = i.r_hash.toString('base64')
     if (hashCache[hash]) return
@@ -608,6 +610,7 @@ export async function parseKeysendInvoice(
   }
 
   const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records
+  console.log('-----> recs!!!', JSON.stringify(recs))
 
   let dest = ''
   let owner

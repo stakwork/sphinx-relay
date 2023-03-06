@@ -205,6 +205,7 @@ exports.sendMessage = sendMessage;
 function signAndSend(opts, owner, mqttTopic, replayingHistory) {
     const ownerPubkey = owner.publicKey;
     const ownerID = owner.id;
+    console.log("-----> signAndSend", JSON.stringify(opts));
     return new Promise(function (resolve, reject) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!opts || typeof opts !== 'object') {

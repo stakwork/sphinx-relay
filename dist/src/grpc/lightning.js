@@ -428,6 +428,7 @@ exports.loadRouter = loadRouter;
 const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('-----> keysendMessage', JSON.stringify(opts));
         logger_1.sphinxLogger.info('keysendMessage', logger_1.logging.Lightning);
         return new Promise(function (resolve, reject) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -437,9 +438,11 @@ function keysendMessage(opts, ownerPubkey) {
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts, ownerPubkey);
+                        console.log('-----> keysendOK!!!');
                         resolve(res);
                     }
                     catch (e) {
+                        console.log('-----> FAILED KEYSEND', e);
                         reject(e);
                     }
                     return;
@@ -451,12 +454,14 @@ function keysendMessage(opts, ownerPubkey) {
                 let res = null;
                 const ts = new Date().valueOf();
                 // WEAVE MESSAGE If TOO LARGE
+                console.log('-----> weave msg');
                 for (let i = 0; i < n; i++) {
                     const spliti = Math.ceil((opts.data || '').length / n);
                     const m = (opts.data || '').substring(i * spliti, i * spliti + spliti);
                     const isLastThread = i === n - 1;
                     const amt = isLastThread ? opts.amt : constants_1.default.min_sat_amount;
                     try {
+                        console.log('-----> weave:', `${ts}_${i}_${n}`);
                         res = yield keysend(Object.assign(Object.assign({}, opts), { amt, data: `${ts}_${i}_${n}_${m}` }), ownerPubkey);
                         success = true;
                         yield (0, helpers_1.sleep)(432);
@@ -479,7 +484,9 @@ function keysendMessage(opts, ownerPubkey) {
 exports.keysendMessage = keysendMessage;
 function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('-----> signAscii');
         const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);
+        console.log('-----> signed Ascii', sig);
         return sig;
     });
 }

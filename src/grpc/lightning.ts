@@ -466,6 +466,7 @@ export async function keysendMessage(
   opts: KeysendOpts,
   ownerPubkey?: string
 ): Promise<interfaces.SendPaymentResponse> {
+  console.log('-----> keysendMessage', JSON.stringify(opts))
   sphinxLogger.info('keysendMessage', logging.Lightning)
   return new Promise(async function (resolve, reject) {
     if (!opts.data || typeof opts.data !== 'string') {
@@ -475,8 +476,10 @@ export async function keysendMessage(
     if (opts.data.length < MAX_MSG_LENGTH) {
       try {
         const res = await keysend(opts, ownerPubkey)
+        console.log('-----> keysendOK!!!')
         resolve(res)
       } catch (e) {
+        console.log('-----> FAILED KEYSEND', e)
         reject(e)
       }
       return
@@ -488,12 +491,14 @@ export async function keysendMessage(
     let res: any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
+    console.log('-----> weave msg')
     for (let i = 0; i < n; i++) {
       const spliti = Math.ceil((opts.data || '').length / n)
       const m = (opts.data || '').substring(i * spliti, i * spliti + spliti)
       const isLastThread = i === n - 1
       const amt = isLastThread ? opts.amt : constants.min_sat_amount
       try {
+        console.log('-----> weave:', `${ts}_${i}_${n}`)
         res = await keysend(
           {
             ...opts,
@@ -521,7 +526,9 @@ export async function signAscii(
   ascii: string,
   ownerPubkey?: string
 ): Promise<string> {
+  console.log('-----> signAscii')
   const sig = await signMessage(ascii_to_hexa(ascii), ownerPubkey)
+  console.log('-----> signed Ascii', sig)
   return sig
 }
 
