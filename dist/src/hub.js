@@ -142,10 +142,36 @@ function massPingHubFromProxies(rn) {
             },
         });
         const nodes = [];
+        const channelList = yield Lightning.listChannels({});
+        if (!channelList)
+            return logger_1.sphinxLogger.error('failed to listChannels');
+        const { channels } = channelList;
+        const localBalances = channels.map((c) => parseInt(c.local_balance));
+        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
+        const largestLocalBalance = Math.max(...localBalances);
+        const largestRemoteBalance = Math.max(...remoteBalances);
+        const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
         yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
-            const proxyNodeInfo = yield (0, nodeinfo_1.proxynodeinfo)(o.publicKey);
             const clean = o.authToken === null || o.authToken === '';
-            nodes.push(Object.assign(Object.assign({}, proxyNodeInfo), { clean, last_active: o.lastActive, route_hint: o.routeHint, relay_commit: rn === null || rn === void 0 ? void 0 : rn.relay_commit, lnd_version: rn === null || rn === void 0 ? void 0 : rn.lnd_version, relay_version: rn === null || rn === void 0 ? void 0 : rn.relay_version, testnet: rn === null || rn === void 0 ? void 0 : rn.testnet, ip: rn === null || rn === void 0 ? void 0 : rn.ip, public_ip: rn === null || rn === void 0 ? void 0 : rn.public_ip, node_alias: rn === null || rn === void 0 ? void 0 : rn.node_alias }));
+            nodes.push({
+                pubkey: o.publicKey,
+                node_type: nodeinfo_1.NodeType.NODE_VIRTUAL,
+                clean,
+                last_active: o.lastActive,
+                route_hint: o.routeHint,
+                relay_commit: rn === null || rn === void 0 ? void 0 : rn.relay_commit,
+                lnd_version: rn === null || rn === void 0 ? void 0 : rn.lnd_version,
+                relay_version: rn === null || rn === void 0 ? void 0 : rn.relay_version,
+                testnet: rn === null || rn === void 0 ? void 0 : rn.testnet,
+                ip: rn === null || rn === void 0 ? void 0 : rn.ip,
+                public_ip: rn === null || rn === void 0 ? void 0 : rn.public_ip,
+                node_alias: rn === null || rn === void 0 ? void 0 : rn.node_alias,
+                number_channels: channels.length,
+                open_channel_data: channels,
+                largest_local_balance: largestLocalBalance,
+                largest_remote_balance: largestRemoteBalance,
+                total_local_balance: totalLocalBalance,
+            });
         }));
         if (logger_1.logging.Proxy) {
             const cleanNodes = nodes.filter((n) => n.clean);
