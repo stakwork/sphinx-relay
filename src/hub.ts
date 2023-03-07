@@ -4,7 +4,7 @@ import { Op } from 'sequelize'
 import * as socket from './utils/socket'
 import * as jsonUtils from './utils/json'
 import * as helpers from './helpers'
-import { nodeinfo, proxynodeinfo } from './utils/nodeinfo'
+import { nodeinfo, NodeType } from './utils/nodeinfo'
 import * as Lightning from './grpc/lightning'
 import constants from './constants'
 import { loadConfig } from './utils/config'
@@ -156,11 +156,19 @@ async function massPingHubFromProxies(rn) {
     },
   })
   const nodes: { [k: string]: any }[] = []
+  const channelList = await Lightning.listChannels({})
+  if (!channelList) return sphinxLogger.error('failed to listChannels')
+  const { channels } = channelList
+  const localBalances = channels.map((c) => parseInt(c.local_balance))
+  const remoteBalances = channels.map((c) => parseInt(c.remote_balance))
+  const largestLocalBalance = Math.max(...localBalances)
+  const largestRemoteBalance = Math.max(...remoteBalances)
+  const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0)
   await asyncForEach(owners, async (o: Contact) => {
-    const proxyNodeInfo = await proxynodeinfo(o.publicKey)
     const clean = o.authToken === null || o.authToken === ''
     nodes.push({
-      ...proxyNodeInfo,
+      pubkey: o.publicKey,
+      node_type: NodeType.NODE_VIRTUAL,
       clean,
       last_active: o.lastActive,
       route_hint: o.routeHint,
@@ -171,6 +179,11 @@ async function massPingHubFromProxies(rn) {
       ip: rn?.ip,
       public_ip: rn?.public_ip,
       node_alias: rn?.node_alias,
+      number_channels: channels.length,
+      open_channel_data: channels,
+      largest_local_balance: largestLocalBalance,
+      largest_remote_balance: largestRemoteBalance,
+      total_local_balance: totalLocalBalance,
     })
   })
   if (logging.Proxy) {

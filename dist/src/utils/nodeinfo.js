@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isClean = exports.nodeinfo = exports.proxynodeinfo = exports.NodeType = void 0;
+exports.isClean = exports.nodeinfo = exports.NodeType = void 0;
 const Lightning = require("../grpc/lightning");
 const publicIp = require("public-ip");
 const gitinfo = require("./gitinfo");
@@ -24,30 +24,6 @@ var NodeType;
     NodeType["NODE_VIRTUAL"] = "node_virtual";
     NodeType["NODE_GREENLIGHT"] = "node_greenlight";
 })(NodeType = exports.NodeType || (exports.NodeType = {}));
-function proxynodeinfo(pk) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const channelList = yield Lightning.listChannels({});
-        if (!channelList)
-            throw new Error('cant get channels');
-        const { channels } = channelList;
-        const localBalances = channels.map((c) => parseInt(c.local_balance));
-        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
-        const largestLocalBalance = Math.max(...localBalances);
-        const largestRemoteBalance = Math.max(...remoteBalances);
-        const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
-        return {
-            pubkey: pk,
-            number_channels: channels.length,
-            open_channel_data: channels,
-            largest_local_balance: largestLocalBalance,
-            largest_remote_balance: largestRemoteBalance,
-            total_local_balance: totalLocalBalance,
-            // node_type: 'node_virtual'
-            node_type: NodeType.NODE_VIRTUAL,
-        };
-    });
-}
-exports.proxynodeinfo = proxynodeinfo;
 function nodeinfo() {
     return __awaiter(this, void 0, void 0, function* () {
         const nzp = yield listNonZeroPolicies();
