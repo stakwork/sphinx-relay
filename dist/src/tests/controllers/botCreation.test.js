@@ -47,8 +47,6 @@ function botCreation(t, node1, node2, node3) {
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install welcome';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
-        const text21 = '/bot install sentiment';
-        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text21);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
         const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
