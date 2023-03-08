@@ -24,6 +24,7 @@ export const payInvoice = async (
     makeArgs(sendingNode, v)
   )
 
+  console.log('-> payInvoice res', sendingNode.alias, r)
   t.true(r.success, 'Put method should have succeeded')
   const paymentHash = r.response.payment_hash
   t.truthy(paymentHash, 'paymentHash should exist')

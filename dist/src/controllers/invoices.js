@@ -44,7 +44,7 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     logger_1.sphinxLogger.info(`[pay invoice] ${payment_request}`);
     try {
         const response = yield Lightning.sendPayment(payment_request, req.owner.publicKey);
-        logger_1.sphinxLogger.info(`[pay invoice data] ${response}`);
+        logger_1.sphinxLogger.info(`[pay invoice data] ${JSON.stringify(response)}`);
         const message = (yield models_1.models.Message.findOne({
             where: { payment_request, tenant },
         }));
@@ -225,7 +225,7 @@ const listInvoices = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.listInvoices = listInvoices;
 const receiveInvoice = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    logger_1.sphinxLogger.info(`received invoice ${payload}`);
+    logger_1.sphinxLogger.info(`received invoice ${payload.message.invoice}`);
     const total_spent = 1;
     const dat = payload;
     const payment_request = dat.message.invoice;

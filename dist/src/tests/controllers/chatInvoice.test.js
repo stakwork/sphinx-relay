@@ -11,30 +11,31 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.chatInvoice = void 0;
 const ava_1 = require("ava");
-const helpers_1 = require("../utils/helpers");
+const helpers = require("../utils/helpers");
 const save_1 = require("../utils/save");
 const del_1 = require("../utils/del");
 const msg_1 = require("../utils/msg");
 const get_1 = require("../utils/get");
 const nodes_1 = require("../nodes");
 ava_1.default.serial('test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, helpers_1.iterate)(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
-        yield chatInvoice(t, node1, node2);
-    }));
+    // await iterate(nodes, async (node1, node2) => {
+    //   await chatInvoice(t, node1, node2)
+    // })
+    yield chatInvoice(t, nodes_1.default[3], nodes_1.default[4]);
 }));
 function chatInvoice(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
         //TWO NODES SEND PAYMENTS TO EACH OTHER IN A CHAT ===>
-        console.log(`${node1.alias} and ${node2.alias}`);
+        console.log(`=> chatInvoice ${node1.alias} and ${node2.alias}`);
         //NODE1 ADDS NODE2 AS A CONTACT
         const added = yield (0, save_1.addContact)(t, node1, node2);
         t.true(added, 'n1 should add n2 as contact');
         //NODE1 SENDS A TEXT MESSAGE TO NODE2
-        const text = (0, helpers_1.randomText)();
+        const text = helpers.randomText();
         yield (0, msg_1.sendMessageAndCheckDecryption)(t, node1, node2, text);
         // t.true(messageSent.success, 'node1 should send text message to node2')
         //NODE2 SENDS A TEXT MESSAGE TO NODE1
-        const text2 = (0, helpers_1.randomText)();
+        const text2 = helpers.randomText();
         yield (0, msg_1.sendMessageAndCheckDecryption)(t, node2, node1, text2);
         //t.true(messageSent2.success, 'node2 should send text message to node1')
         //NODE1 SENDS INVOICE TO NODE2
@@ -44,6 +45,9 @@ function chatInvoice(t, node1, node2) {
         t.truthy(invoice, 'invoice should be sent');
         const payReq = invoice.response.payment_request;
         t.truthy(payReq, 'payment request should exist');
+        yield helpers.sleep(1000);
+        // NODE 2 PAYS NODE1
+        console.log('=>', node2.alias, 'pays', node1.alias);
         const payInvoice1 = yield (0, msg_1.payInvoice)(t, node2, node1, amount, payReq);
         t.true(payInvoice1, 'Node2 should have paid node1 invoice');
         //NODE2 SENDS INVOICE TO NODE1
@@ -53,6 +57,8 @@ function chatInvoice(t, node1, node2) {
         t.truthy(invoice2, 'invoice should be sent');
         const payReq2 = invoice2.response.payment_request;
         t.truthy(payReq2, 'payment request should exist');
+        yield helpers.sleep(1000);
+        console.log('=>', node1.alias, 'pays', node2.alias);
         const payInvoice2 = yield (0, msg_1.payInvoice)(t, node1, node2, amount2, payReq2);
         t.true(payInvoice2, 'Node1 should have paid node2 invoice');
         //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS

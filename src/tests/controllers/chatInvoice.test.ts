@@ -1,5 +1,5 @@
 import test, { ExecutionContext } from 'ava'
-import { randomText, iterate } from '../utils/helpers'
+import * as helpers from '../utils/helpers'
 import { addContact } from '../utils/save'
 import { deleteContact } from '../utils/del'
 import {
@@ -20,28 +20,29 @@ interface Context {}
 test.serial(
   'test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact',
   async (t: ExecutionContext<Context>) => {
-    await iterate(nodes, async (node1, node2) => {
+    await helpers.iterate(nodes, async (node1, node2) => {
       await chatInvoice(t, node1, node2)
     })
+    // await chatInvoice(t, nodes[3], nodes[4])
   }
 )
 
 export async function chatInvoice(t, node1, node2) {
   //TWO NODES SEND PAYMENTS TO EACH OTHER IN A CHAT ===>
 
-  console.log(`${node1.alias} and ${node2.alias}`)
+  console.log(`=> chatInvoice ${node1.alias} and ${node2.alias}`)
 
   //NODE1 ADDS NODE2 AS A CONTACT
   const added = await addContact(t, node1, node2)
   t.true(added, 'n1 should add n2 as contact')
 
   //NODE1 SENDS A TEXT MESSAGE TO NODE2
-  const text = randomText()
+  const text = helpers.randomText()
   await sendMessageAndCheckDecryption(t, node1, node2, text)
   // t.true(messageSent.success, 'node1 should send text message to node2')
 
   //NODE2 SENDS A TEXT MESSAGE TO NODE1
-  const text2 = randomText()
+  const text2 = helpers.randomText()
   await sendMessageAndCheckDecryption(t, node2, node1, text2)
   //t.true(messageSent2.success, 'node2 should send text message to node1')
 
@@ -53,6 +54,10 @@ export async function chatInvoice(t, node1, node2) {
   const payReq = invoice.response.payment_request
   t.truthy(payReq, 'payment request should exist')
 
+  await helpers.sleep(1000)
+
+  // NODE 2 PAYS NODE1
+  console.log('=>', node2.alias, 'pays', node1.alias)
   const payInvoice1 = await payInvoice(t, node2, node1, amount, payReq)
   t.true(payInvoice1, 'Node2 should have paid node1 invoice')
 
@@ -64,6 +69,9 @@ export async function chatInvoice(t, node1, node2) {
   const payReq2 = invoice2.response.payment_request
   t.truthy(payReq2, 'payment request should exist')
 
+  await helpers.sleep(1000)
+
+  console.log('=>', node1.alias, 'pays', node2.alias)
   const payInvoice2 = await payInvoice(t, node1, node2, amount2, payReq2)
   t.true(payInvoice2, 'Node1 should have paid node2 invoice')
 

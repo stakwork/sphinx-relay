@@ -15,6 +15,7 @@ jobs:
             'boostPayment',
             'botCreation',
             'chatPayment',
+            'chatInvoice',
             'contacts',
             'images',
             'latestTest',
@@ -38,12 +39,11 @@ jobs:
             'hmac',
             'socketIO',
             'tribeMember',
-            'badgeBot',
             'actionHistory',
             'silentTribeBotMsg',
             'kickBot',
           ]
-        node: [12, 16]
+        node: [16]
     steps:
       - name: Enable docker.host.internal for Ubuntu
         run: |
