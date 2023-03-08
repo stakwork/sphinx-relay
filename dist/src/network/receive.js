@@ -82,7 +82,7 @@ function onReceive(payload, dest) {
                 return logger_1.sphinxLogger.error(`INVALID DEST ${dest}`);
         }
         payload.dest = dest; // add "dest" into payload
-        // console.log("===> onReceive", JSON.stringify(payload, null, 2));
+        console.log('===> onReceive', JSON.stringify(payload, null, 2));
         if (!(payload.type || payload.type === 0))
             return logger_1.sphinxLogger.error(`no payload.type`);
         const owner = (yield models_1.models.Contact.findOne({
@@ -569,10 +569,17 @@ function parseKeysendInvoice(i) {
         let owner;
         if ((0, proxy_1.isProxy)()) {
             try {
-                const invoice = bolt11.decode(i.payment_request);
-                if (!invoice.payeeNodeKey)
-                    return logger_1.sphinxLogger.error(`cant get dest from pay req`);
-                dest = invoice.payeeNodeKey;
+                if (i.payment_request) {
+                    // child user
+                    const invoice = bolt11.decode(i.payment_request);
+                    if (!invoice.payeeNodeKey)
+                        return logger_1.sphinxLogger.error(`cant get dest from pay req`);
+                    dest = invoice.payeeNodeKey;
+                }
+                else {
+                    // root user
+                    dest = yield (0, proxy_1.getProxyRootPubkey)();
+                }
                 owner = yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: dest },
                 });

@@ -29,7 +29,7 @@ import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import constants from '../constants'
 import * as jsonUtils from '../utils/json'
-import { isProxy } from '../utils/proxy'
+import { getProxyRootPubkey, isProxy } from '../utils/proxy'
 import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger, logging } from '../utils/logger'
@@ -89,7 +89,7 @@ async function onReceive(payload: Payload, dest: string) {
   }
   payload.dest = dest // add "dest" into payload
 
-  // console.log("===> onReceive", JSON.stringify(payload, null, 2));
+  // console.log('===> onReceive', JSON.stringify(payload, null, 2))
   if (!(payload.type || payload.type === 0))
     return sphinxLogger.error(`no payload.type`)
 
@@ -613,10 +613,16 @@ export async function parseKeysendInvoice(
   let owner
   if (isProxy()) {
     try {
-      const invoice = bolt11.decode(i.payment_request)
-      if (!invoice.payeeNodeKey)
-        return sphinxLogger.error(`cant get dest from pay req`)
-      dest = invoice.payeeNodeKey
+      if (i.payment_request) {
+        // child user
+        const invoice = bolt11.decode(i.payment_request)
+        if (!invoice.payeeNodeKey)
+          return sphinxLogger.error(`cant get dest from pay req`)
+        dest = invoice.payeeNodeKey
+      } else {
+        // root user
+        dest = await getProxyRootPubkey()
+      }
       owner = await models.Contact.findOne({
         where: { isOwner: true, publicKey: dest },
       })
