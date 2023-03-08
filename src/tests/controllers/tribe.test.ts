@@ -26,6 +26,7 @@ async function tribeTest(
   node2: NodeConfig
 ) {
   //NODE1 CREATES A TRIBE
+  console.log('NODE:', node1.alias, '->', node2.alias)
   let tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
 
