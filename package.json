@@ -92,7 +92,7 @@
     "rncryptor-js": "0.0.1",
     "secp256k1": "3.8.0",
     "secure-random": "^1.1.2",
-    "sequelize": "^5.19.3",
+    "sequelize": "^6.29.0",
     "sequelize-cli": "^5.5.1",
     "sequelize-typescript": "^1.1.0",
     "short-uuid": "^3.1.1",
