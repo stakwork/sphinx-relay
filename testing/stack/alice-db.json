@@ -1,6 +1,6 @@
 {
   "development": {
     "dialect": "sqlite",
-    "storage": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/relay/db/dave.db"
+    "storage": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/relay/db/alice.db"
   }
 }

@@ -156,23 +156,20 @@ export async function checkThreshold(
     if (url) {
       const sentiment: SentimentScore[] = await getSentiment(url)
 
-      const newThreshold =
+      const newResult =
         sentiment?.reduce(
           (total: number, value: SentimentScore) =>
             total + value.sentiment_score,
           0
         ) / sentiment?.length
 
-      if (typeof newThreshold === 'number') {
+      if (typeof newResult === 'number') {
         const last_result = meta?.last_result || 0
         const threshold = meta?.threshold || 10
-
-        const diff = newThreshold - last_result
-
-        if (
-          diff >= (last_result * threshold) / 100 &&
-          (diff !== 0 || last_result * threshold !== 0)
-        ) {
+        const maximum_result = 100
+        const diff = (Math.abs(newResult - last_result) / maximum_result) * 100
+        console.log('++++++++++++ Difference', diff)
+        if (diff >= threshold) {
           // Send Alert to tribe
           botResponse(
             botName,
@@ -184,7 +181,7 @@ export async function checkThreshold(
           )
         }
         await bot.update({
-          meta: JSON.stringify({ ...meta, last_result: newThreshold }),
+          meta: JSON.stringify({ ...meta, last_result: newResult }),
         })
       }
     }

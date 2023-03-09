@@ -93,18 +93,19 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
             const url = meta.url;
             if (url) {
                 const sentiment = yield getSentiment(url);
-                const newThreshold = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
-                if (typeof newThreshold === 'number') {
+                const newResult = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
+                if (typeof newResult === 'number') {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
                     const threshold = (meta === null || meta === void 0 ? void 0 : meta.threshold) || 10;
-                    const diff = newThreshold - last_result;
-                    if (diff >= (last_result * threshold) / 100 &&
-                        (diff !== 0 || last_result * threshold !== 0)) {
+                    const maximum_result = 100;
+                    const diff = (Math.abs(newResult - last_result) / maximum_result) * 100;
+                    console.log('++++++++++++ Difference', diff);
+                    if (diff >= threshold) {
                         // Send Alert to tribe
                         botResponse(botName, 'Sentiment has increased by some percentage', botPrefix, tribe.id, message, command || 'threshold');
                     }
                     yield bot.update({
-                        meta: JSON.stringify(Object.assign(Object.assign({}, meta), { last_result: newThreshold })),
+                        meta: JSON.stringify(Object.assign(Object.assign({}, meta), { last_result: newResult })),
                     });
                 }
             }
