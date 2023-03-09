@@ -208,6 +208,7 @@ async function massPingHubFromProxies(rn) {
 async function sendHubCall(body, mass?: boolean) {
   try {
     // console.log("=> PING BODY", body)
+    console.log('=> pingHub', body)
     const r = await fetch(
       config.hub_api_url + (mass ? '/mass_ping' : '/ping'),
       {
@@ -218,7 +219,7 @@ async function sendHubCall(body, mass?: boolean) {
       }
     )
     const j = await r.json()
-    // console.log("=> PING RESPONSE", j)
+    console.log('=> PING RESPONSE', j)
     if (!(j && j.status && j.status === 'ok')) {
       sphinxLogger.info(`[hub] ping returned not ok ${j}`)
     }
