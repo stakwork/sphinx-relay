@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProxyRootPubkey = exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
+exports.getProxyXpub = exports.getProxyRootPubkey = exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("@grpc/grpc-js");
 const proto_1 = require("../grpc/proto");
@@ -19,6 +19,7 @@ const models_1 = require("../models");
 const node_fetch_1 = require("node-fetch");
 const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
+const sequelize_1 = require("sequelize");
 // var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
@@ -44,7 +45,9 @@ exports.genUsersInterval = genUsersInterval;
 const NEW_USER_NUM = config.proxy_new_nodes || config.proxy_new_nodes === 0
     ? config.proxy_new_nodes
     : 2;
-const SATS_PER_USER = config.proxy_initial_sats || 5000;
+let SATS_PER_USER = config.proxy_initial_sats;
+if (!(SATS_PER_USER || SATS_PER_USER === 0))
+    SATS_PER_USER = 5000;
 // isOwner users with no authToken
 function generateNewUsers() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -53,7 +56,7 @@ function generateNewUsers() {
             return;
         }
         const newusers = yield models_1.models.Contact.findAll({
-            where: { isOwner: true, authToken: null },
+            where: { isOwner: true, authToken: null, id: { [sequelize_1.Op.ne]: 1 } },
         });
         if (newusers.length >= NEW_USER_NUM) {
             logger_1.sphinxLogger.info(`already have new users`, logger_1.logging.Proxy);
@@ -84,7 +87,7 @@ function generateNewUsers() {
         const rootpk = yield getProxyRootPubkey();
         for (const _ of arr) {
             try {
-                yield generateNewUser(rootpk);
+                yield generateNewUser(rootpk, SATS_PER_USER);
             }
             catch (e) {
                 logger_1.sphinxLogger.error('failed to generateNewUser' + e, logger_1.logging.Proxy);
@@ -100,7 +103,7 @@ const adminURL = config.proxy_admin_url
 function generateNewUser(rootpk, initial_sat) {
     return __awaiter(this, void 0, void 0, function* () {
         let route = 'generate';
-        if (initial_sat) {
+        if (initial_sat || initial_sat === 0) {
             route = `generate?sats=${initial_sat}`;
             logger_1.sphinxLogger.info(`new user with sats: ${initial_sat}`, logger_1.logging.Proxy);
         }
@@ -257,4 +260,21 @@ function getProxyLNDBalance() {
         });
     });
 }
+function getProxyXpub() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield (0, node_fetch_1.default)(adminURL + 'origin_xpub', {
+                method: 'GET',
+                headers: { 'x-admin-token': config.proxy_admin_token },
+            });
+            const j = yield r.json();
+            return j;
+        }
+        catch (e) {
+            console.log(e);
+            throw e;
+        }
+    });
+}
+exports.getProxyXpub = getProxyXpub;
 //# sourceMappingURL=proxy.js.map

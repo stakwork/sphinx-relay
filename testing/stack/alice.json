@@ -1,17 +1,29 @@
 {
   "development": {
+    "hub_api_url": "None",
+    "proxy_initial_sats": 100,
+    "proxy_new_nodes": 2,
+    "proxy_lnd_ip": "127.0.0.1",
+    "proxy_admin_token": "r46bnf8ibrhbb424heba",
+    "proxy_admin_url": "http://localhost:5050",
+    "dont_ping_hub": true,
+    "proxy_lnd_port": "11111",
+    "proxy_tls_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/proxy/cert/tls.cert",
+    "proxy_macaroons_dir": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/proxy/macaroons",
     "node_ip": "127.0.0.1",
     "lnd_ip": "127.0.0.1",
-    "lnd_port": "10009",
-    "tls_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/alice/.lnd/tls.cert",
-    "macaroon_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/alice/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
+    "lnd_port": "10012",
+    "tls_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/dave/.lnd/tls.cert",
+    "macaroon_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/dave/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
     "node_http_protocol": "http",
-    "node_http_port": "3001",
-    "media_host": "localhost:5555",
-    "tribes_host": "localhost:13000",
+    "node_http_port": "3004",
     "tribes_mqtt_port": "1883",
     "tribes_insecure": true,
-    "public_url": "127.0.0.1:3001",
-    "connect_ui": true
+    "public_url": "127.0.0.1:3004",
+    "media_host": "localhost:5555",
+    "connect_ui": true,
+    "logging_level": "debug",
+    "mqtt_host": "127.0.0.1",
+    "proxy_hd_keys": true
   }
 }

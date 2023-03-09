@@ -24,10 +24,6 @@ const fs = require("fs");
 const cert_1 = require("./utils/cert");
 const moment = require("moment");
 const config = (0, config_1.loadConfig)();
-/*
-"unlock": true,
-"encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
-*/
 function unlocker(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { password } = req.body;

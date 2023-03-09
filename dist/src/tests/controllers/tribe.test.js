@@ -25,6 +25,7 @@ ava_1.default.serial('tribe', (t) => __awaiter(void 0, void 0, void 0, function*
 function tribeTest(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 CREATES A TRIBE
+        console.log('NODE:', node1.alias, '->', node2.alias);
         let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
         //NODE2 JOINS TRIBE CREATED BY NODE1

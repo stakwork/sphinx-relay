@@ -8,6 +8,7 @@ import { models, ContactRecord } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
+import { Op } from 'sequelize'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -38,7 +39,9 @@ const NEW_USER_NUM =
   config.proxy_new_nodes || config.proxy_new_nodes === 0
     ? config.proxy_new_nodes
     : 2
-const SATS_PER_USER = config.proxy_initial_sats || 5000
+let SATS_PER_USER = config.proxy_initial_sats
+if (!(SATS_PER_USER || SATS_PER_USER === 0)) SATS_PER_USER = 5000
+
 // isOwner users with no authToken
 export async function generateNewUsers() {
   if (!isProxy()) {
@@ -46,7 +49,7 @@ export async function generateNewUsers() {
     return
   }
   const newusers = await models.Contact.findAll({
-    where: { isOwner: true, authToken: null },
+    where: { isOwner: true, authToken: null, id: { [Op.ne]: 1 } },
   })
   if (newusers.length >= NEW_USER_NUM) {
     sphinxLogger.info(`already have new users`, logging.Proxy)
@@ -78,7 +81,7 @@ export async function generateNewUsers() {
   const rootpk = await getProxyRootPubkey()
   for (const _ of arr) {
     try {
-      await generateNewUser(rootpk)
+      await generateNewUser(rootpk, SATS_PER_USER)
     } catch (e) {
       sphinxLogger.error('failed to generateNewUser' + e, logging.Proxy)
       break
@@ -94,7 +97,7 @@ export async function generateNewUser(
   initial_sat?: number
 ): Promise<any> {
   let route = 'generate'
-  if (initial_sat) {
+  if (initial_sat || initial_sat === 0) {
     route = `generate?sats=${initial_sat}`
     sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
   }
@@ -250,4 +253,18 @@ function getProxyLNDBalance(): Promise<number> {
       }
     })
   })
+}
+
+export async function getProxyXpub() {
+  try {
+    const r = await fetch(adminURL + 'origin_xpub', {
+      method: 'GET',
+      headers: { 'x-admin-token': config.proxy_admin_token },
+    })
+    const j = await r.json()
+    return j
+  } catch (e) {
+    console.log(e)
+    throw e
+  }
 }
