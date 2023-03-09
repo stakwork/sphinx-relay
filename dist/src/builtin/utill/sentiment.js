@@ -9,14 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkThreshold = exports.timerMs = exports.timer = exports.threshold = exports.botResponse = void 0;
+exports.updateUrl = exports.checkThreshold = exports.timerMs = exports.timer = exports.threshold = exports.botResponse = void 0;
 const Sphinx = require("sphinx-bot");
 const hideAndUnhideCommand_1 = require("../../controllers/botapi/hideAndUnhideCommand");
 const models_1 = require("../../models");
 const logger_1 = require("../../utils/logger");
-const config_1 = require("../../utils/config");
 const node_fetch_1 = require("node-fetch");
-const config = (0, config_1.loadConfig)();
 function botResponse(botName, message, botPrefix, tribeId, botMessage, command) {
     return __awaiter(this, void 0, void 0, function* () {
         const embed = new Sphinx.MessageEmbed()
@@ -37,6 +35,9 @@ function threshold(botName, command, tribe, botPrefix, message, value) {
             const bot = (yield models_1.models.ChatBot.findOne({
                 where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
             }));
+            if (!bot) {
+                logger_1.sphinxLogger.error([`SENTIMENT BOT ERROR, BOT NOT FOUND`, logger_1.logging.Bots]);
+            }
             let meta = JSON.parse(bot.meta || `{}`);
             meta.threshold = threshold;
             yield bot.update({ meta: JSON.stringify(meta) });
@@ -87,10 +88,11 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
             if (!bot) {
                 clearInterval(interval);
             }
-            if (config.sentiment_url) {
-                const meta = JSON.parse(bot.meta);
-                console.log('+++++++++++++ SENTIMENT META', meta);
-                const sentiment = yield getSentiment(config.sentiment_url);
+            let meta = JSON.parse(bot.meta || `{}`);
+            const url = meta.url;
+            console.log('+++++++++++++ SENTIMENT META', meta);
+            if (url) {
+                const sentiment = yield getSentiment(url);
                 console.log('++++++++++++ Sendtiment', sentiment);
                 const newThreshold = sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0);
                 if (typeof newThreshold === 'number') {
@@ -189,10 +191,31 @@ function getSentiment(url) {
             return (res === null || res === void 0 ? void 0 : res.data) || [];
         }
         catch (error) {
-            console.log(error);
-            console.log('We got some error');
-            return [];
+            throw error;
         }
     });
 }
+function updateUrl(botPrefix, botName, url, tribe, command, message) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!url) {
+            return yield botResponse(botName, 'Please provide Valid URL', botPrefix, tribe.id, message, command);
+        }
+        try {
+            const bot = (yield models_1.models.ChatBot.findOne({
+                where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+            }));
+            if (!bot) {
+                logger_1.sphinxLogger.error([`SENTIMENT BOT ERROR, BOT NOT FOUND`, logger_1.logging.Bots]);
+            }
+            let meta = JSON.parse(bot.meta || `{}`);
+            meta.url = url;
+            yield bot.update({ meta: JSON.stringify(meta) });
+            return yield botResponse(botName, 'sentiment Url updated Successfully', botPrefix, tribe.id, message, command);
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error([`SENTIMENT BOT ERROR ${error}`, logger_1.logging.Bots]);
+        }
+    });
+}
+exports.updateUrl = updateUrl;
 //# sourceMappingURL=sentiment.js.map

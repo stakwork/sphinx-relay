@@ -42,7 +42,6 @@ function init() {
             }, 60000);
             //   timerMs(1)
         }
-        console.log('++++++++++++ Interval 2', interval);
         if (arr[0] === botPrefix) {
             const cmd = arr[1];
             switch (cmd) {
@@ -55,6 +54,11 @@ function init() {
                     if (arr.length < 3)
                         return;
                     yield (0, sentiment_1.timer)(botName, cmd, tribe, botPrefix, message, arr[2], interval);
+                    return;
+                case 'url':
+                    if (arr.length < 3)
+                        return;
+                    yield (0, sentiment_1.updateUrl)(botPrefix, botName, arr[2], tribe, cmd, message);
                     return;
             }
         }

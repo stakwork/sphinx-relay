@@ -43,7 +43,7 @@ const builtInBotMsgTypes = {
 const builtInHiddenCmd = {
   callRecording: ['hide', 'update'],
   kick: ['hide', 'add', 'remove'],
-  sentiment: ['threshold', 'timer'],
+  sentiment: ['threshold', 'timer', 'url'],
 }
 
 const builtInBotNames = {

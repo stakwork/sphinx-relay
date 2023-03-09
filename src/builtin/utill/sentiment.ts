@@ -2,21 +2,19 @@ import * as Sphinx from 'sphinx-bot'
 import { determineOwnerOnly } from '../../controllers/botapi/hideAndUnhideCommand'
 import { ChatBotRecord, ChatRecord, models } from '../../models'
 import { sphinxLogger, logging } from '../../utils/logger'
-import { loadConfig } from '../../utils/config'
 import fetch from 'node-fetch'
 
 interface SentimentMeta {
   threshold: number
   last_result: number
   timer: number
+  url: string
 }
 
 interface SentimentScore {
   date_added_to_graph: string
   sentiment_score: number
 }
-
-const config = loadConfig()
 
 export async function botResponse(
   botName: string,
@@ -56,6 +54,10 @@ export async function threshold(
     const bot = (await models.ChatBot.findOne({
       where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
     })) as ChatRecord
+
+    if (!bot) {
+      sphinxLogger.error([`SENTIMENT BOT ERROR, BOT NOT FOUND`, logging.Bots])
+    }
 
     let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
     meta.threshold = threshold
@@ -147,12 +149,11 @@ export async function checkThreshold(
     if (!bot) {
       clearInterval(interval)
     }
-    if (config.sentiment_url) {
-      const meta: SentimentMeta = JSON.parse(bot.meta)
-      console.log('+++++++++++++ SENTIMENT META', meta)
-      const sentiment: SentimentScore[] = await getSentiment(
-        config.sentiment_url
-      )
+    let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
+    const url = meta.url
+    console.log('+++++++++++++ SENTIMENT META', meta)
+    if (url) {
+      const sentiment: SentimentScore[] = await getSentiment(url)
       console.log('++++++++++++ Sendtiment', sentiment)
       const newThreshold = sentiment?.reduce(
         (total: number, value: SentimentScore) => total + value.sentiment_score,
@@ -260,8 +261,49 @@ async function getSentiment(url) {
     }
     return res?.data || []
   } catch (error) {
-    console.log(error)
-    console.log('We got some error')
-    return []
+    throw error
+  }
+}
+
+export async function updateUrl(
+  botPrefix: string,
+  botName: string,
+  url: string,
+  tribe: ChatRecord,
+  command: string,
+  message: Sphinx.Message
+) {
+  if (!url) {
+    return await botResponse(
+      botName,
+      'Please provide Valid URL',
+      botPrefix,
+      tribe.id,
+      message,
+      command
+    )
+  }
+  try {
+    const bot = (await models.ChatBot.findOne({
+      where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+    })) as ChatBotRecord
+
+    if (!bot) {
+      sphinxLogger.error([`SENTIMENT BOT ERROR, BOT NOT FOUND`, logging.Bots])
+    }
+
+    let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
+    meta.url = url
+    await bot.update({ meta: JSON.stringify(meta) })
+    return await botResponse(
+      botName,
+      'sentiment Url updated Successfully',
+      botPrefix,
+      tribe.id,
+      message,
+      command
+    )
+  } catch (error) {
+    sphinxLogger.error([`SENTIMENT BOT ERROR ${error}`, logging.Bots])
   }
 }

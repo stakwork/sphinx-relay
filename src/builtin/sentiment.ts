@@ -2,7 +2,7 @@ import * as Sphinx from 'sphinx-bot'
 // import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models } from '../models'
-import { threshold, checkThreshold, timer } from './utill/sentiment'
+import { threshold, checkThreshold, timer, updateUrl } from './utill/sentiment'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -43,7 +43,7 @@ export function init() {
       }, 60000)
       //   timerMs(1)
     }
-    console.log('++++++++++++ Interval 2', interval)
+
     if (arr[0] === botPrefix) {
       const cmd = arr[1]
       switch (cmd) {
@@ -54,6 +54,10 @@ export function init() {
         case 'timer':
           if (arr.length < 3) return
           await timer(botName, cmd, tribe, botPrefix, message, arr[2], interval)
+          return
+        case 'url':
+          if (arr.length < 3) return
+          await updateUrl(botPrefix, botName, arr[2], tribe, cmd, message)
           return
       }
     }
