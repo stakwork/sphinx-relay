@@ -82,7 +82,7 @@ function generateNewUsers() {
         logger_1.sphinxLogger.info(`gen new users: ${n}`, logger_1.logging.Proxy);
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();
-        for (var _ of arr) {
+        for (const _ of arr) {
             try {
                 yield generateNewUser(rootpk);
             }
