@@ -82,9 +82,15 @@ function generateNewUsers() {
         logger_1.sphinxLogger.info(`gen new users: ${n}`, logger_1.logging.Proxy);
         const arr = new Array(n);
         const rootpk = yield getProxyRootPubkey();
-        yield asyncForEach(arr, () => __awaiter(this, void 0, void 0, function* () {
-            yield generateNewUser(rootpk);
-        }));
+        for (var _ of arr) {
+            try {
+                yield generateNewUser(rootpk);
+            }
+            catch (e) {
+                logger_1.sphinxLogger.error('failed to generateNewUser' + e, logger_1.logging.Proxy);
+                break;
+            }
+        }
     });
 }
 exports.generateNewUsers = generateNewUsers;
@@ -93,32 +99,27 @@ const adminURL = config.proxy_admin_url
     : 'http://localhost:5555/';
 function generateNewUser(rootpk, initial_sat) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            let route = 'generate';
-            if (initial_sat) {
-                route = `generate?sats=${initial_sat}`;
-                logger_1.sphinxLogger.info(`new user with sats: ${initial_sat}`, logger_1.logging.Proxy);
-            }
-            const r = yield (0, node_fetch_1.default)(adminURL + route, {
-                method: 'POST',
-                headers: { 'x-admin-token': config.proxy_admin_token },
-            });
-            const j = yield r.json();
-            const contact = {
-                publicKey: j.pubkey,
-                routeHint: `${rootpk}:${j.channel}`,
-                isOwner: true,
-                authToken: null,
-            };
-            const created = (yield models_1.models.Contact.create(contact));
-            // set tenant to self!
-            created.update({ tenant: created.id });
-            logger_1.sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`);
-            return created.dataValues;
+        let route = 'generate';
+        if (initial_sat) {
+            route = `generate?sats=${initial_sat}`;
+            logger_1.sphinxLogger.info(`new user with sats: ${initial_sat}`, logger_1.logging.Proxy);
         }
-        catch (e) {
-            // sphinxLogger.error(`=> could not gen new user ${e}`)
-        }
+        const r = yield (0, node_fetch_1.default)(adminURL + route, {
+            method: 'POST',
+            headers: { 'x-admin-token': config.proxy_admin_token },
+        });
+        const j = yield r.json();
+        const contact = {
+            publicKey: j.pubkey,
+            routeHint: `${rootpk}:${j.channel}`,
+            isOwner: true,
+            authToken: null,
+        };
+        const created = (yield models_1.models.Contact.create(contact));
+        // set tenant to self!
+        created.update({ tenant: created.id });
+        logger_1.sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`);
+        return created.dataValues;
     });
 }
 exports.generateNewUser = generateNewUser;
@@ -254,13 +255,6 @@ function getProxyLNDBalance() {
                 reject(err);
             }
         });
-    });
-}
-function asyncForEach(array, callback) {
-    return __awaiter(this, void 0, void 0, function* () {
-        for (let index = 0; index < array.length; index++) {
-            yield callback(array[index], index, array);
-        }
     });
 }
 //# sourceMappingURL=proxy.js.map

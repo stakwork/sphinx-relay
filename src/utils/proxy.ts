@@ -76,9 +76,14 @@ export async function generateNewUsers() {
 
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
-  await asyncForEach(arr, async () => {
-    await generateNewUser(rootpk)
-  })
+  for (var _ of arr) {
+    try {
+      await generateNewUser(rootpk)
+    } catch (e) {
+      sphinxLogger.error('failed to generateNewUser' + e, logging.Proxy)
+      break
+    }
+  }
 }
 
 const adminURL = config.proxy_admin_url
@@ -88,33 +93,29 @@ export async function generateNewUser(
   rootpk: string,
   initial_sat?: number
 ): Promise<any> {
-  try {
-    let route = 'generate'
-    if (initial_sat) {
-      route = `generate?sats=${initial_sat}`
-      sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
-    }
-    const r = await fetch(adminURL + route, {
-      method: 'POST',
-      headers: { 'x-admin-token': config.proxy_admin_token },
-    })
-    const j = await r.json()
-    const contact = {
-      publicKey: j.pubkey,
-      routeHint: `${rootpk}:${j.channel}`,
-      isOwner: true,
-      authToken: null,
-    }
-    const created: ContactRecord = (await models.Contact.create(
-      contact
-    )) as ContactRecord
-    // set tenant to self!
-    created.update({ tenant: created.id })
-    sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
-    return created.dataValues
-  } catch (e) {
-    // sphinxLogger.error(`=> could not gen new user ${e}`)
+  let route = 'generate'
+  if (initial_sat) {
+    route = `generate?sats=${initial_sat}`
+    sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
   }
+  const r = await fetch(adminURL + route, {
+    method: 'POST',
+    headers: { 'x-admin-token': config.proxy_admin_token },
+  })
+  const j = await r.json()
+  const contact = {
+    publicKey: j.pubkey,
+    routeHint: `${rootpk}:${j.channel}`,
+    isOwner: true,
+    authToken: null,
+  }
+  const created: ContactRecord = (await models.Contact.create(
+    contact
+  )) as ContactRecord
+  // set tenant to self!
+  created.update({ tenant: created.id })
+  sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
+  return created.dataValues
 }
 
 export async function generateNewExternalUser(pubkey: string, sig: string) {
@@ -249,10 +250,4 @@ function getProxyLNDBalance(): Promise<number> {
       }
     })
   })
-}
-
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
-  }
 }
