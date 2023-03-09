@@ -18,6 +18,7 @@ const LoopBot = require("./loop");
 const BadgeBot = require("./badge");
 const CallRecordingBot = require("./callRecording");
 const KickBot = require("./kick");
+const SentimentBot = require("./sentiment");
 const GitBot = require("./git");
 const bots_1 = require("../controllers/bots");
 Object.defineProperty(exports, "buildBotPayload", { enumerable: true, get: function () { return bots_1.buildBotPayload; } });
@@ -30,6 +31,7 @@ function init() {
         BadgeBot.init();
         CallRecordingBot.init();
         KickBot.init();
+        SentimentBot.init();
     });
 }
 exports.init = init;

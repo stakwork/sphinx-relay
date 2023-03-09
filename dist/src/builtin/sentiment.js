@@ -19,6 +19,7 @@ const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
 const botPrefix = '/sentiment';
 const botName = 'SentimentBot';
+let interval;
 function init() {
     if (initted)
         return;
@@ -28,24 +29,34 @@ function init() {
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         var _a;
-        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== botPrefix)
+        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== botPrefix &&
+            message.content !== '/bot install sentiment')
             return;
         const arr = (message.content && message.content.split(' ')) || [];
-        if (arr[0] !== botPrefix)
-            return;
-        const cmd = arr[1];
         const tribe = (yield models_1.models.Chat.findOne({
             where: { uuid: message.channel.id },
         }));
-        switch (cmd) {
-            case 'threshold':
-                if (arr.length < 3)
+        if (!interval) {
+            interval = setInterval(() => {
+                (0, sentiment_1.checkThreshold)(tribe, botName, botPrefix, interval, 'threshold', message);
+            }, 60000);
+            //   timerMs(1)
+        }
+        console.log('++++++++++++ Interval 2', interval);
+        if (arr[0] === botPrefix) {
+            const cmd = arr[1];
+            switch (cmd) {
+                case 'threshold':
+                    if (arr.length < 3)
+                        return;
+                    yield (0, sentiment_1.threshold)(botName, cmd, tribe, botPrefix, message, arr[2]);
                     return;
-                yield (0, sentiment_1.threshold)(botName, cmd, tribe, botPrefix, message, arr[2]);
-                return;
-            case 'timer':
-                if (arr.length < 3)
+                case 'timer':
+                    if (arr.length < 3)
+                        return;
+                    yield (0, sentiment_1.timer)(botName, cmd, tribe, botPrefix, message, arr[2], interval);
                     return;
+            }
         }
     }));
 }

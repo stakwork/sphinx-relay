@@ -5,6 +5,7 @@ import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
+import { sleep } from '../utils/helpers'
 
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
@@ -45,11 +46,18 @@ async function botCreation(t, node1, node2, node3) {
   const text2 = '/bot install welcome'
   await sendTribeMessage(t, node1, tribe, text2)
 
+  const text21 = '/bot install sentiment'
+  await sendTribeMessage(t, node1, tribe, text21)
+
   //NODE1 AWAIT REPLY FROM BOT
   botAlias = 'MotherBot'
   const botReply2 = await getCheckBotMsg(t, node1, botAlias)
   t.truthy(botReply2, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply2))
+
+  await sleep(60000)
+  const text22 = '/sentiment timer 5'
+  await sendTribeMessage(t, node1, tribe, text22)
 
   //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
   const setMessage = '/welcome setmessage '
