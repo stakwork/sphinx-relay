@@ -2,7 +2,13 @@ import * as Sphinx from 'sphinx-bot'
 // import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models } from '../models'
-import { threshold, checkThreshold, timer, updateUrl } from './utill/sentiment'
+import {
+  threshold,
+  checkThreshold,
+  timer,
+  updateUrl,
+  timerMs,
+} from './utill/sentiment'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -14,7 +20,7 @@ let interval
 export function init() {
   if (initted) return
   initted = true
-  //   const commands = ['hide', 'add', 'remove']
+
   const client = new Sphinx.Client()
   client.login('_', finalAction)
 
@@ -40,8 +46,7 @@ export function init() {
           'threshold',
           message
         )
-      }, 60000)
-      //   timerMs(1)
+      }, timerMs(1))
     }
 
     if (arr[0] === botPrefix) {

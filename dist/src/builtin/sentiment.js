@@ -24,7 +24,6 @@ function init() {
     if (initted)
         return;
     initted = true;
-    //   const commands = ['hide', 'add', 'remove']
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
@@ -39,8 +38,7 @@ function init() {
         if (!interval) {
             interval = setInterval(() => {
                 (0, sentiment_1.checkThreshold)(tribe, botName, botPrefix, interval, 'threshold', message);
-            }, 60000);
-            //   timerMs(1)
+            }, (0, sentiment_1.timerMs)(1));
         }
         if (arr[0] === botPrefix) {
             const cmd = arr[1];
