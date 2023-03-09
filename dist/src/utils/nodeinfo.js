@@ -31,7 +31,7 @@ function nodeinfo() {
         let info;
         try {
             const tryProxy = false;
-            info = yield Lightning.getInfo(tryProxy);
+            info = yield Lightning.getInfo(tryProxy, true);
             console.log('-----> nodeinfo ', info);
             if (info.identity_pubkey)
                 owner_pubkey = info.identity_pubkey;
