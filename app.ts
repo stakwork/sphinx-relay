@@ -47,7 +47,7 @@ async function start() {
   // // IF NOT UNLOCK, go ahead and start this now
   if (config.hub_api_url && !config.unlock) {
     pingHubInterval(30000)
-    genUsersInterval(15000)
+    genUsersInterval(60000)
   }
 }
 start()
