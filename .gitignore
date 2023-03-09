@@ -45,3 +45,4 @@ src/tests/configs/*
 src/tests/configs/nodes.json
 .idea/
 coverage/
+testing/stack2

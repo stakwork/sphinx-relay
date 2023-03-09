@@ -18,10 +18,10 @@ const msg_1 = require("../utils/msg");
 const get_1 = require("../utils/get");
 const nodes_1 = require("../nodes");
 ava_1.default.serial('test-09-chatInvoice: add contact, send invoices, pay invoices, delete contact', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    // await iterate(nodes, async (node1, node2) => {
-    //   await chatInvoice(t, node1, node2)
-    // })
-    yield chatInvoice(t, nodes_1.default[3], nodes_1.default[4]);
+    yield helpers.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+        yield chatInvoice(t, node1, node2);
+    }));
+    // await chatInvoice(t, nodes[3], nodes[4])
 }));
 function chatInvoice(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {

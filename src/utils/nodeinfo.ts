@@ -15,35 +15,6 @@ export enum NodeType {
   NODE_GREENLIGHT = 'node_greenlight',
 }
 
-export async function proxynodeinfo(pk: string): Promise<{
-  pubkey: string
-  number_channels: number
-  open_channel_data: interfaces.Channel[]
-  largest_local_balance: number
-  largest_remote_balance: number
-  total_local_balance: number
-  node_type: NodeType.NODE_VIRTUAL
-}> {
-  const channelList = await Lightning.listChannels({})
-  if (!channelList) throw new Error('cant get channels')
-  const { channels } = channelList
-  const localBalances = channels.map((c) => parseInt(c.local_balance))
-  const remoteBalances = channels.map((c) => parseInt(c.remote_balance))
-  const largestLocalBalance = Math.max(...localBalances)
-  const largestRemoteBalance = Math.max(...remoteBalances)
-  const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0)
-  return {
-    pubkey: pk,
-    number_channels: channels.length,
-    open_channel_data: channels,
-    largest_local_balance: largestLocalBalance,
-    largest_remote_balance: largestRemoteBalance,
-    total_local_balance: totalLocalBalance,
-    // node_type: 'node_virtual'
-    node_type: NodeType.NODE_VIRTUAL,
-  }
-}
-
 export interface NodeInfoCore {
   pubkey: string
   last_active: string
@@ -88,7 +59,8 @@ export async function nodeinfo(): Promise<NodeInfoCore | NodeInfo | undefined> {
 
   try {
     const tryProxy = false
-    info = await Lightning.getInfo(tryProxy)
+    const noCache = true // make sure its not virtual user
+    info = await Lightning.getInfo(tryProxy, noCache)
     if (info.identity_pubkey) owner_pubkey = info.identity_pubkey
   } catch (e) {
     // no LND
