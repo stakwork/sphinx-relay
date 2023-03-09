@@ -90,20 +90,13 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
             }
             let meta = JSON.parse(bot.meta || `{}`);
             const url = meta.url;
-            console.log('+++++++++++++ SENTIMENT META', meta);
             if (url) {
                 const sentiment = yield getSentiment(url);
-                console.log('++++++++++++ Sendtiment', sentiment);
                 const newThreshold = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
-                console.log(0 / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length));
-                console.log('New Threshold', newThreshold);
                 if (typeof newThreshold === 'number') {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
                     const threshold = (meta === null || meta === void 0 ? void 0 : meta.threshold) || 10;
-                    console.log('++++++++++ threshold', threshold);
                     const diff = newThreshold - last_result;
-                    console.log('++++++++++ difference', diff);
-                    console.log('+++++++++ last result', last_result);
                     if (diff >= (last_result * threshold) / 100 &&
                         (diff !== 0 || last_result * threshold !== 0)) {
                         // Send Alert to tribe
@@ -113,7 +106,6 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
                         meta: JSON.stringify(Object.assign(Object.assign({}, meta), { last_result: newThreshold })),
                     });
                 }
-                console.log('++++++++++ THRESHOLD FROM ENDPOINT', newThreshold);
             }
         }
         catch (error) {

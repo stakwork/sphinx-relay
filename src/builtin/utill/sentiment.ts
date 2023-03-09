@@ -151,26 +151,23 @@ export async function checkThreshold(
     }
     let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
     const url = meta.url
-    console.log('+++++++++++++ SENTIMENT META', meta)
+
     if (url) {
       const sentiment: SentimentScore[] = await getSentiment(url)
-      console.log('++++++++++++ Sendtiment', sentiment)
+
       const newThreshold =
         sentiment?.reduce(
           (total: number, value: SentimentScore) =>
             total + value.sentiment_score,
           0
         ) / sentiment?.length
-      console.log(0 / sentiment?.length)
-      console.log('New Threshold', newThreshold)
+
       if (typeof newThreshold === 'number') {
         const last_result = meta?.last_result || 0
         const threshold = meta?.threshold || 10
-        console.log('++++++++++ threshold', threshold)
-        const diff = newThreshold - last_result
-        console.log('++++++++++ difference', diff)
 
-        console.log('+++++++++ last result', last_result)
+        const diff = newThreshold - last_result
+
         if (
           diff >= (last_result * threshold) / 100 &&
           (diff !== 0 || last_result * threshold !== 0)
@@ -189,7 +186,6 @@ export async function checkThreshold(
           meta: JSON.stringify({ ...meta, last_result: newThreshold }),
         })
       }
-      console.log('++++++++++ THRESHOLD FROM ENDPOINT', newThreshold)
     }
   } catch (error) {
     sphinxLogger.error([`SENTIMENT BOT ERROR ${error}`, logging.Bots])
