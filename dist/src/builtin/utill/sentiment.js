@@ -94,7 +94,9 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
             if (url) {
                 const sentiment = yield getSentiment(url);
                 console.log('++++++++++++ Sendtiment', sentiment);
-                const newThreshold = sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0);
+                const newThreshold = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
+                console.log(0 / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length));
+                console.log('New Threshold', newThreshold);
                 if (typeof newThreshold === 'number') {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
                     const threshold = (meta === null || meta === void 0 ? void 0 : meta.threshold) || 10;

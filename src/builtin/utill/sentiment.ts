@@ -155,10 +155,14 @@ export async function checkThreshold(
     if (url) {
       const sentiment: SentimentScore[] = await getSentiment(url)
       console.log('++++++++++++ Sendtiment', sentiment)
-      const newThreshold = sentiment?.reduce(
-        (total: number, value: SentimentScore) => total + value.sentiment_score,
-        0
-      )
+      const newThreshold =
+        sentiment?.reduce(
+          (total: number, value: SentimentScore) =>
+            total + value.sentiment_score,
+          0
+        ) / sentiment?.length
+      console.log(0 / sentiment?.length)
+      console.log('New Threshold', newThreshold)
       if (typeof newThreshold === 'number') {
         const last_result = meta?.last_result || 0
         const threshold = meta?.threshold || 10
