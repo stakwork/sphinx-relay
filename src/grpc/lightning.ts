@@ -876,14 +876,18 @@ export async function pendingChannels(ownerPubkey?: string): Promise<{
 }> {
   sphinxLogger.info('pendingChannels', logging.Lightning)
   const lightning = await loadLightning(true, ownerPubkey) // try proxy
+  const emptyChans = {
+    total_limbo_balance: '0',
+    pending_open_channels: [],
+    pending_closing_channels: [],
+    pending_force_closing_channels: [],
+    waiting_close_channels: [],
+  }
   if (isGL(lightning)) {
-    return {
-      total_limbo_balance: '0',
-      pending_open_channels: [],
-      pending_closing_channels: [],
-      pending_force_closing_channels: [],
-      waiting_close_channels: [],
-    }
+    return emptyChans
+  }
+  if (isProxy()) {
+    return emptyChans
   }
   return new Promise((resolve, reject) => {
     // no pendingChannels on proxy??????

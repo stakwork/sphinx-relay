@@ -30,7 +30,7 @@ function timeout(i, node, paymentHash, resolve, reject) {
             }
         }
         if (i > 10) {
-            return reject(['failed to getCheckNewPaidMsgs']);
+            return reject(['failed to getCheckNewPaidInvoice']);
         }
         setTimeout(() => {
             timeout(i + 1, node, paymentHash, resolve, reject);

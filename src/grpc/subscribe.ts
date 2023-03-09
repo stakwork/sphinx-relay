@@ -23,7 +23,7 @@ export function subscribeInvoices(
     const cmd = interfaces.subscribeCommand()
     const call = lightning[cmd]({})
     call.on('data', async function (response) {
-      // console.log("=> INVOICE RAW", response)
+      // console.log('=> INVOICE RAW', response)
       const inv = interfaces.subscribeResponse(response)
       // console.log("INVOICE RECEIVED", inv)
       // loginvoice(inv)

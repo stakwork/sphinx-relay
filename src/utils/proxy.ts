@@ -8,6 +8,7 @@ import { models, ContactRecord } from '../models'
 import fetch from 'node-fetch'
 import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
+import { Op } from 'sequelize'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()
@@ -38,7 +39,9 @@ const NEW_USER_NUM =
   config.proxy_new_nodes || config.proxy_new_nodes === 0
     ? config.proxy_new_nodes
     : 2
-const SATS_PER_USER = config.proxy_initial_sats || 5000
+let SATS_PER_USER = config.proxy_initial_sats
+if (!(SATS_PER_USER || SATS_PER_USER === 0)) SATS_PER_USER = 5000
+
 // isOwner users with no authToken
 export async function generateNewUsers() {
   if (!isProxy()) {
@@ -46,7 +49,7 @@ export async function generateNewUsers() {
     return
   }
   const newusers = await models.Contact.findAll({
-    where: { isOwner: true, authToken: null },
+    where: { isOwner: true, authToken: null, id: { [Op.ne]: 1 } },
   })
   if (newusers.length >= NEW_USER_NUM) {
     sphinxLogger.info(`already have new users`, logging.Proxy)
@@ -76,9 +79,14 @@ export async function generateNewUsers() {
 
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
-  await asyncForEach(arr, async () => {
-    await generateNewUser(rootpk)
-  })
+  for (const _ of arr) {
+    try {
+      await generateNewUser(rootpk, SATS_PER_USER)
+    } catch (e) {
+      sphinxLogger.error('failed to generateNewUser' + e, logging.Proxy)
+      break
+    }
+  }
 }
 
 const adminURL = config.proxy_admin_url
@@ -88,33 +96,29 @@ export async function generateNewUser(
   rootpk: string,
   initial_sat?: number
 ): Promise<any> {
-  try {
-    let route = 'generate'
-    if (initial_sat) {
-      route = `generate?sats=${initial_sat}`
-      sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
-    }
-    const r = await fetch(adminURL + route, {
-      method: 'POST',
-      headers: { 'x-admin-token': config.proxy_admin_token },
-    })
-    const j = await r.json()
-    const contact = {
-      publicKey: j.pubkey,
-      routeHint: `${rootpk}:${j.channel}`,
-      isOwner: true,
-      authToken: null,
-    }
-    const created: ContactRecord = (await models.Contact.create(
-      contact
-    )) as ContactRecord
-    // set tenant to self!
-    created.update({ tenant: created.id })
-    sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
-    return created.dataValues
-  } catch (e) {
-    // sphinxLogger.error(`=> could not gen new user ${e}`)
+  let route = 'generate'
+  if (initial_sat || initial_sat === 0) {
+    route = `generate?sats=${initial_sat}`
+    sphinxLogger.info(`new user with sats: ${initial_sat}`, logging.Proxy)
   }
+  const r = await fetch(adminURL + route, {
+    method: 'POST',
+    headers: { 'x-admin-token': config.proxy_admin_token },
+  })
+  const j = await r.json()
+  const contact = {
+    publicKey: j.pubkey,
+    routeHint: `${rootpk}:${j.channel}`,
+    isOwner: true,
+    authToken: null,
+  }
+  const created: ContactRecord = (await models.Contact.create(
+    contact
+  )) as ContactRecord
+  // set tenant to self!
+  created.update({ tenant: created.id })
+  sphinxLogger.info(`=> CREATED OWNER: ${created.dataValues.publicKey}`)
+  return created.dataValues
 }
 
 export async function generateNewExternalUser(pubkey: string, sig: string) {
@@ -251,8 +255,16 @@ function getProxyLNDBalance(): Promise<number> {
   })
 }
 
-async function asyncForEach(array, callback) {
-  for (let index = 0; index < array.length; index++) {
-    await callback(array[index], index, array)
+export async function getProxyXpub() {
+  try {
+    const r = await fetch(adminURL + 'origin_xpub', {
+      method: 'GET',
+      headers: { 'x-admin-token': config.proxy_admin_token },
+    })
+    const j = await r.json()
+    return j
+  } catch (e) {
+    console.log(e)
+    throw e
   }
 }

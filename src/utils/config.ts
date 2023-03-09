@@ -33,6 +33,7 @@ const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
 const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
 // const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
+const DEFAULT_PROXY_HD_KEYS = false
 const DEFAULT_SENTIMENT_URL = ''
 
 export function loadConfig() {
@@ -139,5 +140,7 @@ export function loadConfig() {
       ENV.BOLTWALL_SERVER || config.boltwall_server || DEFAULT_BOLTWALL_SERVER,
     sentiment_url:
       ENV.SENTIMENT_URL || config.sentiment_url || DEFAULT_SENTIMENT_URL,
+    proxy_hd_keys:
+      ENV.PROXY_HD_KEYS || config.proxy_hd_keys || DEFAULT_PROXY_HD_KEYS,
   }
 }

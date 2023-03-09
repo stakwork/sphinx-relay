@@ -242,7 +242,7 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 isAdmin = false;
                 yield joinDefaultTribes(owner, theAdmin);
             }
-            tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage); // add MQTT subsription
+            tribes.newSubscription(owner, network.receiveMqttMessage);
         }
         if (isAdmin) {
             logger_1.sphinxLogger.info('Admin signing up!!!');

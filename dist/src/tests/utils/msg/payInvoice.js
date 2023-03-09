@@ -21,6 +21,7 @@ const payInvoice = (t, sendingNode, receivingNode, amount, payment_request) => _
     const receivingNodebeforeBalance = yield (0, get_1.getBalance)(t, receivingNode);
     const v = { payment_request };
     const r = yield http.put(sendingNode.external_ip + '/invoices', (0, helpers_1.makeArgs)(sendingNode, v));
+    console.log('-> payInvoice res', sendingNode.alias, r);
     t.true(r.success, 'Put method should have succeeded');
     const paymentHash = r.response.payment_hash;
     t.truthy(paymentHash, 'paymentHash should exist');
