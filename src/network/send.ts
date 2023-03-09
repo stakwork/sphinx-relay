@@ -293,11 +293,17 @@ export function signAndSend(
         the message through to the rest of the members, but sending
         to the other members in the chat should not cost sats      */
       if (mqttTopic) {
-        await tribes.publish(mqttTopic, data, ownerPubkey, () => {
-          if (!replayingHistory) {
-            if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
-          }
-        })
+        await tribes.publish(
+          mqttTopic,
+          data,
+          ownerPubkey,
+          () => {
+            if (!replayingHistory) {
+              if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
+            }
+          },
+          ownerID === 1 // first user doesn't use xpub auth
+        )
       } else {
         await LND.keysendMessage(
           { ...opts, data } as LND.KeysendOpts,

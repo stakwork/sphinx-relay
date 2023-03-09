@@ -15,11 +15,6 @@ import moment = require('moment')
 
 const config = loadConfig()
 
-/*
-"unlock": true,
-"encrypted_macaroon_path": "/relay/.lnd/admin.macaroon.enc"
-*/
-
 export async function unlocker(req: Req, res): Promise<boolean> {
   const { password } = req.body
   if (!password) {

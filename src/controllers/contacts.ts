@@ -261,7 +261,7 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
         isAdmin = false
         await joinDefaultTribes(owner, theAdmin)
       }
-      tribes.subscribe(`${pubkey}/#`, network.receiveMqttMessage) // add MQTT subsription
+      tribes.newSubscription(owner, network.receiveMqttMessage)
     }
     if (isAdmin) {
       sphinxLogger.info('Admin signing up!!!')

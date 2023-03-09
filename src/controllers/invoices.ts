@@ -44,7 +44,7 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
       req.owner.publicKey
     )
 
-    sphinxLogger.info(`[pay invoice data] ${response}`)
+    sphinxLogger.info(`[pay invoice data] ${JSON.stringify(response)}`)
 
     const message: MessageRecord = (await models.Message.findOne({
       where: { payment_request, tenant },
@@ -243,7 +243,7 @@ export const listInvoices = async (req: Req, res: Response): Promise<void> => {
 }
 
 export const receiveInvoice = async (payload: Payload): Promise<void> => {
-  sphinxLogger.info(`received invoice ${payload}`)
+  sphinxLogger.info(`received invoice ${payload.message.invoice}`)
 
   const total_spent = 1
   const dat = payload
