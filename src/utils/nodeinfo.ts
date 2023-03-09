@@ -60,6 +60,7 @@ export async function nodeinfo(): Promise<NodeInfoCore | NodeInfo | undefined> {
   try {
     const tryProxy = false
     info = await Lightning.getInfo(tryProxy)
+    console.log('-----> nodeinfo ', info)
     if (info.identity_pubkey) owner_pubkey = info.identity_pubkey
   } catch (e) {
     // no LND
