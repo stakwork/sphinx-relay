@@ -38,7 +38,7 @@ function init() {
         if (!interval) {
             interval = setInterval(() => {
                 (0, sentiment_1.checkThreshold)(tribe, botName, botPrefix, interval, 'threshold', message);
-            }, (0, sentiment_1.timerMs)(1));
+            }, (0, sentiment_1.timerMs)(60));
         }
         if (arr[0] === botPrefix) {
             const cmd = arr[1];
