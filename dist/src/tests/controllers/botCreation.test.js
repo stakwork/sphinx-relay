@@ -56,8 +56,8 @@ function botCreation(t, node1, node2, node3) {
         t.truthy(botReply2, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply2))
         // await sleep(60000)
-        // const text22 = '/sentiment timer 5'
-        // await sendTribeMessage(t, node1, tribe, text22)
+        const text22 = '/sentiment url http://localhost:5000/sentiments';
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text22);
         //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
         const setMessage = '/welcome setmessage ';
         const newWelcomeMessage = "You're in my test tribe now";

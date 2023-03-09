@@ -130,64 +130,7 @@ function getSentiment(url) {
             if (!r.ok) {
                 throw 'failed to get sentiment ' + r.status;
             }
-            // const res = await r.json()
-            //   return res
-            const res = {
-                data: [
-                    {
-                        date_added_to_graph: '1678216636.390903',
-                        sentiment_score: 2,
-                    },
-                    {
-                        date_added_to_graph: '1678214894.6002529',
-                        sentiment_score: 2,
-                    },
-                    {
-                        date_added_to_graph: '1678214837.070613',
-                        sentiment_score: 9,
-                    },
-                    {
-                        date_added_to_graph: '1678142973.310696',
-                        sentiment_score: 9,
-                    },
-                    {
-                        date_added_to_graph: '1678142948.614592',
-                        sentiment_score: 8,
-                    },
-                    {
-                        date_added_to_graph: '1678142931.287526',
-                        sentiment_score: 7,
-                    },
-                    {
-                        date_added_to_graph: '1678142921.061992',
-                        sentiment_score: 6,
-                    },
-                    {
-                        date_added_to_graph: '1678142909.395699',
-                        sentiment_score: 5,
-                    },
-                    {
-                        date_added_to_graph: '1678142894.856799',
-                        sentiment_score: 3,
-                    },
-                    {
-                        date_added_to_graph: '1678142888.8225641',
-                        sentiment_score: 3,
-                    },
-                    {
-                        date_added_to_graph: '1678142877.288387',
-                        sentiment_score: 2,
-                    },
-                    {
-                        date_added_to_graph: '1678142867.893755',
-                        sentiment_score: 1,
-                    },
-                    {
-                        date_added_to_graph: '1678140944.6455538',
-                        sentiment_score: 3,
-                    },
-                ],
-            };
+            const res = yield r.json();
             return (res === null || res === void 0 ? void 0 : res.data) || [];
         }
         catch (error) {
