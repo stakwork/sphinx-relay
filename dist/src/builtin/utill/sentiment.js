@@ -81,6 +81,7 @@ function timerMs(mins) {
 exports.timerMs = timerMs;
 function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
     return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info(`SENTIMENT BOT GOING TO GET SENTIMENT`, logger_1.logging.Bots);
         try {
             const bot = (yield models_1.models.ChatBot.findOne({
                 where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
@@ -147,7 +148,7 @@ function updateUrl(botPrefix, botName, url, tribe, command, message) {
             let meta = JSON.parse(bot.meta || `{}`);
             meta.url = url;
             yield bot.update({ meta: JSON.stringify(meta) });
-            return yield botResponse(botName, 'sentiment Url updated Successfully', botPrefix, tribe.id, message, command);
+            return yield botResponse(botName, 'Sentiment Url updated Successfully', botPrefix, tribe.id, message, command);
         }
         catch (error) {
             logger_1.sphinxLogger.error([`SENTIMENT BOT ERROR ${error}`, logger_1.logging.Bots]);

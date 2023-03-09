@@ -141,6 +141,7 @@ export async function checkThreshold(
   command: string,
   message: Sphinx.Message
 ) {
+  sphinxLogger.info(`SENTIMENT BOT GOING TO GET SENTIMENT`, logging.Bots)
   try {
     const bot = (await models.ChatBot.findOne({
       where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
@@ -240,7 +241,7 @@ export async function updateUrl(
     await bot.update({ meta: JSON.stringify(meta) })
     return await botResponse(
       botName,
-      'sentiment Url updated Successfully',
+      'Sentiment Url updated Successfully',
       botPrefix,
       tribe.id,
       message,

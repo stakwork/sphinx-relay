@@ -46,7 +46,7 @@ export function init() {
           'threshold',
           message
         )
-      }, timerMs(1))
+      }, timerMs(60))
     }
 
     if (arr[0] === botPrefix) {
