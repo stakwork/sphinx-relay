@@ -76,7 +76,7 @@ export async function generateNewUsers() {
 
   const arr = new Array(n)
   const rootpk = await getProxyRootPubkey()
-  for (var _ of arr) {
+  for (const _ of arr) {
     try {
       await generateNewUser(rootpk)
     } catch (e) {
