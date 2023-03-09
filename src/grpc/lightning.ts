@@ -96,8 +96,10 @@ export async function loadLightning(
   ownerPubkey?: string,
   noCache?: boolean
 ): Promise<LightningClient | ProxyLightningClient | NodeClient> {
+  console.log('===== loadLightning', tryProxy, ownerPubkey, noCache)
   // only if specified AND available
   if (tryProxy && isProxy() && ownerPubkey) {
+    console.log('===== PROXY', ownerPubkey)
     lightningClient = await loadProxyLightning(ownerPubkey)
     if (!lightningClient) {
       throw new Error('no lightning client')
@@ -105,6 +107,8 @@ export async function loadLightning(
     return lightningClient
   }
   if (lightningClient && !noCache) {
+    console.log('===== return lightningClient')
+
     return lightningClient
   }
 
@@ -123,6 +127,7 @@ export async function loadLightning(
   }
 
   // LND
+  console.log('==== lnd now')
   const credentials = loadCredentials()
   const lnrpcDescriptor = loadProto('lightning')
   const lnrpc = lnrpcDescriptor.lnrpc

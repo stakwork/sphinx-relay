@@ -72,8 +72,10 @@ const loadGreenlightCredentials = () => {
 };
 function loadLightning(tryProxy, ownerPubkey, noCache) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('===== loadLightning', tryProxy, ownerPubkey, noCache);
         // only if specified AND available
         if (tryProxy && (0, proxy_1.isProxy)() && ownerPubkey) {
+            console.log('===== PROXY', ownerPubkey);
             lightningClient = yield (0, proxy_1.loadProxyLightning)(ownerPubkey);
             if (!lightningClient) {
                 throw new Error('no lightning client');
@@ -81,6 +83,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             return lightningClient;
         }
         if (lightningClient && !noCache) {
+            console.log('===== return lightningClient');
             return lightningClient;
         }
         if (IS_GREENLIGHT) {
@@ -97,6 +100,7 @@ function loadLightning(tryProxy, ownerPubkey, noCache) {
             return (lightningClient = new greenlight.Node(uri[1], credentials, options));
         }
         // LND
+        console.log('==== lnd now');
         const credentials = loadCredentials();
         const lnrpcDescriptor = (0, proto_1.loadProto)('lightning');
         const lnrpc = lnrpcDescriptor.lnrpc;
