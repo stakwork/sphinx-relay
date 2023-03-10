@@ -28,19 +28,27 @@ function init() {
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
         var _a;
-        if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== botPrefix &&
-            message.content !== '/bot install sentiment')
-            return;
+        // if (
+        //   message.author?.bot !== botPrefix &&
+        //   message.content !== '/bot install sentiment'
+        // )
+        //   return
         const arr = (message.content && message.content.split(' ')) || [];
         const tribe = (yield models_1.models.Chat.findOne({
             where: { uuid: message.channel.id },
         }));
         if (!interval) {
+            const bot = (yield models_1.models.ChatBot.findOne({
+                where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+            }));
+            if (!bot)
+                return;
+            let meta = JSON.parse(bot.meta || `{}`);
             interval = setInterval(() => {
                 (0, sentiment_1.checkThreshold)(tribe, botName, botPrefix, interval, 'threshold', message);
-            }, (0, sentiment_1.timerMs)(60));
+            }, (0, sentiment_1.timerMs)(meta.timer || 60));
         }
-        if (arr[0] === botPrefix) {
+        if (arr[0] === botPrefix && ((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) === botPrefix) {
             const cmd = arr[1];
             switch (cmd) {
                 case 'threshold':

@@ -4,7 +4,7 @@ import { ChatBotRecord, ChatRecord, models } from '../../models'
 import { sphinxLogger, logging } from '../../utils/logger'
 import fetch from 'node-fetch'
 
-interface SentimentMeta {
+export interface SentimentMeta {
   threshold: number
   last_result: number
   timer: number
@@ -165,19 +165,21 @@ export async function checkThreshold(
 
       if (typeof newResult === 'number') {
         const last_result = meta?.last_result || 0
+
         const threshold = meta?.threshold || 10
-        const maximum_result = 100
-        const diff = (Math.abs(newResult - last_result) / maximum_result) * 100
-        console.log('++++++++++++ Difference', diff)
+        const diff = (Math.abs(newResult - last_result) / last_result) * 100
+
         if (diff >= threshold) {
+          let direction = 'increased'
+          if (newResult < last_result) direction = 'decreased'
           // Send Alert to tribe
           botResponse(
             botName,
-            'Sentiment has increased by some percentage',
+            `Sentiment has ${direction} by ${Math.round(diff)}%`,
             botPrefix,
             tribe.id,
             message,
-            command || 'threshold'
+            ''
           )
         }
         await bot.update({

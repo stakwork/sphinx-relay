@@ -8,6 +8,7 @@ import {
   timer,
   updateUrl,
   timerMs,
+  SentimentMeta,
 } from './utill/sentiment'
 
 const msg_types = Sphinx.MSG_TYPE
@@ -25,11 +26,11 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    if (
-      message.author?.bot !== botPrefix &&
-      message.content !== '/bot install sentiment'
-    )
-      return
+    // if (
+    //   message.author?.bot !== botPrefix &&
+    //   message.content !== '/bot install sentiment'
+    // )
+    //   return
     const arr = (message.content && message.content.split(' ')) || []
 
     const tribe = (await models.Chat.findOne({
@@ -37,6 +38,13 @@ export function init() {
     })) as ChatRecord
 
     if (!interval) {
+      const bot = (await models.ChatBot.findOne({
+        where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+      })) as ChatRecord
+
+      if (!bot) return
+      let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
+
       interval = setInterval(() => {
         checkThreshold(
           tribe,
@@ -46,10 +54,10 @@ export function init() {
           'threshold',
           message
         )
-      }, timerMs(60))
+      }, timerMs(meta.timer || 60))
     }
 
-    if (arr[0] === botPrefix) {
+    if (arr[0] === botPrefix && message.author?.bot === botPrefix) {
       const cmd = arr[1]
       switch (cmd) {
         case 'threshold':

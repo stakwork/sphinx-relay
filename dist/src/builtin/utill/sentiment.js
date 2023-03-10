@@ -97,12 +97,13 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
                 if (typeof newResult === 'number') {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
                     const threshold = (meta === null || meta === void 0 ? void 0 : meta.threshold) || 10;
-                    const maximum_result = 100;
-                    const diff = (Math.abs(newResult - last_result) / maximum_result) * 100;
-                    console.log('++++++++++++ Difference', diff);
+                    const diff = (Math.abs(newResult - last_result) / last_result) * 100;
                     if (diff >= threshold) {
+                        let direction = 'increased';
+                        if (newResult < last_result)
+                            direction = 'decreased';
                         // Send Alert to tribe
-                        botResponse(botName, 'Sentiment has increased by some percentage', botPrefix, tribe.id, message, command || 'threshold');
+                        botResponse(botName, `Sentiment has ${direction} by ${Math.round(diff)}%`, botPrefix, tribe.id, message, '');
                     }
                     yield bot.update({
                         meta: JSON.stringify(Object.assign(Object.assign({}, meta), { last_result: newResult })),
