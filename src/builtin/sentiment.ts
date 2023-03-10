@@ -25,11 +25,11 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    if (
-      message.author?.bot !== botPrefix &&
-      message.content !== '/bot install sentiment'
-    )
-      return
+    // if (
+    //   message.author?.bot !== botPrefix &&
+    //   message.content !== '/bot install sentiment'
+    // )
+    //   return
     const arr = (message.content && message.content.split(' ')) || []
 
     const tribe = (await models.Chat.findOne({

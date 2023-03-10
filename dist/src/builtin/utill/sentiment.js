@@ -15,6 +15,7 @@ const hideAndUnhideCommand_1 = require("../../controllers/botapi/hideAndUnhideCo
 const models_1 = require("../../models");
 const logger_1 = require("../../utils/logger");
 const node_fetch_1 = require("node-fetch");
+let multiplier = 2;
 function botResponse(botName, message, botPrefix, tribeId, botMessage, command) {
     return __awaiter(this, void 0, void 0, function* () {
         const embed = new Sphinx.MessageEmbed()
@@ -93,6 +94,11 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
             const url = meta.url;
             if (url) {
                 const sentiment = yield getSentiment(url);
+                sentiment.push({
+                    date_added_to_graph: '1678327916.9007187',
+                    sentiment_score: multiplier * 200,
+                });
+                multiplier += 1;
                 const newResult = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
                 if (typeof newResult === 'number') {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
