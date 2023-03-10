@@ -101,8 +101,10 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
                 multiplier += 1;
                 const newResult = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
                 console.log('++++++++++ Manipulated Sentiment', sentiment);
+                console.log('+++++++++++++ new result', newResult);
                 if (typeof newResult === 'number') {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
+                    console.log('+++++++++++++++ last result', last_result);
                     const threshold = (meta === null || meta === void 0 ? void 0 : meta.threshold) || 10;
                     const maximum_result = 100;
                     const diff = (Math.abs(newResult - last_result) / maximum_result) * 100;
