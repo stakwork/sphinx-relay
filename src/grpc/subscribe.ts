@@ -89,7 +89,7 @@ export async function reconnectToLightning(
   i++
   sphinxLogger.info(`reconnecting... attempt #${i}`, logging.Lightning)
   try {
-    await network.initGrpcSubscriptions(true)
+    await network.initGrpcSubscriptions()
     sphinxLogger.info(`connected!`, logging.Lightning)
     if (callback) callback()
   } catch (e) {

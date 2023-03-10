@@ -432,14 +432,14 @@ function forwardMessageToTribe(ogpayload, sender, realSatsContactId, amtToForwar
         });
     });
 }
-function initGrpcSubscriptions(noCache) {
+function initGrpcSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             if (config.lightning_provider === 'GREENLIGHT') {
                 yield Greenlight.initGreenlight();
                 Greenlight.keepalive();
             }
-            yield Lightning.getInfo(true, noCache); // try proxy
+            yield Lightning.getInfo(true);
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

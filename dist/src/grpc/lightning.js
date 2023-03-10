@@ -70,17 +70,18 @@ const loadGreenlightCredentials = () => {
     const glChain = fs.readFileSync(config.tls_chain_location);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
-function loadLightning(tryProxy, ownerPubkey, noCache) {
+function loadLightning(tryProxy, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // only if specified AND available
         if (tryProxy && (0, proxy_1.isProxy)() && ownerPubkey) {
-            lightningClient = yield (0, proxy_1.loadProxyLightning)(ownerPubkey);
-            if (!lightningClient) {
+            // do not cache proxy lightning
+            const theLightningClient = yield (0, proxy_1.loadProxyLightning)(ownerPubkey);
+            if (!theLightningClient) {
                 throw new Error('no lightning client');
             }
-            return lightningClient;
+            return theLightningClient;
         }
-        if (lightningClient && !noCache) {
+        if (lightningClient) {
             return lightningClient;
         }
         if (IS_GREENLIGHT) {
@@ -701,13 +702,13 @@ function verifyAscii(ascii, sig, ownerPubkey) {
     });
 }
 exports.verifyAscii = verifyAscii;
-function getInfo(tryProxy, noCache) {
+function getInfo(tryProxy) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('getInfo')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 // try proxy
-                const lightning = yield loadLightning(tryProxy === false ? false : true, undefined, noCache);
+                const lightning = yield loadLightning(tryProxy === false ? false : true, undefined);
                 lightning.getInfo({}, function (err, response) {
                     if (err == null) {
                         resolve(interfaces.getInfoResponse(response));

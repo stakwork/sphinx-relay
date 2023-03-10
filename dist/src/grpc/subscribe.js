@@ -93,7 +93,7 @@ function reconnectToLightning(innerCtx, callback, noCache) {
         i++;
         logger_1.sphinxLogger.info(`reconnecting... attempt #${i}`, logger_1.logging.Lightning);
         try {
-            yield network.initGrpcSubscriptions(true);
+            yield network.initGrpcSubscriptions();
             logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Lightning);
             if (callback)
                 callback();
