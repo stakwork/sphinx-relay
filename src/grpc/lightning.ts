@@ -83,28 +83,26 @@ const loadGreenlightCredentials = () => {
 export async function loadLightning(): Promise<LightningClient | NodeClient>
 export async function loadLightning(
   tryProxy: false,
-  ownerPubkey?: string,
-  noCache?: boolean
+  ownerPubkey?: string
 ): Promise<LightningClient | NodeClient>
 export async function loadLightning(
   tryProxy?: boolean,
-  ownerPubkey?: string,
-  noCache?: boolean
+  ownerPubkey?: string
 ): Promise<LightningClient | ProxyLightningClient | NodeClient>
 export async function loadLightning(
   tryProxy?: boolean,
-  ownerPubkey?: string,
-  noCache?: boolean
+  ownerPubkey?: string
 ): Promise<LightningClient | ProxyLightningClient | NodeClient> {
   // only if specified AND available
   if (tryProxy && isProxy() && ownerPubkey) {
-    lightningClient = await loadProxyLightning(ownerPubkey)
-    if (!lightningClient) {
+    // do not cache proxy lightning
+    const theLightningClient = await loadProxyLightning(ownerPubkey)
+    if (!theLightningClient) {
       throw new Error('no lightning client')
     }
-    return lightningClient
+    return theLightningClient
   }
-  if (lightningClient && !noCache) {
+  if (lightningClient) {
     return lightningClient
   }
 
@@ -771,8 +769,7 @@ export async function verifyAscii(
 }
 
 export async function getInfo(
-  tryProxy?: boolean,
-  noCache?: boolean
+  tryProxy?: boolean
 ): Promise<interfaces.GetInfoResponse> {
   // log('getInfo')
   return new Promise(async (resolve, reject) => {
@@ -780,8 +777,7 @@ export async function getInfo(
       // try proxy
       const lightning = await loadLightning(
         tryProxy === false ? false : true,
-        undefined,
-        noCache
+        undefined
       )
       // TODO remove any
       ;(<any>lightning).getInfo({}, function (err, response) {

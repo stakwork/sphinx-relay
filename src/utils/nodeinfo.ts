@@ -59,8 +59,7 @@ export async function nodeinfo(): Promise<NodeInfoCore | NodeInfo | undefined> {
 
   try {
     const tryProxy = false
-    const noCache = true // make sure its not virtual user
-    info = await Lightning.getInfo(tryProxy, noCache)
+    info = await Lightning.getInfo(tryProxy)
     if (info.identity_pubkey) owner_pubkey = info.identity_pubkey
   } catch (e) {
     // no LND

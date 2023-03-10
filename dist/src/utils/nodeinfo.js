@@ -31,8 +31,7 @@ function nodeinfo() {
         let info;
         try {
             const tryProxy = false;
-            const noCache = true; // make sure its not virtual user
-            info = yield Lightning.getInfo(tryProxy, noCache);
+            info = yield Lightning.getInfo(tryProxy);
             if (info.identity_pubkey)
                 owner_pubkey = info.identity_pubkey;
         }
