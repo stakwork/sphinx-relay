@@ -168,7 +168,7 @@ export async function checkThreshold(
             total + value.sentiment_score,
           0
         ) / sentiment?.length
-
+      console.log('++++++++++ Manipulated Sentiment', sentiment)
       if (typeof newResult === 'number') {
         const last_result = meta?.last_result || 0
         const threshold = meta?.threshold || 10
