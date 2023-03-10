@@ -55,7 +55,7 @@ export function init() {
       }, timerMs(meta.timer || 60))
     }
     console.log('++++++++++++ Interval 2', interval)
-    if (arr[0] === botPrefix) {
+    if (arr[0] === botPrefix && message.author?.bot === botPrefix) {
       const cmd = arr[1]
       switch (cmd) {
         case 'threshold':

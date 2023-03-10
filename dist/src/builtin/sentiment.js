@@ -27,6 +27,7 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
+        var _a;
         // if (
         //   message.author?.bot !== botPrefix &&
         //   message.content !== '/bot install sentiment'
@@ -47,7 +48,7 @@ function init() {
             }, (0, sentiment_1.timerMs)(meta.timer || 60));
         }
         console.log('++++++++++++ Interval 2', interval);
-        if (arr[0] === botPrefix) {
+        if (arr[0] === botPrefix && ((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) === botPrefix) {
             const cmd = arr[1];
             switch (cmd) {
                 case 'threshold':
