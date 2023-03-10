@@ -168,21 +168,20 @@ export async function checkThreshold(
             total + value.sentiment_score,
           0
         ) / sentiment?.length
-      console.log('++++++++++ Manipulated Sentiment', sentiment)
-      console.log('+++++++++++++ new result', newResult)
+
       if (typeof newResult === 'number') {
         const last_result = meta?.last_result || 0
-        console.log('+++++++++++++++ last result', last_result)
+
         const threshold = meta?.threshold || 10
         const diff = (Math.abs(newResult - last_result) / last_result) * 100
-        console.log('++++++++++++ Difference', diff)
+
         if (diff >= threshold) {
           let direction = 'increased'
           if (newResult < last_result) direction = 'decreased'
           // Send Alert to tribe
           botResponse(
             botName,
-            `Sentiment has ${direction} by ${Math.round(diff)} percentage`,
+            `Sentiment has ${direction} by ${Math.round(diff)}%`,
             botPrefix,
             tribe.id,
             message,
