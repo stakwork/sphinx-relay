@@ -177,7 +177,7 @@ export async function checkThreshold(
             botPrefix,
             tribe.id,
             message,
-            command || 'threshold'
+            ''
           )
         }
         await bot.update({

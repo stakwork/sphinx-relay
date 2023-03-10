@@ -102,7 +102,7 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
                     console.log('++++++++++++ Difference', diff);
                     if (diff >= threshold) {
                         // Send Alert to tribe
-                        botResponse(botName, 'Sentiment has increased by some percentage', botPrefix, tribe.id, message, command || 'threshold');
+                        botResponse(botName, 'Sentiment has increased by some percentage', botPrefix, tribe.id, message, '');
                     }
                     yield bot.update({
                         meta: JSON.stringify(Object.assign(Object.assign({}, meta), { last_result: newResult })),
