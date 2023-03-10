@@ -98,7 +98,7 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
                     date_added_to_graph: '1678327916.9007187',
                     sentiment_score: multiplier * 200,
                 });
-                multiplier += 1;
+                multiplier += 10;
                 const newResult = (sentiment === null || sentiment === void 0 ? void 0 : sentiment.reduce((total, value) => total + value.sentiment_score, 0)) / (sentiment === null || sentiment === void 0 ? void 0 : sentiment.length);
                 console.log('++++++++++ Manipulated Sentiment', sentiment);
                 console.log('+++++++++++++ new result', newResult);
@@ -106,12 +106,14 @@ function checkThreshold(tribe, botName, botPrefix, interval, command, message) {
                     const last_result = (meta === null || meta === void 0 ? void 0 : meta.last_result) || 0;
                     console.log('+++++++++++++++ last result', last_result);
                     const threshold = (meta === null || meta === void 0 ? void 0 : meta.threshold) || 10;
-                    const maximum_result = 100;
-                    const diff = (Math.abs(newResult - last_result) / maximum_result) * 100;
+                    const diff = (Math.abs(newResult - last_result) / last_result) * 100;
                     console.log('++++++++++++ Difference', diff);
                     if (diff >= threshold) {
+                        let direction = 'increased';
+                        if (newResult < last_result)
+                            direction = 'decreased';
                         // Send Alert to tribe
-                        botResponse(botName, 'Sentiment has increased by some percentage', botPrefix, tribe.id, message, '');
+                        botResponse(botName, `Sentiment has ${direction} by ${Math.round(diff)} percentage`, botPrefix, tribe.id, message, '');
                     }
                     yield bot.update({
                         meta: JSON.stringify(Object.assign(Object.assign({}, meta), { last_result: newResult })),

@@ -161,7 +161,7 @@ export async function checkThreshold(
         date_added_to_graph: '1678327916.9007187',
         sentiment_score: multiplier * 200,
       })
-      multiplier += 1
+      multiplier += 10
       const newResult =
         sentiment?.reduce(
           (total: number, value: SentimentScore) =>
@@ -174,14 +174,15 @@ export async function checkThreshold(
         const last_result = meta?.last_result || 0
         console.log('+++++++++++++++ last result', last_result)
         const threshold = meta?.threshold || 10
-        const maximum_result = 100
-        const diff = (Math.abs(newResult - last_result) / maximum_result) * 100
+        const diff = (Math.abs(newResult - last_result) / last_result) * 100
         console.log('++++++++++++ Difference', diff)
         if (diff >= threshold) {
+          let direction = 'increased'
+          if (newResult < last_result) direction = 'decreased'
           // Send Alert to tribe
           botResponse(
             botName,
-            'Sentiment has increased by some percentage',
+            `Sentiment has ${direction} by ${Math.round(diff)} percentage`,
             botPrefix,
             tribe.id,
             message,
