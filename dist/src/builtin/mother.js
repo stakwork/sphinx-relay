@@ -31,6 +31,7 @@ const builtinBots = [
     'badge',
     'callRecording',
     'kick',
+    'sentiment',
 ];
 // else just message type
 const builtInBotMsgTypes = {
@@ -48,6 +49,7 @@ const builtInBotMsgTypes = {
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],
     kick: ['hide', 'add', 'remove'],
+    sentiment: ['threshold', 'timer', 'url'],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
@@ -56,6 +58,7 @@ const builtInBotNames = {
     badge: 'BadgeBot',
     callRecording: 'CallRecordingBot',
     kick: 'KickBot',
+    sentiment: 'SentimentBot',
 };
 function init() {
     const client = new Sphinx.Client();

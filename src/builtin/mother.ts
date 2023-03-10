@@ -23,6 +23,7 @@ const builtinBots = [
   'badge',
   'callRecording',
   'kick',
+  'sentiment',
 ]
 
 // else just message type
@@ -42,6 +43,7 @@ const builtInBotMsgTypes = {
 const builtInHiddenCmd = {
   callRecording: ['hide', 'update'],
   kick: ['hide', 'add', 'remove'],
+  sentiment: ['threshold', 'timer', 'url'],
 }
 
 const builtInBotNames = {
@@ -51,6 +53,7 @@ const builtInBotNames = {
   badge: 'BadgeBot',
   callRecording: 'CallRecordingBot',
   kick: 'KickBot',
+  sentiment: 'SentimentBot',
 }
 
 export function init() {
