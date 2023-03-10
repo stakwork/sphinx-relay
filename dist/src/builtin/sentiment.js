@@ -37,17 +37,17 @@ function init() {
         const tribe = (yield models_1.models.Chat.findOne({
             where: { uuid: message.channel.id },
         }));
-        console.log('+++++++++++++ Interval', interval);
         if (!interval) {
             const bot = (yield models_1.models.ChatBot.findOne({
                 where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
             }));
+            if (!bot)
+                return;
             let meta = JSON.parse(bot.meta || `{}`);
             interval = setInterval(() => {
                 (0, sentiment_1.checkThreshold)(tribe, botName, botPrefix, interval, 'threshold', message);
             }, (0, sentiment_1.timerMs)(meta.timer || 60));
         }
-        console.log('++++++++++++ Interval 2', interval);
         if (arr[0] === botPrefix && ((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) === botPrefix) {
             const cmd = arr[1];
             switch (cmd) {

@@ -36,11 +36,13 @@ export function init() {
     const tribe = (await models.Chat.findOne({
       where: { uuid: message.channel.id },
     })) as ChatRecord
-    console.log('+++++++++++++ Interval', interval)
+
     if (!interval) {
       const bot = (await models.ChatBot.findOne({
         where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
       })) as ChatRecord
+
+      if (!bot) return
       let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
 
       interval = setInterval(() => {
@@ -54,7 +56,7 @@ export function init() {
         )
       }, timerMs(meta.timer || 60))
     }
-    console.log('++++++++++++ Interval 2', interval)
+
     if (arr[0] === botPrefix && message.author?.bot === botPrefix) {
       const cmd = arr[1]
       switch (cmd) {

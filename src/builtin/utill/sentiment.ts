@@ -16,8 +16,6 @@ interface SentimentScore {
   sentiment_score: number
 }
 
-let multiplier = 2
-
 export async function botResponse(
   botName: string,
   message: string,
@@ -157,11 +155,7 @@ export async function checkThreshold(
 
     if (url) {
       const sentiment: SentimentScore[] = await getSentiment(url)
-      sentiment.push({
-        date_added_to_graph: '1678327916.9007187',
-        sentiment_score: multiplier * 200,
-      })
-      multiplier += 10
+
       const newResult =
         sentiment?.reduce(
           (total: number, value: SentimentScore) =>
