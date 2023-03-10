@@ -4,7 +4,7 @@ import { ChatBotRecord, ChatRecord, models } from '../../models'
 import { sphinxLogger, logging } from '../../utils/logger'
 import fetch from 'node-fetch'
 
-interface SentimentMeta {
+export interface SentimentMeta {
   threshold: number
   last_result: number
   timer: number

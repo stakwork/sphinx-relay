@@ -8,6 +8,7 @@ import {
   timer,
   updateUrl,
   timerMs,
+  SentimentMeta,
 } from './utill/sentiment'
 
 const msg_types = Sphinx.MSG_TYPE
@@ -35,8 +36,13 @@ export function init() {
     const tribe = (await models.Chat.findOne({
       where: { uuid: message.channel.id },
     })) as ChatRecord
-
+    console.log('+++++++++++++ Interval', interval)
     if (!interval) {
+      const bot = (await models.ChatBot.findOne({
+        where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
+      })) as ChatRecord
+      let meta: SentimentMeta = JSON.parse(bot.meta || `{}`)
+
       interval = setInterval(() => {
         checkThreshold(
           tribe,
@@ -46,9 +52,9 @@ export function init() {
           'threshold',
           message
         )
-      }, timerMs(60))
+      }, timerMs(meta.timer || 60))
     }
-
+    console.log('++++++++++++ Interval 2', interval)
     if (arr[0] === botPrefix) {
       const cmd = arr[1]
       switch (cmd) {
