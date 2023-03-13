@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.saveActionHistory = exports.pinMsgToTribe = exports.editTribe = exports.updateProfile = exports.joinTribe = exports.createTribe = exports.addContact = exports.saveLsat = void 0;
+exports.addMemberToTribe = exports.saveActionHistory = exports.pinMsgToTribe = exports.editTribe = exports.updateProfile = exports.joinTribe = exports.createTribe = exports.addContact = exports.saveLsat = void 0;
 var saveLsat_1 = require("./saveLsat");
 Object.defineProperty(exports, "saveLsat", { enumerable: true, get: function () { return saveLsat_1.saveLsat; } });
 var addContact_1 = require("./addContact");
@@ -17,4 +17,6 @@ var pinMsg_1 = require("./pinMsg");
 Object.defineProperty(exports, "pinMsgToTribe", { enumerable: true, get: function () { return pinMsg_1.pinMsgToTribe; } });
 var actionHistory_1 = require("./actionHistory");
 Object.defineProperty(exports, "saveActionHistory", { enumerable: true, get: function () { return actionHistory_1.saveActionHistory; } });
+var addMemberToTribe_1 = require("./addMemberToTribe");
+Object.defineProperty(exports, "addMemberToTribe", { enumerable: true, get: function () { return addMemberToTribe_1.addMemberToTribe; } });
 //# sourceMappingURL=index.js.map

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkTribeMember = exports.getTribeMember = exports.shouldNotGetBotRes = exports.shouldNotGetNewMsgs = exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.getCacheMsg = exports.checkTribeMember = exports.getTribeMember = exports.shouldNotGetBotRes = exports.shouldNotGetNewMsgs = exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -53,4 +53,6 @@ var getTribeMember_1 = require("./getTribeMember");
 Object.defineProperty(exports, "getTribeMember", { enumerable: true, get: function () { return getTribeMember_1.getTribeMember; } });
 var checkTribeMember_1 = require("./checkTribeMember");
 Object.defineProperty(exports, "checkTribeMember", { enumerable: true, get: function () { return checkTribeMember_1.checkTribeMember; } });
+var getMsgFromCache_1 = require("./getMsgFromCache");
+Object.defineProperty(exports, "getCacheMsg", { enumerable: true, get: function () { return getMsgFromCache_1.getCacheMsg; } });
 //# sourceMappingURL=index.js.map
