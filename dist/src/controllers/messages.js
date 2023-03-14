@@ -24,6 +24,7 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const tribes_1 = require("../utils/tribes");
 // deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
@@ -123,12 +124,12 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         order: [['id', order]],
         where: { tenant },
     };
-    const all_messages_length = (yield models_1.models.Message.count(clause));
+    let all_messages_length = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    const messages = (yield models_1.models.Message.findAll(clause));
+    let messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chatIds = [];
     messages.forEach((m) => {
@@ -141,6 +142,15 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
             where: { deleted: false, id: chatIds, tenant },
         }))
         : [];
+    // Get Cache Messages
+    yield getFromCache({
+        chats,
+        order,
+        offset,
+        limit,
+        messages,
+        all_messages_length,
+    });
     // console.log("=> found all chats", chats && chats.length);
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     // console.log("=> indexed chats");
@@ -185,12 +195,12 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             tenant,
         },
     };
-    const numberOfNewMessages = (yield models_1.models.Message.count(clause));
+    let numberOfNewMessages = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    const messages = (yield models_1.models.Message.findAll(clause));
+    let messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chatIds = [];
     messages.forEach((m) => {
@@ -203,6 +213,15 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             where: { deleted: false, id: chatIds, tenant },
         }))
         : [];
+    yield getFromCache({
+        chats,
+        order,
+        offset,
+        limit,
+        messages,
+        all_messages_length: numberOfNewMessages,
+        dateToReturn,
+    });
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     (0, res_1.success)(res, {
         new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
@@ -677,4 +696,24 @@ const receiveVoip = (payload) => __awaiter(void 0, void 0, void 0, function* () 
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveVoip = receiveVoip;
+function getFromCache({ chats, order, offset, limit, messages, all_messages_length, dateToReturn, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let i = 0; i < chats.length; i++) {
+            const chat = chats[i];
+            if (chat.preview) {
+                const cacheMsg = yield (0, tribes_1.getCacheMsg)({
+                    preview: chat.preview,
+                    chat_uuid: chat.uuid,
+                    chat_id: chat.id,
+                    order,
+                    offset,
+                    limit,
+                    dateToReturn,
+                });
+                messages = [...messages, ...cacheMsg];
+                all_messages_length = all_messages_length + cacheMsg.length;
+            }
+        }
+    });
+}
 //# sourceMappingURL=messages.js.map

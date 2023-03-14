@@ -4,7 +4,7 @@ import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
-import { Contact, models, sequelize, ChatRecord } from '../models'
+import { Contact, models, sequelize, ChatRecord, Message } from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
 import { isProxy, getProxyXpub } from './proxy'
@@ -18,6 +18,16 @@ const config = loadConfig()
 
 // {pubkey: {host: Client} }
 const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
+
+interface CacheMsgInput {
+  preview: string
+  chat_uuid: string
+  chat_id: number
+  order: string
+  offset: number | '' | undefined
+  limit: number | '' | undefined
+  dateToReturn?: string
+}
 
 const optz: IClientSubscribeOptions = { qos: 0 }
 
@@ -714,4 +724,38 @@ function subscribeAndCheck(client: mqtt.Client, topic: string) {
 
 function parseRouteHint(routeHint) {
   return routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length)
+}
+
+export async function getCacheMsg({
+  preview,
+  chat_uuid,
+  chat_id,
+  order,
+  offset,
+  limit,
+  dateToReturn,
+}: CacheMsgInput) {
+  try {
+    const r = await fetch(`${preview}/api/msgs/${chat_uuid}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      throw `get cache message for tribe with uuid: ${chat_uuid} ` + r.status
+    }
+    const res = await r.json()
+    const updatedCacheMsg: Message[] = []
+
+    for (let i = 0; i < res.length; i++) {
+      const msg = res[i]
+      updatedCacheMsg.push({ ...msg, chat_id })
+    }
+    return updatedCacheMsg
+  } catch (error) {
+    sphinxLogger.error([
+      `unanle to get cache message for tribe with uuid: ${chat_uuid}`,
+      logging.Tribes,
+    ])
+    return []
+  }
 }

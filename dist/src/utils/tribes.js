@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
+exports.getCacheMsg = exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("../grpc/lightning");
@@ -643,4 +643,32 @@ function subscribeAndCheck(client, topic) {
 function parseRouteHint(routeHint) {
     return routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length);
 }
+function getCacheMsg({ preview, chat_uuid, chat_id, order, offset, limit, dateToReturn, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const r = yield (0, node_fetch_1.default)(`${preview}/api/msgs/${chat_uuid}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw `get cache message for tribe with uuid: ${chat_uuid} ` + r.status;
+            }
+            const res = yield r.json();
+            const updatedCacheMsg = [];
+            for (let i = 0; i < res.length; i++) {
+                const msg = res[i];
+                updatedCacheMsg.push(Object.assign(Object.assign({}, msg), { chat_id }));
+            }
+            return updatedCacheMsg;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error([
+                `unanle to get cache message for tribe with uuid: ${chat_uuid}`,
+                logger_1.logging.Tribes,
+            ]);
+            return [];
+        }
+    });
+}
+exports.getCacheMsg = getCacheMsg;
 //# sourceMappingURL=tribes.js.map

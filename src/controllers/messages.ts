@@ -20,6 +20,7 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { ChatPlusMembers } from '../network/send'
+import { getCacheMsg } from '../utils/tribes'
 
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
@@ -140,16 +141,14 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     order: [['id', order]],
     where: { tenant },
   }
-  const all_messages_length: number = (await models.Message.count(
+  let all_messages_length: number = (await models.Message.count(
     clause
   )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  const messages: Message[] = (await models.Message.findAll(
-    clause
-  )) as Message[]
+  let messages: Message[] = (await models.Message.findAll(clause)) as Message[]
 
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
@@ -169,6 +168,16 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
           where: { deleted: false, id: chatIds, tenant },
         })) as Chat[])
       : []
+
+  // Get Cache Messages
+  await getFromCache({
+    chats,
+    order,
+    offset,
+    limit,
+    messages,
+    all_messages_length,
+  })
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
@@ -199,7 +208,7 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
 
   const limit = req.query.limit && parseInt(req.query.limit as string)
   const offset = req.query.offset && parseInt(req.query.offset as string)
-  const dateToReturn = req.query.date
+  const dateToReturn = req.query.date as string
   if (!dateToReturn) {
     return getAllMessages(req, res)
   }
@@ -220,16 +229,14 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
       tenant,
     },
   }
-  const numberOfNewMessages: number = (await models.Message.count(
+  let numberOfNewMessages: number = (await models.Message.count(
     clause
   )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  const messages: Message[] = (await models.Message.findAll(
-    clause
-  )) as Message[]
+  let messages: Message[] = (await models.Message.findAll(clause)) as Message[]
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
     logging.Express
@@ -247,6 +254,16 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
           where: { deleted: false, id: chatIds, tenant },
         })) as Chat[])
       : []
+
+  await getFromCache({
+    chats,
+    order,
+    offset,
+    limit,
+    messages,
+    all_messages_length: numberOfNewMessages,
+    dateToReturn,
+  })
   const chatsById = indexBy(chats, 'id')
   success(res, {
     new_messages: messages.map((message) =>
@@ -843,4 +860,39 @@ export const receiveVoip = async (payload: Payload): Promise<void> => {
   sendVoipNotification(owner, { caller_name: sender.alias, link_url: text })
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+}
+interface GetCacheInput {
+  chats: Chat[]
+  order: string
+  offset: number | '' | undefined
+  limit: number | '' | undefined
+  messages: Message[]
+  all_messages_length: number
+  dateToReturn?: string
+}
+async function getFromCache({
+  chats,
+  order,
+  offset,
+  limit,
+  messages,
+  all_messages_length,
+  dateToReturn,
+}: GetCacheInput) {
+  for (let i = 0; i < chats.length; i++) {
+    const chat = chats[i]
+    if (chat.preview) {
+      const cacheMsg = await getCacheMsg({
+        preview: chat.preview,
+        chat_uuid: chat.uuid,
+        chat_id: chat.id,
+        order,
+        offset,
+        limit,
+        dateToReturn,
+      })
+      messages = [...messages, ...cacheMsg]
+      all_messages_length = all_messages_length + cacheMsg.length
+    }
+  }
 }
