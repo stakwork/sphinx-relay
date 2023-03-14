@@ -536,12 +536,15 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
-  const message: Message = (await models.Message.create(msg)) as Message
+  let message: Message | null = null
+  if (!chat.preview) {
+    message = (await models.Message.create(msg)) as Message
+  }
 
   socket.sendJson(
     {
       type: 'message',
-      response: jsonUtils.messageToJson(message, chat, sender),
+      response: jsonUtils.messageToJson(message || msg, chat, sender),
     },
     tenant
   )
@@ -555,7 +558,9 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     force_push
   )
 
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  if (!chat.preview) {
+    sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  }
 }
 
 /**

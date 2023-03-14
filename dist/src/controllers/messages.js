@@ -458,13 +458,18 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = (yield models_1.models.Message.create(msg));
+    let message = null;
+    if (!chat.preview) {
+        message = (yield models_1.models.Message.create(msg));
+    }
     socket.sendJson({
         type: 'message',
-        response: jsonUtils.messageToJson(message, chat, sender),
+        response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
     (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner, undefined, force_push);
-    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    if (!chat.preview) {
+        (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    }
 });
 exports.receiveMessage = receiveMessage;
 /**
