@@ -50,10 +50,17 @@ function cacheMessage(t, index1, index2, index3) {
         t.true(addMember, 'node4 should have added new user to tribe');
         //NODE1 SENDS A MESSAGE IN THE TRIBE AND NODE2 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
         const text = (0, helpers_1.randomText)();
-        let tribeMessage1 = yield (0, msg_1.sendTribeMessageAndCheckDecryption)(t, node1, node2, text, tribe);
+        let tribeMessage1 = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         t.truthy(tribeMessage1, 'node1 should send message to tribe');
+        yield (0, helpers_1.sleep)(1000);
         const cacheMsg = yield (0, get_1.getCacheMsg)(t, tribe, tribeMessage1, text);
         t.true(cacheMsg, 'Message Should exist on Cache server');
+        const text2 = (0, helpers_1.randomText)();
+        let tribeMessage2 = yield (0, msg_1.sendTribeMessage)(t, node2, tribe, text2);
+        t.truthy(tribeMessage2, 'node2 should send message to tribe');
+        yield (0, helpers_1.sleep)(1000);
+        const msgExist = yield (0, get_1.getMsgByUuid)(t, node1, tribeMessage2);
+        t.true(msgExist, 'Message should be seen by node 1');
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');

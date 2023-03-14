@@ -170,7 +170,7 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
       : []
 
   // Get Cache Messages
-  await getFromCache({
+  const allMsg = await getFromCache({
     chats,
     order,
     offset,
@@ -178,14 +178,15 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     messages,
     all_messages_length,
   })
+
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
   success(res, {
-    new_messages: messages.map((message) =>
+    new_messages: allMsg.messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
-    new_messages_total: all_messages_length,
+    new_messages_total: allMsg.all_messages_length,
     confirmed_messages: [],
   })
 }
@@ -255,7 +256,7 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
         })) as Chat[])
       : []
 
-  await getFromCache({
+  const allMsg = await getFromCache({
     chats,
     order,
     offset,
@@ -266,10 +267,10 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   })
   const chatsById = indexBy(chats, 'id')
   success(res, {
-    new_messages: messages.map((message) =>
+    new_messages: allMsg.messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
-    new_messages_total: numberOfNewMessages,
+    new_messages_total: allMsg.all_messages_length,
   })
 }
 
@@ -900,4 +901,5 @@ async function getFromCache({
       all_messages_length = all_messages_length + cacheMsg.length
     }
   }
+  return { messages, all_messages_length }
 }

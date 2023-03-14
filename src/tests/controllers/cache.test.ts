@@ -1,10 +1,10 @@
 import test from 'ava'
-import { randomText } from '../utils/helpers'
+import { randomText, sleep } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe, addMemberToTribe } from '../utils/save'
-import { sendTribeMessageAndCheckDecryption } from '../utils/msg'
+import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
-import { getCacheMsg } from '../utils/get'
+import { getCacheMsg, getMsgByUuid } from '../utils/get'
 
 /*
 npx ava src/tests/controllers/cache.test.ts --verbose --serial --timeout=2m
@@ -48,17 +48,20 @@ export async function cacheMessage(t, index1, index2, index3) {
 
   //NODE1 SENDS A MESSAGE IN THE TRIBE AND NODE2 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
   const text = randomText()
-  let tribeMessage1 = await sendTribeMessageAndCheckDecryption(
-    t,
-    node1,
-    node2,
-    text,
-    tribe
-  )
+  let tribeMessage1 = await sendTribeMessage(t, node1, tribe, text)
   t.truthy(tribeMessage1, 'node1 should send message to tribe')
 
+  await sleep(1000)
   const cacheMsg = await getCacheMsg(t, tribe, tribeMessage1, text)
   t.true(cacheMsg, 'Message Should exist on Cache server')
+
+  const text2 = randomText()
+  let tribeMessage2 = await sendTribeMessage(t, node2, tribe, text2)
+  t.truthy(tribeMessage2, 'node2 should send message to tribe')
+
+  await sleep(1000)
+  const msgExist = await getMsgByUuid(t, node1, tribeMessage2)
+  t.true(msgExist, 'Message should be seen by node 1')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

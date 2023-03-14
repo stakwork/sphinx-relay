@@ -143,7 +143,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }))
         : [];
     // Get Cache Messages
-    yield getFromCache({
+    const allMsg = yield getFromCache({
         chats,
         order,
         offset,
@@ -155,8 +155,8 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     // console.log("=> indexed chats");
     (0, res_1.success)(res, {
-        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
-        new_messages_total: all_messages_length,
+        new_messages: allMsg.messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
+        new_messages_total: allMsg.all_messages_length,
         confirmed_messages: [],
     });
 });
@@ -213,7 +213,7 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             where: { deleted: false, id: chatIds, tenant },
         }))
         : [];
-    yield getFromCache({
+    const allMsg = yield getFromCache({
         chats,
         order,
         offset,
@@ -224,8 +224,8 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     (0, res_1.success)(res, {
-        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
-        new_messages_total: numberOfNewMessages,
+        new_messages: allMsg.messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
+        new_messages_total: allMsg.all_messages_length,
     });
 });
 exports.getMsgs = getMsgs;
@@ -719,6 +719,7 @@ function getFromCache({ chats, order, offset, limit, messages, all_messages_leng
                 all_messages_length = all_messages_length + cacheMsg.length;
             }
         }
+        return { messages, all_messages_length };
     });
 }
 //# sourceMappingURL=messages.js.map
