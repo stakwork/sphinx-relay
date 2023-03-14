@@ -736,10 +736,13 @@ export async function getCacheMsg({
   dateToReturn,
 }: CacheMsgInput) {
   try {
-    const r = await fetch(`${preview}/api/msgs/${chat_uuid}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
+    const r = await fetch(
+      `${preview}/api/msgs/${chat_uuid}?limit=${limit}&offset=${offset}&order=${order}&date=${dateToReturn}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
     if (!r.ok) {
       throw `get cache message for tribe with uuid: ${chat_uuid} ` + r.status
     }

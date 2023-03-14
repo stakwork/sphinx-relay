@@ -646,7 +646,7 @@ function parseRouteHint(routeHint) {
 function getCacheMsg({ preview, chat_uuid, chat_id, order, offset, limit, dateToReturn, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const r = yield (0, node_fetch_1.default)(`${preview}/api/msgs/${chat_uuid}`, {
+            const r = yield (0, node_fetch_1.default)(`${preview}/api/msgs/${chat_uuid}?limit=${limit}&offset=${offset}&order=${order}&date=${dateToReturn}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
