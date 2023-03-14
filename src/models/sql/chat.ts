@@ -145,6 +145,9 @@ export default class Chat extends Model<Chat> {
     allowNull: false,
   })
   defaultJoin: boolean
+
+  @Column
+  preview: string
 }
 
 export interface ChatRecord extends Chat {
