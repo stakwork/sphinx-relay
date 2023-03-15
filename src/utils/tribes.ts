@@ -736,8 +736,10 @@ export async function getCacheMsg({
   dateToReturn,
 }: CacheMsgInput) {
   try {
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
     const r = await fetch(
-      `${preview}/api/msgs/${chat_uuid}?limit=${limit}&offset=${offset}&order=${order}&date=${dateToReturn}`,
+      `${protocol}://${preview}/api/msgs/${chat_uuid}?limit=${limit}&offset=${offset}&order=${order}&date=${dateToReturn}`,
       {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
