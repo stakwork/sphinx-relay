@@ -68,6 +68,7 @@ function set(app) {
         app.put('/member/:contactId/:status/:messageId', chatTribes.approveOrRejectMember);
         app.put('/group/:id', chatTribes.editTribe);
         app.put('/chat_pin/:id', chatTribes.pinToTribe);
+        app.post('/preview/:chat_id', chats.addTribePreivew);
         app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile);
         app.post('/invites', invites.createInvite);
         app.post('/invites/:invite_string/pay', invites.payInvite);

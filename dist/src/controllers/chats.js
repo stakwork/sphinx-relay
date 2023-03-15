@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.addTribeMember = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.setNotifyLevel = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
+exports.addTribePreivew = exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.addTribeMember = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.setNotifyLevel = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -24,6 +24,8 @@ const chatTribes_1 = require("./chatTribes");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const helpers_1 = require("../helpers");
+const config_1 = require("../utils/config");
+const config = (0, config_1.loadConfig)();
 /**
  * Updates a chat.
  *
@@ -852,4 +854,56 @@ function createGroupChatParams(owner, contactIds, members, name) {
         type: constants_1.default.chat_types.group,
     };
 }
+function addTribePreivew(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        const { chat_id } = req.params;
+        const { preview } = req.body;
+        if (!preview && !config.default_cache_host)
+            return (0, res_1.failure)(res, 'provide cache server url');
+        const cache_url = preview || config.default_cache_host;
+        try {
+            const tribe = (yield models_1.models.Chat.findOne({
+                where: {
+                    id: chat_id,
+                    tenant,
+                    ownerPubkey: req.owner.publicKey,
+                    deleted: false,
+                },
+            }));
+            if (!tribe) {
+                return (0, res_1.failure)(res, 'Tribe does not exist');
+            }
+            if (tribe.private) {
+                return (0, res_1.failure)(res, 'You cannot add preview to a private tribe');
+            }
+            //verify preview url
+            const cacheServerDetails = yield tribes.verifyTribePreviewUrl(cache_url);
+            //add cache server to tribe
+            const date = new Date();
+            const alias = 'cache';
+            yield addMemberToTribe({
+                sender_pub_key: cacheServerDetails.pubkey,
+                tenant,
+                chat: tribe,
+                date,
+                senderAlias: alias,
+                sender_photo_url: '',
+                sender_route_hint: '',
+                member: { key: cacheServerDetails.contact_key, alias },
+                isTribeOwner: true,
+            });
+            //update preview
+            yield tribe.update({ preview });
+            return (0, res_1.success)(res, 'Preview added successfully to tribe');
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`=> couldnt add preview to tribe ${error}`);
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.addTribePreivew = addTribePreivew;
 //# sourceMappingURL=chats.js.map

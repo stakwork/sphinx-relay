@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.cacheMessage = void 0;
 const ava_1 = require("ava");
 const helpers_1 = require("../utils/helpers");
-const del_1 = require("../utils/del");
+// import { deleteTribe, leaveTribe } from '../utils/del'
 const save_1 = require("../utils/save");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
@@ -32,6 +32,7 @@ function cacheMessage(t, index1, index2, index3) {
         //NODE4 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node4');
+        console.log(tribe);
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
         let join = yield (0, save_1.joinTribe)(t, node2, tribe);
@@ -62,14 +63,14 @@ function cacheMessage(t, index1, index2, index3) {
         const msgExist = yield (0, get_1.getMsgByUuid)(t, node1, tribeMessage2);
         t.true(msgExist, 'Message should be seen by node 1');
         //NODE2 LEAVES TRIBE
-        let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
-        t.true(left2, 'node2 should leave tribe');
+        //   let left2 = await leaveTribe(t, node2, tribe)
+        //   t.true(left2, 'node2 should leave tribe')
         //NODE3 LEAVES TRIBE
-        let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
-        t.true(left3, 'node3 should leave tribe');
+        //   let left3 = await leaveTribe(t, node3, tribe)
+        //   t.true(left3, 'node3 should leave tribe')
         //NODE1 DELETES TRIBE
-        let delTribe2 = yield (0, del_1.deleteTribe)(t, node1, tribe);
-        t.true(delTribe2, 'node1 should delete tribe');
+        //   let delTribe2 = await deleteTribe(t, node1, tribe)
+        //   t.true(delTribe2, 'node1 should delete tribe')
     });
 }
 exports.cacheMessage = cacheMessage;

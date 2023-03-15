@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCacheMsg = exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
+exports.verifyTribePreviewUrl = exports.getCacheMsg = exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("../grpc/lightning");
@@ -671,4 +671,27 @@ function getCacheMsg({ preview, chat_uuid, chat_id, order, offset, limit, dateTo
     });
 }
 exports.getCacheMsg = getCacheMsg;
+function verifyTribePreviewUrl(url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${url}/api/pubkeys`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw `could not verify cache server` + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            console.log(error);
+            throw `could not verify cache server`;
+        }
+    });
+}
+exports.verifyTribePreviewUrl = verifyTribePreviewUrl;
 //# sourceMappingURL=tribes.js.map

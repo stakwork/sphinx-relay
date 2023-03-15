@@ -762,3 +762,23 @@ export async function getCacheMsg({
     return []
   }
 }
+
+export async function verifyTribePreviewUrl(url: string) {
+  try {
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+
+    const r = await fetch(`${protocol}://${url}/api/pubkeys`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      throw `could not verify cache server` + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    console.log(error)
+    throw `could not verify cache server`
+  }
+}
