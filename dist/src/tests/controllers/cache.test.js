@@ -32,6 +32,8 @@ function cacheMessage(t, index1, index2, index3) {
         //NODE4 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node4');
+        let setPreview = yield (0, save_1.setTribePreview)(t, node1, tribe, 'localhost:8008');
+        t.true(setPreview, 'Node1 has added preview to tribe');
         if (node1.routeHint)
             tribe.owner_route_hint = node1.routeHint;
         let join = yield (0, save_1.joinTribe)(t, node2, tribe);
@@ -41,13 +43,6 @@ function cacheMessage(t, index1, index2, index3) {
             tribe.owner_route_hint = node1.routeHint;
         let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
-        //NODE4 Adds Cache member
-        const addMember = yield (0, save_1.addMemberToTribe)(t, node1, tribe, {
-            alias: 'cache',
-            pub_key: '03f3a6e1b400e29f1a101391660005f0d44d6d18efa3b293b34a084d98d4664f7b',
-            contact_key: 'MIIBCgKCAQEAt2RSUo/xlB1dGQBn6Ko4j6w6FyLIQ7CL47qm4ihDapne6bG5dmiBT3lcGmrvjLBJqIKHLejhgRY2VgVU8YK0R94/HWWyz709d7nLhtYBbdWmwIjGD7aDxeRX5ATp0THZbEebfUc/237iqD5Enf6pmzdD9JQgtFU9A8uNjexuULmV1Kq2nr3w2OUlTP1a84UP1Qs0XSlFA0HOBj6OLGcP/VD7H4wbfrZXCIMGQo4LPy+htM4k31Qn0K3LgKfU1bKHzJk+kGYTHThOEpHRUIbd8lOAnZwzIg0P47QvY1pVs5Te26sXvnt5Uxj+hrilg829GfvrIG/TDzb1EXIqZmwM3wIDAQAB',
-        });
-        t.true(addMember, 'node4 should have added new user to tribe');
         //NODE1 SENDS A MESSAGE IN THE TRIBE AND NODE2 CHECKS TO SEE IF THEY RECEIVED THE MESSAGE
         const text = (0, helpers_1.randomText)();
         let tribeMessage1 = yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);

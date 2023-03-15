@@ -1043,6 +1043,8 @@ export async function addTribePreivew(
       return failure(res, 'You cannot add preview to a private tribe')
     }
 
+    if (tribe.preview) return failure(res, 'Preview already set for this tribe')
+
     //verify preview url
     const cacheServerDetails: { contact_key: string; pubkey: string } =
       await tribes.verifyTribePreviewUrl(cache_url)

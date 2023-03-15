@@ -879,6 +879,8 @@ function addTribePreivew(req, res) {
             if (tribe.private) {
                 return (0, res_1.failure)(res, 'You cannot add preview to a private tribe');
             }
+            if (tribe.preview)
+                return (0, res_1.failure)(res, 'Preview already set for this tribe');
             //verify preview url
             const cacheServerDetails = yield tribes.verifyTribePreviewUrl(cache_url);
             //add cache server to tribe
