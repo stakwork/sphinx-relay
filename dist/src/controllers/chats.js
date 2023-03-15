@@ -905,7 +905,7 @@ function addTribePreivew(req, res) {
                 owner_pubkey: tribe.ownerPubkey,
             });
             //update preview
-            yield tribe.update({ preview });
+            yield tribe.update({ preview: cache_url });
             return (0, res_1.success)(res, 'preview added successfully to tribe');
         }
         catch (error) {

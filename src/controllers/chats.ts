@@ -1073,7 +1073,7 @@ export async function addTribePreivew(
     })
 
     //update preview
-    await tribe.update({ preview })
+    await tribe.update({ preview: cache_url })
     return success(res, 'preview added successfully to tribe')
   } catch (error) {
     sphinxLogger.error(`=> couldnt add preview to tribe ${error}`)
