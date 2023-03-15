@@ -897,9 +897,16 @@ function addTribePreivew(req, res) {
                 member: { key: cacheServerDetails.contact_key, alias },
                 isTribeOwner: true,
             });
+            // Update tribe on tribe server
+            yield tribes.updateRemoteTribeServer({
+                server: tribe.host,
+                preview_url: cache_url,
+                chat_uuid: tribe.uuid,
+                owner_pubkey: tribe.ownerPubkey,
+            });
             //update preview
             yield tribe.update({ preview });
-            return (0, res_1.success)(res, 'Preview added successfully to tribe');
+            return (0, res_1.success)(res, 'preview added successfully to tribe');
         }
         catch (error) {
             logger_1.sphinxLogger.error(`=> couldnt add preview to tribe ${error}`);

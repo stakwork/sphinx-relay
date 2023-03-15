@@ -1064,9 +1064,17 @@ export async function addTribePreivew(
       isTribeOwner: true,
     })
 
+    // Update tribe on tribe server
+    await tribes.updateRemoteTribeServer({
+      server: tribe.host,
+      preview_url: cache_url,
+      chat_uuid: tribe.uuid,
+      owner_pubkey: tribe.ownerPubkey,
+    })
+
     //update preview
     await tribe.update({ preview })
-    return success(res, 'Preview added successfully to tribe')
+    return success(res, 'preview added successfully to tribe')
   } catch (error) {
     sphinxLogger.error(`=> couldnt add preview to tribe ${error}`)
     return failure(res, error)

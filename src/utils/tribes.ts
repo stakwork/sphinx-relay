@@ -784,3 +784,36 @@ export async function verifyTribePreviewUrl(url: string) {
     throw `could not verify cache server`
   }
 }
+
+export async function updateRemoteTribeServer({
+  server,
+  preview_url,
+  chat_uuid,
+  owner_pubkey,
+}: {
+  server: string
+  preview_url: string
+  chat_uuid: string
+  owner_pubkey: string
+}) {
+  try {
+    let protocol = 'https'
+    const token = await genSignedTimestamp(owner_pubkey)
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      `${protocol}://${server}/tribepreview/${chat_uuid}?preview=${preview_url}&token=${token}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw `could not update tribe server with preview url ` + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    console.log(error)
+    throw `could not update tribe server with preview url`
+  }
+}
