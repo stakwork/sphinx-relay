@@ -625,6 +625,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     forwardedSats: hasForwardedSats,
   }
   const isTribe = chat_type === constants.chat_types.tribe
+  const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
@@ -632,17 +633,21 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
-  const message: Message = (await models.Message.create(msg)) as Message
+  let message: Message | null = null
+  if (!chat.preview || isTribeOwner) {
+    message = (await models.Message.create(msg)) as Message
+  }
 
   socket.sendJson(
     {
       type: 'boost',
-      response: jsonUtils.messageToJson(message, chat, sender),
+      response: jsonUtils.messageToJson(message || msg, chat, sender),
     },
     tenant
   )
-
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  if (!chat.preview || isTribeOwner) {
+    sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  }
 
   if (msg.replyUuid) {
     const ogMsg: Message = (await models.Message.findOne({

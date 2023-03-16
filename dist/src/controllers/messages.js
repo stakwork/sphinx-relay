@@ -506,6 +506,7 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         forwardedSats: hasForwardedSats,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
+    const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey;
     if (isTribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
@@ -516,12 +517,17 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = (yield models_1.models.Message.create(msg));
+    let message = null;
+    if (!chat.preview || isTribeOwner) {
+        message = (yield models_1.models.Message.create(msg));
+    }
     socket.sendJson({
         type: 'boost',
-        response: jsonUtils.messageToJson(message, chat, sender),
+        response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
-    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    if (!chat.preview || isTribeOwner) {
+        (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    }
     if (msg.replyUuid) {
         const ogMsg = (yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid, tenant },
