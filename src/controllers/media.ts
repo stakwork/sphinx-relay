@@ -562,19 +562,22 @@ export const receiveAttachment = async (payload) => {
   if (parent_id) msg.parentId = parent_id
   if (person) msg.person = person
   const isTribe = chat_type === constants.chat_types.tribe
+  const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
   }
-
-  const message = await models.Message.create(msg)
+  let message: Message | null = null
+  if (!chat.preview || isTribeOwner) {
+    message = (await models.Message.create(msg)) as Message
+  }
 
   // console.log('saved attachment', message.dataValues)
 
   socket.sendJson(
     {
       type: 'attachment',
-      response: jsonUtils.messageToJson(message, chat, sender),
+      response: jsonUtils.messageToJson(message || msg, chat, sender),
     },
     tenant
   )
@@ -588,7 +591,9 @@ export const receiveAttachment = async (payload) => {
     force_push
   )
 
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  if (!chat.preview || isTribeOwner) {
+    sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  }
 }
 
 export async function signer(req: Req, res) {
