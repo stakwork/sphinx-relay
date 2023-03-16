@@ -533,6 +533,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     push: force_push ? true : false,
   }
   const isTribe = chat_type === constants.chat_types.tribe
+  const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
@@ -542,7 +543,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
-  if (!chat.preview) {
+  if (!chat.preview || isTribeOwner) {
     message = (await models.Message.create(msg)) as Message
   }
 
@@ -563,7 +564,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     force_push
   )
 
-  if (!chat.preview) {
+  if (!chat.preview || isTribeOwner) {
     sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
   }
 }

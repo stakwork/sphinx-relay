@@ -447,6 +447,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         push: force_push ? true : false,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
+    const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey;
     if (isTribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
@@ -459,7 +460,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (parent_id)
         msg.parentId = parent_id;
     let message = null;
-    if (!chat.preview) {
+    if (!chat.preview || isTribeOwner) {
         message = (yield models_1.models.Message.create(msg));
     }
     socket.sendJson({
@@ -467,7 +468,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
     (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner, undefined, force_push);
-    if (!chat.preview) {
+    if (!chat.preview || isTribeOwner) {
         (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
     }
 });
