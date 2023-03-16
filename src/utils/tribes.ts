@@ -753,7 +753,7 @@ export async function getCacheMsg({
 
     for (let i = 0; i < res.length; i++) {
       const msg = res[i]
-      updatedCacheMsg.push({ ...msg, chat_id })
+      updatedCacheMsg.push({ ...msg, chat_id, chatId: chat_id })
     }
     return updatedCacheMsg
   } catch (error) {
