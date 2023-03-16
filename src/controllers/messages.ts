@@ -22,6 +22,10 @@ import { Req, Res } from '../types'
 import { ChatPlusMembers } from '../network/send'
 import { getCacheMsg } from '../utils/tribes'
 
+interface ExtentedMessage extends Message {
+  chat_id?: number
+}
+
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -901,5 +905,32 @@ async function getFromCache({
       all_messages_length = all_messages_length + cacheMsg.length
     }
   }
-  return { messages, all_messages_length }
+  return removeDuplicateMsg(messages, all_messages_length)
+}
+
+function removeDuplicateMsg(
+  messages: ExtentedMessage[],
+  message_length: number
+) {
+  const filteredMsg: ExtentedMessage[] = []
+  const uuidObject: { [k: string]: ExtentedMessage } = {}
+  let all_message_length = message_length
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i]
+    const alreadyStoredMsg = uuidObject[message.uuid]
+    if (message.type === 0 && alreadyStoredMsg && !alreadyStoredMsg.chat_id) {
+      const msgIndex = filteredMsg.findIndex(
+        (msg) => msg.uuid === alreadyStoredMsg.uuid
+      )
+      filteredMsg.splice(msgIndex, 1)
+      all_message_length -= 1
+      filteredMsg.push(message)
+      uuidObject[message.uuid] = message
+    } else {
+      filteredMsg.push(message)
+      uuidObject[message.uuid] = message
+    }
+  }
+
+  return { messages: filteredMsg, all_messages_length: all_message_length }
 }
