@@ -1,12 +1,7 @@
 import test from 'ava'
 import { randomText, sleep } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
-import {
-  createTribe,
-  joinTribe,
-  //   addMemberToTribe,
-  setTribePreview,
-} from '../utils/save'
+import { createTribe, joinTribe, setTribePreview } from '../utils/save'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
 import { getCacheMsg, getMsgByUuid } from '../utils/get'

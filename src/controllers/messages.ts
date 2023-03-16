@@ -924,7 +924,13 @@ function removeDuplicateMsg(
   for (let i = 0; i < messages.length; i++) {
     const message = messages[i]
     const alreadyStoredMsg = uuidObject[message.uuid]
-    if (message.type === 0 && alreadyStoredMsg && !alreadyStoredMsg.chat_id) {
+    if (
+      (message.type === constants.message_types.message ||
+        message.type === constants.message_types.boost ||
+        message.type === constants.message_types.attachment) &&
+      alreadyStoredMsg &&
+      !alreadyStoredMsg.chat_id
+    ) {
       const msgIndex = filteredMsg.findIndex(
         (msg) => msg.uuid === alreadyStoredMsg.uuid
       )
