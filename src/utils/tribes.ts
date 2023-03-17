@@ -4,10 +4,17 @@ import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
-import { Contact, models, sequelize, ChatRecord, Message } from '../models'
+import {
+  Contact,
+  models,
+  sequelize,
+  ChatRecord,
+  Message,
+  isPostgres,
+} from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
-import { isProxy, getProxyXpub } from './proxy'
+import { getProxyXpub } from './proxy'
 import { logging, sphinxLogger } from './logger'
 import type { Tribe } from '../models/ts/tribe'
 import { sleep, asyncForEach } from '../helpers'
@@ -315,7 +322,7 @@ function mqttURL(h: string) {
 // }
 
 export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
-  const isOwner = isProxy() ? "'t'" : '1'
+  const isOwner = isPostgres() ? "'t'" : '1'
   try {
     const r = (await sequelize.query(
       `

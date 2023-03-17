@@ -305,7 +305,7 @@ function mqttURL(h) {
 // }
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        const isOwner = (0, proxy_1.isProxy)() ? "'t'" : '1';
+        const isOwner = (0, models_1.isPostgres)() ? "'t'" : '1';
         try {
             const r = (yield models_1.sequelize.query(`
       SELECT sphinx_chats.* FROM sphinx_chats
