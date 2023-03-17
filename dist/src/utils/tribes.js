@@ -660,7 +660,7 @@ function getCacheMsg({ preview, chat_uuid, chat_id, order, offset, limit, dateTo
             const updatedCacheMsg = [];
             for (let i = 0; i < res.length; i++) {
                 const msg = res[i];
-                updatedCacheMsg.push(Object.assign(Object.assign({}, msg), { chat_id, chatId: chat_id }));
+                updatedCacheMsg.push(Object.assign(Object.assign({}, msg), { chat_id, chatId: chat_id, cached: true }));
             }
             return updatedCacheMsg;
         }

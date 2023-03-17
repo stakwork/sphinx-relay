@@ -13,6 +13,14 @@ export async function checkMessageDecryption(
   const lastMessage = await getCheckNewMsgs(t, node, msgUuid)
   t.truthy(lastMessage, 'await message post')
 
+  if (lastMessage.cached) {
+    t.true(
+      lastMessage.message_content === text,
+      'message content should match text'
+    )
+    return true
+  }
+
   //decrypt the last message sent to node using node private key and lastMessage content
   const decrypt = rsa.decrypt(node.privkey, lastMessage.message_content)
 
