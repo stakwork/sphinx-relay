@@ -1,7 +1,8 @@
 // parse BIGINTs to number
 import * as pg from 'pg'
 pg.defaults.parseInt8 = true
-import { Sequelize } from 'sequelize-typescript'
+import { Sequelize, SequelizeOptions } from 'sequelize-typescript'
+import type { Dialect } from 'sequelize'
 import * as path from 'path'
 import Chat, { ChatRecord } from './sql/chat'
 import Contact, { ContactRecord } from './sql/contact'
@@ -38,16 +39,20 @@ const configFile = argv.db
 
 const env = process.env.NODE_ENV || 'development'
 
-let config: any
+let config: SequelizeOptions
 const dialect = process.env.DB_DIALECT
 const storage = process.env.DB_STORAGE
 if (dialect && storage) {
   config = {
-    dialect,
+    dialect: dialect as Dialect,
     storage,
   }
 } else {
   config = JSON.parse(readFileSync(configFile).toString())[env]
+}
+
+export function isPostgres(): boolean {
+  return config.dialect === 'postgres'
 }
 
 const appConfig = loadConfig()
