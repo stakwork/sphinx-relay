@@ -139,7 +139,7 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
     const chats = chatIds.length > 0
         ? (yield models_1.models.Chat.findAll({
-            where: { deleted: false, id: chatIds, tenant },
+            where: { deleted: false, tenant },
         }))
         : [];
     // Get Cache Messages
@@ -373,6 +373,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.recipientPic = recipientPic;
     // console.log(msg)
     const message = (yield models_1.models.Message.create(msg));
+    console.log('==========>We got here<==========', message);
     (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
         id: message.id,
@@ -738,7 +739,8 @@ function removeDuplicateMsg(messages, message_length) {
         const alreadyStoredMsg = uuidObject[message.uuid];
         if ((message.type === constants_1.default.message_types.message ||
             message.type === constants_1.default.message_types.boost ||
-            message.type === constants_1.default.message_types.attachment) &&
+            message.type === constants_1.default.message_types.attachment ||
+            message.type === constants_1.default.message_types.bot_res) &&
             alreadyStoredMsg &&
             !alreadyStoredMsg.chat_id) {
             const msgIndex = filteredMsg.findIndex((msg) => msg.uuid === alreadyStoredMsg.uuid);

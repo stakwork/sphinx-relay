@@ -16,7 +16,7 @@ const del_1 = require("../utils/del");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
 /*
-npx ava test-12-tribe3Escrow.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribe3Escrow.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test-12-tribe3Escrow: create tribe, two nodes join tribe, send messages, check escrow, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield tribe3Escrow(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);

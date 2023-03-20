@@ -16,7 +16,7 @@ npx ava src/tests/controllers/silentTribeBotMsg.test.ts --verbose --serial --tim
 */
 
 test('test-30-slinetTribeBotMsg: create tribe, install to tribe bot, send hidden tribe commands, delete bot, delete tribe', async (t) => {
-  await silentTribeBotMsg(t, nodes[0], nodes[1], nodes[2])
+  await silentTribeBotMsg(t, nodes[4], nodes[1], nodes[2])
 })
 
 async function silentTribeBotMsg(t, node1, node2, node3) {
@@ -64,7 +64,7 @@ async function silentTribeBotMsg(t, node1, node2, node3) {
 
   //NODE1 SHOULD SEE THE BOT RESPONSE FOR THE UPDATE COMMAND
   let botAlias = 'CallRecordingBot'
-  const botReply = await getCheckBotMsg(t, node1, botAlias)
+  const botReply = await getCheckBotMsg(t, node1, botAlias, tribe, 1)
   t.truthy(botReply, 'CallRecordingBot should reply')
 
   //NODE2 SHOULD NOT SEE THE BOT RESPONSE FOR THE UPDATE CALL RECORDING COMMAND
@@ -93,7 +93,13 @@ async function silentTribeBotMsg(t, node1, node2, node3) {
 
   //NODE1 SHOULD SEE THE BOT RESPONSE FOR THE HIDE COMMAND
   let welcomeBotRes = 'WelcomeBot'
-  const welcomeBotReply = await getCheckBotMsg(t, node1, welcomeBotRes)
+  const welcomeBotReply = await getCheckBotMsg(
+    t,
+    node1,
+    welcomeBotRes,
+    tribe,
+    1
+  )
   t.truthy(welcomeBotReply, 'WelcomeBot should reply')
 
   //NODE2 SHOULD NOT SEE THE BOT RESPONSE FOR THE HIDE SET MESSAGE COMMAND
@@ -118,7 +124,7 @@ async function silentTribeBotMsg(t, node1, node2, node3) {
 
   //NODE1 SHOULD SEE THE BOT RESPONSE FOR THE SET MESSAGE COMMAND
   let welcomeBotAlias = 'WelcomeBot'
-  const setMsgReply = await getCheckBotMsg(t, node1, welcomeBotAlias)
+  const setMsgReply = await getCheckBotMsg(t, node1, welcomeBotAlias, tribe, 2)
   t.truthy(setMsgReply, 'WelcomeBot should reply')
 
   //NODE2 SHOULD NOT SEE THE BOT RESPONSE FOR THE SET MESSAGE COMMAND

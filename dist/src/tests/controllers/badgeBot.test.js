@@ -52,21 +52,21 @@ function badgeBotTest(t, index1, index2, index3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         //NODE1 AWAIT REPLY FROM BOT
         let botAlias = 'MotherBot';
-        const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 1);
         t.truthy(botReply, 'MotherBot should reply');
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install badge';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
-        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 2);
         t.truthy(botReply2, 'MotherBot should reply');
         //NODE1 SENDS A BOT INSTALL MESSAGE IN SECOND TRIBE
         const badge2 = '/bot install badge';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe2, badge2);
         //NODE1 AWAIT REPLY FROM BOT
         botAlias = 'MotherBot';
-        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe2, 1);
         t.truthy(botReply3, 'MotherBot should reply');
         // // NODE1 CREATES A BADGE THROUGH THE ENPOINT
         const earnBadge = yield (0, bots_1.createBadge)(t, node1, 'Earn Badge');

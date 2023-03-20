@@ -169,7 +169,7 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
   const chats: Chat[] =
     chatIds.length > 0
       ? ((await models.Chat.findAll({
-          where: { deleted: false, id: chatIds, tenant },
+          where: { deleted: false, tenant },
         })) as Chat[])
       : []
 
@@ -437,6 +437,8 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   if (recipientPic) msg.recipientPic = recipientPic
   // console.log(msg)
   const message: Message = (await models.Message.create(msg)) as Message
+
+  console.log('==========>We got here<==========', message)
 
   success(res, jsonUtils.messageToJson(message, chat))
 
@@ -927,7 +929,8 @@ function removeDuplicateMsg(
     if (
       (message.type === constants.message_types.message ||
         message.type === constants.message_types.boost ||
-        message.type === constants.message_types.attachment) &&
+        message.type === constants.message_types.attachment ||
+        message.type === constants.message_types.bot_res) &&
       alreadyStoredMsg &&
       !alreadyStoredMsg.chat_id
     ) {
