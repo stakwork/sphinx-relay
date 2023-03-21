@@ -10,11 +10,11 @@ import { getCheckNewMsgs, getTribeByUuid, getCheckTribe } from '../utils/get'
 import nodes from '../nodes'
 
 /*
-npx ava test-10-tribe3Msgs.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribe3Messages.test.ts --verbose --serial --timeout=2m
 */
 
 test('test-10-tribe3Msgs: create tribe, two nodes join tribe, send messages, 2 nodes leave tribe, delete tribe', async (t) => {
-  await tribe3Msgs(t, nodes[4], nodes[1], nodes[2])
+  await tribe3Msgs(t, nodes[0], nodes[1], nodes[2])
 })
 
 export async function tribe3Msgs(t, node1, node2, node3) {

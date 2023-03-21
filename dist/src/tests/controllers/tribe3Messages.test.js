@@ -20,10 +20,10 @@ const msg_1 = require("../utils/msg");
 const get_1 = require("../utils/get");
 const nodes_1 = require("../nodes");
 /*
-npx ava test-10-tribe3Msgs.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribe3Messages.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test-10-tribe3Msgs: create tribe, two nodes join tribe, send messages, 2 nodes leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield tribe3Msgs(t, nodes_1.default[4], nodes_1.default[1], nodes_1.default[2]);
+    yield tribe3Msgs(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
 }));
 function tribe3Msgs(t, node1, node2, node3) {
     return __awaiter(this, void 0, void 0, function* () {
