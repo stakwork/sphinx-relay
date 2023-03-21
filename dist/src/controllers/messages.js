@@ -739,7 +739,6 @@ function removeDuplicateMsg(messages, message_length) {
         const alreadyStoredMsg = uuidObject[message.uuid];
         if ((message.type === constants_1.default.message_types.message ||
             message.type === constants_1.default.message_types.boost ||
-            message.type === constants_1.default.message_types.attachment ||
             message.type === constants_1.default.message_types.bot_res) &&
             alreadyStoredMsg &&
             !alreadyStoredMsg.chat_id) {

@@ -929,7 +929,6 @@ function removeDuplicateMsg(
     if (
       (message.type === constants.message_types.message ||
         message.type === constants.message_types.boost ||
-        message.type === constants.message_types.attachment ||
         message.type === constants.message_types.bot_res) &&
       alreadyStoredMsg &&
       !alreadyStoredMsg.chat_id
