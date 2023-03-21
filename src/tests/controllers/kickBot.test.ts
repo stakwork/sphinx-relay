@@ -1,6 +1,6 @@
 import test from 'ava'
 import nodes from '../nodes'
-import { createTribe, joinTribe, setTribePreview } from '../utils/save'
+import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg, checkTribeMember } from '../utils/get'
 import { sendTribeMessage } from '../utils/msg'
 import { deleteTribe, leaveTribe } from '../utils/del'
@@ -24,9 +24,6 @@ export async function kickBotTest(t, index1, index2, index3) {
   //NODE1 CREATES A TRIBE
   let tribe = await createTribe(t, node1)
   t.truthy(tribe, 'tribe should have been created by node1')
-
-  let setPreview = await setTribePreview(t, node1, tribe, 'localhost:8008')
-  t.true(setPreview, 'Node1 has added preview to tribe')
 
   //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
   const text = '/bot help'

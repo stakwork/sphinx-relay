@@ -32,8 +32,6 @@ function kickBotTest(t, index1, index2, index3) {
         //NODE1 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node1');
-        let setPreview = yield (0, save_1.setTribePreview)(t, node1, tribe, 'localhost:8008');
-        t.true(setPreview, 'Node1 has added preview to tribe');
         //NODE1 SENDS A BOT HELP MESSAGE IN TRIBE
         const text = '/bot help';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
