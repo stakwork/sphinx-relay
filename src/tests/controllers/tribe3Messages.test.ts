@@ -14,7 +14,7 @@ npx ava src/tests/controllers/tribe3Messages.test.ts --verbose --serial --timeou
 */
 
 test('test-10-tribe3Msgs: create tribe, two nodes join tribe, send messages, 2 nodes leave tribe, delete tribe', async (t) => {
-  await tribe3Msgs(t, nodes[0], nodes[1], nodes[2])
+  await tribe3Msgs(t, nodes[4], nodes[1], nodes[2])
 })
 
 export async function tribe3Msgs(t, node1, node2, node3) {
@@ -45,7 +45,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   //NODE1 SENDS A TEXT MESSAGE IN TRIBE
   const text = randomText()
   let tribeMessage = await sendTribeMessage(t, node1, tribe, text)
-  console.log(tribeMessage)
+
   //CHECK THAT NODE1'S DECRYPTED MESSAGE IS SAME AS INPUT
   const n2check = await checkMessageDecryption(
     t,
@@ -54,7 +54,6 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     text
   )
   t.true(n2check, 'node2 should have read and decrypted node1 message')
-  console.log('=======> Tobi <==========')
 
   //CHECK THAT NODE1'S DECRYPTED MESSAGE IS SAME AS INPUT
   const n3check = await checkMessageDecryption(

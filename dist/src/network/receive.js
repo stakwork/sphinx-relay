@@ -477,6 +477,7 @@ exports.initTribesSubscriptions = initTribesSubscriptions;
 function parsePayload(data) {
     const li = data.lastIndexOf('}');
     const msg = data.substring(0, li + 1);
+    console.log(msg);
     const payload = JSON.parse(msg);
     return payload || '';
 }
@@ -608,6 +609,7 @@ function parseKeysendInvoice(i) {
         let sender_pubkey;
         if (data) {
             try {
+                console.log(data);
                 const payload = parsePayload(data);
                 if (payload && payload.type === constants_1.default.message_types.keysend) {
                     // console.log('====> IS KEYSEND TYPE')
