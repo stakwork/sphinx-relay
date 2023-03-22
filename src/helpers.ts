@@ -4,7 +4,9 @@ import { signAndSend } from './network'
 import type { Msg, Payload, ChatMember } from './network/interfaces'
 import constants from './constants'
 import { logging, sphinxLogger } from './utils/logger'
+import { loadConfig } from './utils/config'
 
+const config = loadConfig()
 export const findOrCreateChat = async (params: {
   chat_id: number
   owner_id: number
@@ -388,4 +390,16 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
       ...(includePhotoUrl && { photo_url: sender.photoUrl }),
     },
   }
+}
+
+export function checkCache() {
+  const store_cache = config.store_cache
+  if (
+    typeof store_cache === 'string' &&
+    store_cache &&
+    store_cache.length > 0
+  ) {
+    return true
+  }
+  return false
 }

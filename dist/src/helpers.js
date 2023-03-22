@@ -9,12 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
+exports.checkCache = exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
 const network_1 = require("./network");
 const constants_1 = require("./constants");
 const logger_1 = require("./utils/logger");
+const config_1 = require("./utils/config");
+const config = (0, config_1.loadConfig)();
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
@@ -329,4 +331,14 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
         sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), (!dontActuallySendContactKey && { contact_key: sender.contactKey })), (sender.alias && { alias: sender.alias })), (includePhotoUrl && { photo_url: sender.photoUrl })),
     };
 }
+function checkCache() {
+    const store_cache = config.store_cache;
+    if (typeof store_cache === 'string' &&
+        store_cache &&
+        store_cache.length > 0) {
+        return true;
+    }
+    return false;
+}
+exports.checkCache = checkCache;
 //# sourceMappingURL=helpers.js.map

@@ -1,7 +1,7 @@
 {
   "development": {
     "hub_api_url": "None",
-    "proxy_initial_sats": 100,
+    "proxy_initial_sats": 1000,
     "proxy_new_nodes": 2,
     "proxy_lnd_ip": "127.0.0.1",
     "proxy_admin_token": "r46bnf8ibrhbb424heba",
@@ -25,6 +25,7 @@
     "connect_ui": true,
     "logging_level": "debug",
     "mqtt_host": "127.0.0.1",
-    "proxy_hd_keys": true
+    "proxy_hd_keys": true,
+    "store_cache": "0,29"
   }
 }

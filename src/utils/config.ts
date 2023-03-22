@@ -34,6 +34,7 @@ const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
 const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
 // const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
 const DEFAULT_PROXY_HD_KEYS = false
+const DEFAULT_STORE_CACHE = ''
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
@@ -140,5 +141,6 @@ export function loadConfig() {
     proxy_hd_keys:
       ENV.PROXY_HD_KEYS || config.proxy_hd_keys || DEFAULT_PROXY_HD_KEYS,
     default_cache_host: ENV.DEFAULT_CACHE_HOST || config.default_cache_host,
+    store_cache: ENV.STORE_CACHE || config.store_cache || DEFAULT_STORE_CACHE,
   }
 }

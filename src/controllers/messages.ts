@@ -174,14 +174,17 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
       : []
 
   // Get Cache Messages
-  const allMsg = await getFromCache({
-    chats,
-    order,
-    offset,
-    limit,
-    messages,
-    all_messages_length,
-  })
+  const checkCache = helpers.checkCache()
+  const allMsg = checkCache
+    ? await getFromCache({
+        chats,
+        order,
+        offset,
+        limit,
+        messages,
+        all_messages_length,
+      })
+    : { messages, all_messages_length }
 
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
@@ -256,19 +259,24 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   const chats: Chat[] =
     chatIds.length > 0
       ? ((await models.Chat.findAll({
-          where: { deleted: false, id: chatIds, tenant },
+          where: { deleted: false, tenant },
         })) as Chat[])
       : []
 
-  const allMsg = await getFromCache({
-    chats,
-    order,
-    offset,
-    limit,
-    messages,
-    all_messages_length: numberOfNewMessages,
-    dateToReturn,
-  })
+  //Check Cache
+  const checkCache = helpers.checkCache()
+  const allMsg = checkCache
+    ? await getFromCache({
+        chats,
+        order,
+        offset,
+        limit,
+        messages,
+        all_messages_length: numberOfNewMessages,
+        dateToReturn,
+      })
+    : { messages, all_messages_length: numberOfNewMessages }
+
   const chatsById = indexBy(chats, 'id')
   success(res, {
     new_messages: allMsg.messages.map((message) =>

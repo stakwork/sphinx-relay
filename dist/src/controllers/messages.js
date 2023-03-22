@@ -143,14 +143,17 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         }))
         : [];
     // Get Cache Messages
-    const allMsg = yield getFromCache({
-        chats,
-        order,
-        offset,
-        limit,
-        messages,
-        all_messages_length,
-    });
+    const checkCache = helpers.checkCache();
+    const allMsg = checkCache
+        ? yield getFromCache({
+            chats,
+            order,
+            offset,
+            limit,
+            messages,
+            all_messages_length,
+        })
+        : { messages, all_messages_length };
     // console.log("=> found all chats", chats && chats.length);
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     // console.log("=> indexed chats");
@@ -210,18 +213,22 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
     const chats = chatIds.length > 0
         ? (yield models_1.models.Chat.findAll({
-            where: { deleted: false, id: chatIds, tenant },
+            where: { deleted: false, tenant },
         }))
         : [];
-    const allMsg = yield getFromCache({
-        chats,
-        order,
-        offset,
-        limit,
-        messages,
-        all_messages_length: numberOfNewMessages,
-        dateToReturn,
-    });
+    //Check Cache
+    const checkCache = helpers.checkCache();
+    const allMsg = checkCache
+        ? yield getFromCache({
+            chats,
+            order,
+            offset,
+            limit,
+            messages,
+            all_messages_length: numberOfNewMessages,
+            dateToReturn,
+        })
+        : { messages, all_messages_length: numberOfNewMessages };
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     (0, res_1.success)(res, {
         new_messages: allMsg.messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
