@@ -521,7 +521,6 @@ export async function initTribesSubscriptions(): Promise<void> {
 function parsePayload(data): Payload {
   const li = data.lastIndexOf('}')
   const msg = data.substring(0, li + 1)
-  console.log(msg)
   const payload = JSON.parse(msg)
   return payload || ''
 }
@@ -652,7 +651,6 @@ export async function parseKeysendInvoice(
   let sender_pubkey
   if (data) {
     try {
-      console.log(data)
       const payload: Payload = parsePayload(data)
       if (payload && payload.type === constants.message_types.keysend) {
         // console.log('====> IS KEYSEND TYPE')

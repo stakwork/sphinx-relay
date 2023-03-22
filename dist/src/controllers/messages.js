@@ -380,7 +380,6 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.recipientPic = recipientPic;
     // console.log(msg)
     const message = (yield models_1.models.Message.create(msg));
-    console.log('==========>We got here<==========', message);
     (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
         id: message.id,
@@ -745,7 +744,6 @@ function removeDuplicateMsg(messages, message_length) {
         if (helpers.checkMsgTypeInCache(message.type) &&
             alreadyStoredMsg &&
             !alreadyStoredMsg.chat_id) {
-            console.log('Messge log', message);
             const msgIndex = filteredMsg.findIndex((msg) => msg.uuid === alreadyStoredMsg.uuid);
             filteredMsg.splice(msgIndex, 1);
             all_message_length -= 1;
