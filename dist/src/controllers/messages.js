@@ -428,7 +428,7 @@ Receive a message and store it in the database.
 */
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, cached, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -455,7 +455,6 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         push: force_push ? true : false,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
-    const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey;
     if (isTribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
@@ -468,7 +467,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (parent_id)
         msg.parentId = parent_id;
     let message = null;
-    if (!chat.preview || isTribeOwner) {
+    if (!cached) {
         message = (yield models_1.models.Message.create(msg));
     }
     socket.sendJson({
@@ -476,7 +475,7 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
     (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner, undefined, force_push);
-    if (!chat.preview || isTribeOwner) {
+    if (!cached) {
         (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
     }
 });
@@ -487,7 +486,7 @@ Receives a boost message and stores it in the database.
 @return {Promise<void>} - A promise that resolves when the function completes.
 */
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, cached, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
@@ -514,7 +513,6 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         forwardedSats: hasForwardedSats,
     };
     const isTribe = chat_type === constants_1.default.chat_types.tribe;
-    const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey;
     if (isTribe) {
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
@@ -526,14 +524,14 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     if (parent_id)
         msg.parentId = parent_id;
     let message = null;
-    if (!chat.preview || isTribeOwner) {
+    if (!cached) {
         message = (yield models_1.models.Message.create(msg));
     }
     socket.sendJson({
         type: 'boost',
         response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
-    if (!chat.preview || isTribeOwner) {
+    if (!cached) {
         (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
     }
     if (msg.replyUuid) {

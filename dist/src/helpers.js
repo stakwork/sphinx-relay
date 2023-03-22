@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkCache = exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
+exports.checkMsgTypeInCache = exports.checkCache = exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
 const network_1 = require("./network");
@@ -275,6 +275,10 @@ function parseReceiveParams(payload) {
                 where: { uuid: chat_uuid, tenant: owner.id },
             }));
         }
+        const isTribe = chat_type === constants_1.default.chat_types.tribe;
+        const tribeOwner = isTribe && (chat === null || chat === void 0 ? void 0 : chat.ownerPubkey) === (owner === null || owner === void 0 ? void 0 : owner.publicKey);
+        let existInCache = checkMsgTypeInCache(payload.type);
+        const cached = existInCache && !tribeOwner && (chat === null || chat === void 0 ? void 0 : chat.preview) ? true : false;
         return {
             owner: owner,
             dest,
@@ -312,6 +316,7 @@ function parseReceiveParams(payload) {
             recipient_alias,
             recipient_pic,
             person,
+            cached,
         };
     });
 }
@@ -341,4 +346,17 @@ function checkCache() {
     return false;
 }
 exports.checkCache = checkCache;
+function checkMsgTypeInCache(msgType) {
+    const msgTypeInCache = checkCache() && config.store_cache.split(',');
+    if (msgTypeInCache) {
+        for (let i = 0; i < msgTypeInCache.length; i++) {
+            const type = parseInt(msgTypeInCache[i]);
+            if (type === msgType) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+exports.checkMsgTypeInCache = checkMsgTypeInCache;
 //# sourceMappingURL=helpers.js.map

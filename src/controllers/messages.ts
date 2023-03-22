@@ -515,6 +515,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     force_push,
     hasForwardedSats,
     person,
+    cached,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
@@ -543,7 +544,6 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     push: force_push ? true : false,
   }
   const isTribe = chat_type === constants.chat_types.tribe
-  const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
@@ -553,7 +553,8 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
-  if (!chat.preview || isTribeOwner) {
+
+  if (!cached) {
     message = (await models.Message.create(msg)) as Message
   }
 
@@ -574,7 +575,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     force_push
   )
 
-  if (!chat.preview || isTribeOwner) {
+  if (!cached) {
     sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
   }
 }
@@ -603,6 +604,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     msg_id,
     force_push,
     hasForwardedSats,
+    cached,
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
@@ -635,7 +637,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     forwardedSats: hasForwardedSats,
   }
   const isTribe = chat_type === constants.chat_types.tribe
-  const isTribeOwner = isTribe && chat.ownerPubkey === owner.publicKey
+
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
@@ -644,7 +646,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
-  if (!chat.preview || isTribeOwner) {
+  if (!cached) {
     message = (await models.Message.create(msg)) as Message
   }
 
@@ -655,7 +657,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     },
     tenant
   )
-  if (!chat.preview || isTribeOwner) {
+  if (!cached) {
     sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
   }
 

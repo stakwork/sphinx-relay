@@ -329,6 +329,12 @@ export async function parseReceiveParams(payload: Payload): Promise<{
       where: { uuid: chat_uuid, tenant: owner.id },
     })) as ChatRecord
   }
+  const isTribe = chat_type === constants.chat_types.tribe
+  const tribeOwner = isTribe && chat?.ownerPubkey === owner?.publicKey
+
+  let existInCache = checkMsgTypeInCache(payload.type)
+
+  const cached = existInCache && !tribeOwner && chat?.preview ? true : false
   return {
     owner: owner as ContactRecord,
     dest,
@@ -366,6 +372,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
     recipient_alias,
     recipient_pic,
     person,
+    cached,
   }
 }
 
@@ -400,6 +407,19 @@ export function checkCache() {
     store_cache.length > 0
   ) {
     return true
+  }
+  return false
+}
+
+export function checkMsgTypeInCache(msgType: number) {
+  const msgTypeInCache = checkCache() && config.store_cache.split(',')
+  if (msgTypeInCache) {
+    for (let i = 0; i < msgTypeInCache.length; i++) {
+      const type = parseInt(msgTypeInCache[i])
+      if (type === msgType) {
+        return true
+      }
+    }
   }
   return false
 }
