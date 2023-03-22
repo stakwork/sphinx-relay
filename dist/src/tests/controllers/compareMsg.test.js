@@ -20,7 +20,7 @@ const get_1 = require("../utils/get");
 /*
 npx ava src/tests/controllers/cache.test.ts --verbose --serial --timeout=2m
 */
-(0, ava_1.default)('test cache: create tribe, join tribe, send messages,verify message got to tribe, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
+(0, ava_1.default)('test cache: create tribe, join tribe, send messages,verify message got to tribe, compare relay and cache message, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield cacheMessage(t, 3, 1, 2);
 }));
 function cacheMessage(t, index1, index2, index3) {
@@ -28,7 +28,7 @@ function cacheMessage(t, index1, index2, index3) {
         let node1 = nodes_1.default[index1];
         let node2 = nodes_1.default[index2];
         let node3 = nodes_1.default[index3];
-        console.log(`Checking cache messages in tribe for ${node1.alias} and ${node2.alias} and ${node3.alias}`);
+        console.log(`Comparing cache and relay messages in tribe for ${node1.alias} and ${node2.alias} and ${node3.alias}`);
         //NODE4 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node1);
         t.truthy(tribe, 'tribe should have been created by node4');
@@ -56,6 +56,12 @@ function cacheMessage(t, index1, index2, index3) {
         yield (0, helpers_1.sleep)(1000);
         const msgExist = yield (0, get_1.getMsgByUuid)(t, node1, tribeMessage2);
         t.truthy(msgExist, 'Message should be seen by node 1');
+        yield (0, helpers_1.sleep)(1000);
+        const msgExist2 = yield (0, get_1.getMsgByUuid)(t, node3, tribeMessage2);
+        t.truthy(msgExist2, 'Message should be seen by node 2');
+        const compared = yield (0, get_1.getMessageDiff)(t, msgExist2, msgExist);
+        console.log(compared);
+        t.truthy(compared, 'There should be values in message directly from relay not present in cache message');
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
@@ -68,4 +74,4 @@ function cacheMessage(t, index1, index2, index3) {
     });
 }
 exports.cacheMessage = cacheMessage;
-//# sourceMappingURL=cache.test.js.map
+//# sourceMappingURL=compareMsg.test.js.map

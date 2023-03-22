@@ -12,7 +12,7 @@ export async function getMsgByUuid(
     for (let i = 0; i < msg.new_messages.length; i++) {
       const newMsg = msg.new_messages[i]
       if (newMsg.uuid === message.uuid) {
-        return true
+        return newMsg
       }
     }
     return false

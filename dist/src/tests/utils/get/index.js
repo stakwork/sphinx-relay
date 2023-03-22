@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMsgByUuid = exports.getCacheMsg = exports.checkTribeMember = exports.getTribeMember = exports.shouldNotGetBotRes = exports.shouldNotGetNewMsgs = exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
+exports.getMessageDiff = exports.getMsgByUuid = exports.getCacheMsg = exports.checkTribeMember = exports.getTribeMember = exports.shouldNotGetBotRes = exports.shouldNotGetNewMsgs = exports.verifyActionHistorySaved = exports.getCheckAllMessages = exports.getCheckMsgs = exports.getCheckBotMsg = exports.getLatest = exports.getCheckNewStream = exports.getTribeByUuid = exports.getFailNewMsgs = exports.getCheckNewJoin = exports.getTribeId = exports.getCheckContacts = exports.getCheckNewPaidMsgs = exports.getTribeIdFromUUID = exports.getCheckTribe = exports.getChats = exports.getCheckNewMsgs = exports.getContactAndCheckKeyExchange = exports.getContacts = exports.getSelf = exports.getLsat = exports.getCheckNewPaidInvoice = exports.getBalance = void 0;
 var getBalance_1 = require("./getBalance");
 Object.defineProperty(exports, "getBalance", { enumerable: true, get: function () { return getBalance_1.getBalance; } });
 var getCheckNewPaidInvoice_1 = require("./getCheckNewPaidInvoice");
@@ -57,4 +57,6 @@ var getMsgFromCache_1 = require("./getMsgFromCache");
 Object.defineProperty(exports, "getCacheMsg", { enumerable: true, get: function () { return getMsgFromCache_1.getCacheMsg; } });
 var checkMsgByUuid_1 = require("./checkMsgByUuid");
 Object.defineProperty(exports, "getMsgByUuid", { enumerable: true, get: function () { return checkMsgByUuid_1.getMsgByUuid; } });
+var getMessageDiff_1 = require("./getMessageDiff");
+Object.defineProperty(exports, "getMessageDiff", { enumerable: true, get: function () { return getMessageDiff_1.getMessageDiff; } });
 //# sourceMappingURL=index.js.map

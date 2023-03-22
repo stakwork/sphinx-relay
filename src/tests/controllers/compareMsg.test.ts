@@ -4,13 +4,13 @@ import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe, setTribePreview } from '../utils/save'
 import { sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
-import { getCacheMsg, getMsgByUuid } from '../utils/get'
+import { getCacheMsg, getMsgByUuid, getMessageDiff } from '../utils/get'
 
 /*
 npx ava src/tests/controllers/cache.test.ts --verbose --serial --timeout=2m
 */
 
-test('test cache: create tribe, join tribe, send messages,verify message got to tribe, leave tribe, delete tribe', async (t) => {
+test('test cache: create tribe, join tribe, send messages,verify message got to tribe, compare relay and cache message, leave tribe, delete tribe', async (t) => {
   await cacheMessage(t, 3, 1, 2)
 })
 
@@ -20,7 +20,7 @@ export async function cacheMessage(t, index1, index2, index3) {
   let node3 = nodes[index3]
 
   console.log(
-    `Checking cache messages in tribe for ${node1.alias} and ${node2.alias} and ${node3.alias}`
+    `Comparing cache and relay messages in tribe for ${node1.alias} and ${node2.alias} and ${node3.alias}`
   )
 
   //NODE4 CREATES A TRIBE
@@ -55,6 +55,17 @@ export async function cacheMessage(t, index1, index2, index3) {
   await sleep(1000)
   const msgExist = await getMsgByUuid(t, node1, tribeMessage2)
   t.truthy(msgExist, 'Message should be seen by node 1')
+
+  await sleep(1000)
+  const msgExist2 = await getMsgByUuid(t, node3, tribeMessage2)
+  t.truthy(msgExist2, 'Message should be seen by node 2')
+
+  const compared = await getMessageDiff(t, msgExist2, msgExist)
+  console.log(compared)
+  t.truthy(
+    compared,
+    'There should be values in message directly from relay not present in cache message'
+  )
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

@@ -9,24 +9,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMsgByUuid = void 0;
-const getCheckAllMessages_1 = require("./getCheckAllMessages");
-function getMsgByUuid(t, node1, message) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const msg = yield (0, getCheckAllMessages_1.getCheckAllMessages)(t, node1, 1000, 0);
-        if (msg && msg.new_messages && msg.new_messages.length) {
-            for (let i = 0; i < msg.new_messages.length; i++) {
-                const newMsg = msg.new_messages[i];
-                if (newMsg.uuid === message.uuid) {
-                    return newMsg;
+exports.getMessageDiff = void 0;
+const getMessageDiff = (t, noCacheMsg, cacheMsg) => __awaiter(void 0, void 0, void 0, function* () {
+    const missingField = ['created_at', 'updated_at'];
+    if (cacheMsg.cached && noCacheMsg.cached === undefined) {
+        for (let key in noCacheMsg) {
+            if (key !== 'chat') {
+                // created_at and updated_at are always null
+                if (cacheMsg[key] === undefined) {
+                    missingField.push(key);
                 }
             }
-            return false;
         }
-        else {
-            return false;
-        }
-    });
-}
-exports.getMsgByUuid = getMsgByUuid;
-//# sourceMappingURL=checkMsgByUuid.js.map
+        return missingField;
+    }
+    else {
+        return false;
+    }
+});
+exports.getMessageDiff = getMessageDiff;
+//# sourceMappingURL=getMessageDiff.js.map
