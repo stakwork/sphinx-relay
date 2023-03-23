@@ -145,14 +145,16 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     order: [['id', order]],
     where: { tenant },
   }
-  let all_messages_length: number = (await models.Message.count(
+  const all_messages_length: number = (await models.Message.count(
     clause
   )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  let messages: Message[] = (await models.Message.findAll(clause)) as Message[]
+  const messages: Message[] = (await models.Message.findAll(
+    clause
+  )) as Message[]
 
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
@@ -227,14 +229,16 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
       tenant,
     },
   }
-  let numberOfNewMessages: number = (await models.Message.count(
+  const numberOfNewMessages: number = (await models.Message.count(
     clause
   )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  let messages: Message[] = (await models.Message.findAll(clause)) as Message[]
+  const messages: Message[] = (await models.Message.findAll(
+    clause
+  )) as Message[]
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
     logging.Express
