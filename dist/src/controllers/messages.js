@@ -26,8 +26,10 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
 const cron_1 = require("cron");
+const config_1 = require("../utils/config");
 // store all current running jobs in memory
 const jobs = {};
+const config = (0, config_1.loadConfig)();
 // deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
@@ -770,7 +772,7 @@ function deleteMessages(contacts) {
             for (let i = 0; i < contacts.length; i++) {
                 let contact = contacts[i];
                 const date = new Date();
-                date.setDate(date.getDate() - (contact.prune || 30));
+                date.setDate(date.getDate() - (contact.prune || parseInt(config.default_prune)));
                 yield handleMessageDelete({
                     tenant: contact.tenant,
                     date: date.toISOString(),

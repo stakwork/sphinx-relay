@@ -22,6 +22,7 @@ import { Req, Res } from '../types'
 import { ChatPlusMembers } from '../network/send'
 import { getCacheMsg } from '../utils/tribes'
 import { CronJob } from 'cron'
+import { loadConfig } from '../utils/config'
 
 interface ExtentedMessage extends Message {
   chat_id?: number
@@ -29,6 +30,8 @@ interface ExtentedMessage extends Message {
 
 // store all current running jobs in memory
 const jobs = {}
+
+const config = loadConfig()
 
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
@@ -972,7 +975,9 @@ async function deleteMessages(contacts: ContactRecord[]) {
     for (let i = 0; i < contacts.length; i++) {
       let contact: ContactRecord = contacts[i]
       const date = new Date()
-      date.setDate(date.getDate() - (contact.prune || 30))
+      date.setDate(
+        date.getDate() - (contact.prune || parseInt(config.default_prune))
+      )
       await handleMessageDelete({
         tenant: contact.tenant,
         date: date.toISOString(),
