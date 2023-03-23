@@ -131,17 +131,9 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     let messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
-    const chatIds = [];
-    messages.forEach((m) => {
-        if (m.chatId && !chatIds.includes(m.chatId)) {
-            chatIds.push(m.chatId);
-        }
-    });
-    const chats = chatIds.length > 0
-        ? (yield models_1.models.Chat.findAll({
-            where: { deleted: false, tenant },
-        }))
-        : [];
+    const chats = (yield models_1.models.Chat.findAll({
+        where: { deleted: false, tenant },
+    }));
     // Get Cache Messages
     const checkCache = helpers.checkCache();
     const allMsg = checkCache
@@ -205,17 +197,9 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     let messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
-    const chatIds = [];
-    messages.forEach((m) => {
-        if (m.chatId && !chatIds.includes(m.chatId)) {
-            chatIds.push(m.chatId);
-        }
-    });
-    const chats = chatIds.length > 0
-        ? (yield models_1.models.Chat.findAll({
-            where: { deleted: false, tenant },
-        }))
-        : [];
+    const chats = (yield models_1.models.Chat.findAll({
+        where: { deleted: false, tenant },
+    }));
     //Check Cache
     const checkCache = helpers.checkCache();
     const allMsg = checkCache

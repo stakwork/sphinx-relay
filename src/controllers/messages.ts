@@ -159,19 +159,9 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     logging.Express
   )
 
-  const chatIds: number[] = []
-  messages.forEach((m) => {
-    if (m.chatId && !chatIds.includes(m.chatId)) {
-      chatIds.push(m.chatId)
-    }
-  })
-
-  const chats: Chat[] =
-    chatIds.length > 0
-      ? ((await models.Chat.findAll({
-          where: { deleted: false, tenant },
-        })) as Chat[])
-      : []
+  const chats: Chat[] = (await models.Chat.findAll({
+    where: { deleted: false, tenant },
+  })) as Chat[]
 
   // Get Cache Messages
   const checkCache = helpers.checkCache()
@@ -249,19 +239,10 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
     `=> got msgs, ${messages && messages.length}`,
     logging.Express
   )
-  const chatIds: number[] = []
-  messages.forEach((m) => {
-    if (m.chatId && !chatIds.includes(m.chatId)) {
-      chatIds.push(m.chatId)
-    }
-  })
 
-  const chats: Chat[] =
-    chatIds.length > 0
-      ? ((await models.Chat.findAll({
-          where: { deleted: false, tenant },
-        })) as Chat[])
-      : []
+  const chats: Chat[] = (await models.Chat.findAll({
+    where: { deleted: false, tenant },
+  })) as Chat[]
 
   //Check Cache
   const checkCache = helpers.checkCache()
