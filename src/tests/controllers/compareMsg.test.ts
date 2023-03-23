@@ -7,7 +7,7 @@ import nodes from '../nodes'
 import { getCacheMsg, getMsgByUuid, getMessageDiff } from '../utils/get'
 
 /*
-npx ava src/tests/controllers/cache.test.ts --verbose --serial --timeout=2m
+npx ava src/tests/controllers/compareMsg.test.ts --verbose --serial --timeout=2m
 */
 
 test('test cache: create tribe, join tribe, send messages,verify message got to tribe, compare relay and cache message, leave tribe, delete tribe', async (t) => {

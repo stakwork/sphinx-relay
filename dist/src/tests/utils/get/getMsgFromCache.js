@@ -11,21 +11,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCacheMsg = void 0;
 const http = require("ava-http");
+const config_1 = require("../../config");
 function getCacheMsg(t, tribe, message, content) {
     return __awaiter(this, void 0, void 0, function* () {
-        const msgRes = yield http.get(`http://localhost:8008/api/msgs/${tribe.uuid}`);
-        if (msgRes.length > 0) {
-            for (let i = 0; i < msgRes.length; i++) {
-                const msg = msgRes[i];
-                if (msg.uuid === message.uuid && msg.message_content === content) {
-                    return true;
+        if (config_1.config.cache) {
+            const msgRes = yield http.get(`http://localhost:8008/api/msgs/${tribe.uuid}`);
+            if (msgRes.length > 0) {
+                for (let i = 0; i < msgRes.length; i++) {
+                    const msg = msgRes[i];
+                    if (msg.uuid === message.uuid && msg.message_content === content) {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
+            else {
+                return false;
+            }
         }
-        else {
-            return false;
-        }
+        return true;
     });
 }
 exports.getCacheMsg = getCacheMsg;

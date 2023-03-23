@@ -12,13 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setTribePreview = void 0;
 const http = require("ava-http");
 const helpers_1 = require("../helpers");
+const config_1 = require("../../config");
 function setTribePreview(t, node1, tribe, url) {
     return __awaiter(this, void 0, void 0, function* () {
         const body = {
             preview: url,
         };
-        const preview = yield http.post(`${node1.external_ip}/preview/${tribe.id}`, (0, helpers_1.makeArgs)(node1, body));
-        t.true(preview.success, `Preview should be set for ${tribe.name}`);
+        if (config_1.config.cache) {
+            const preview = yield http.post(`${node1.external_ip}/preview/${tribe.id}`, (0, helpers_1.makeArgs)(node1, body));
+            t.true(preview.success, `Preview should be set for ${tribe.name}`);
+        }
         return true;
     });
 }
