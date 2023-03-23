@@ -16,7 +16,7 @@ npx ava src/tests/controllers/silentTribeBotMsg.test.ts --verbose --serial --tim
 */
 
 test('test-30-slinetTribeBotMsg: create tribe, install to tribe bot, send hidden tribe commands, delete bot, delete tribe', async (t) => {
-  await silentTribeBotMsg(t, nodes[4], nodes[1], nodes[2])
+  await silentTribeBotMsg(t, nodes[0], nodes[1], nodes[2])
 })
 
 async function silentTribeBotMsg(t, node1, node2, node3) {

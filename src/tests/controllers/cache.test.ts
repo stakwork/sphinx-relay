@@ -11,7 +11,7 @@ npx ava src/tests/controllers/cache.test.ts --verbose --serial --timeout=2m
 */
 
 test('test cache: create tribe, join tribe, send messages,verify message got to tribe, leave tribe, delete tribe', async (t) => {
-  await cacheMessage(t, 3, 1, 2)
+  await cacheMessage(t, 4, 1, 2)
 })
 
 export async function cacheMessage(t, index1, index2, index3) {

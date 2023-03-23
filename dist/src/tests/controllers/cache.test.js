@@ -21,7 +21,7 @@ const get_1 = require("../utils/get");
 npx ava src/tests/controllers/cache.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test cache: create tribe, join tribe, send messages,verify message got to tribe, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield cacheMessage(t, 3, 1, 2);
+    yield cacheMessage(t, 4, 1, 2);
 }));
 function cacheMessage(t, index1, index2, index3) {
     return __awaiter(this, void 0, void 0, function* () {

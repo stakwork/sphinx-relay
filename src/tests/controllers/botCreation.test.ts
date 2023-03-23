@@ -14,7 +14,7 @@ npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2
 */
 
 test('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', async (t) => {
-  await botCreation(t, nodes[4], nodes[1], nodes[2])
+  await botCreation(t, nodes[0], nodes[1], nodes[2])
 })
 
 async function botCreation(t, node1, node2, node3) {

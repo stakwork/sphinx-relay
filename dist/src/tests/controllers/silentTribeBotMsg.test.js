@@ -20,7 +20,7 @@ const helpers_1 = require("../utils/helpers");
 npx ava src/tests/controllers/silentTribeBotMsg.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test-30-slinetTribeBotMsg: create tribe, install to tribe bot, send hidden tribe commands, delete bot, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield silentTribeBotMsg(t, nodes_1.default[4], nodes_1.default[1], nodes_1.default[2]);
+    yield silentTribeBotMsg(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
 }));
 function silentTribeBotMsg(t, node1, node2, node3) {
     return __awaiter(this, void 0, void 0, function* () {
