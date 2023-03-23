@@ -50,6 +50,9 @@ function set(app) {
         if (models_1.models && models_1.models.RecurringCall) {
             (0, callRecording_1.initializeCronJobsForCallRecordings)();
         }
+        if (models_1.models && models_1.models.Contact) {
+            messages.initializeDeleteMessageCronJobs();
+        }
         // media.cycleMediaToken()
         timers.reloadTimers();
         // queries.startWatchingUTXOs();

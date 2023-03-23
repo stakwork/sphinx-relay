@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.receiveVoip = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
+exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
 const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
@@ -25,6 +25,9 @@ const short = require("short-uuid");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
+const cron_1 = require("cron");
+// store all current running jobs in memory
+const jobs = {};
 // deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
@@ -740,5 +743,59 @@ function removeDuplicateMsg(messages, message_length) {
         }
     }
     return { messages: filteredMsg, all_messages_length: all_message_length };
+}
+const initializeDeleteMessageCronJobs = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        logger_1.sphinxLogger.info(['=> initializing delete message cron job']);
+        const contacts = (yield models_1.models.Contact.findAll({
+            where: { isOwner: true },
+        }));
+        startDeleteMsgCronJob(contacts);
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(['=> error initializing delete message cron job', error]);
+    }
+});
+exports.initializeDeleteMessageCronJobs = initializeDeleteMessageCronJobs;
+function startDeleteMsgCronJob(contacts) {
+    return __awaiter(this, void 0, void 0, function* () {
+        jobs['del_msg'] = new cron_1.CronJob('0 5 * * *', () => {
+            deleteMessages(contacts);
+        }, null, true);
+    });
+}
+function deleteMessages(contacts) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            for (let i = 0; i < contacts.length; i++) {
+                let contact = contacts[i];
+                const date = new Date();
+                date.setDate(date.getDate() - (contact.prune || 30));
+                yield handleMessageDelete({
+                    tenant: contact.tenant,
+                    date: date.toISOString(),
+                });
+            }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error([
+                '=> error iterating through contacts to delete message cron job',
+                error,
+            ]);
+        }
+    });
+}
+function handleMessageDelete({ tenant, date, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield models_1.models.Message.destroy({
+                where: { tenant, createdAt: { [sequelize_1.Op.lt]: date } },
+            });
+            logger_1.sphinxLogger.info(['=> message deleted by cron job']);
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(['=> error deleting message by cron job', error]);
+        }
+    });
 }
 //# sourceMappingURL=messages.js.map
