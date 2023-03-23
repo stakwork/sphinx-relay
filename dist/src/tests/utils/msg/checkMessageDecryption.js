@@ -17,6 +17,10 @@ function checkMessageDecryption(t, node, msgUuid, text) {
         // //wait for message to process
         const lastMessage = yield (0, get_1.getCheckNewMsgs)(t, node, msgUuid);
         t.truthy(lastMessage, 'await message post');
+        if (lastMessage.cached) {
+            t.true(lastMessage.message_content === text, 'message content should match text');
+            return true;
+        }
         //decrypt the last message sent to node using node private key and lastMessage content
         const decrypt = rsa.decrypt(node.privkey, lastMessage.message_content);
         //the decrypted message should equal the random string input before encryption

@@ -20,6 +20,11 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { ChatPlusMembers } from '../network/send'
+import { getCacheMsg } from '../utils/tribes'
+
+interface ExtentedMessage extends Message {
+  chat_id?: number
+}
 
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
@@ -140,43 +145,45 @@ export const getAllMessages = async (req: Req, res: Res): Promise<void> => {
     order: [['id', order]],
     where: { tenant },
   }
-  const all_messages_length: number = (await models.Message.count(
+  let all_messages_length: number = (await models.Message.count(
     clause
   )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  const messages: Message[] = (await models.Message.findAll(
-    clause
-  )) as Message[]
+  let messages: Message[] = (await models.Message.findAll(clause)) as Message[]
 
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
     logging.Express
   )
 
-  const chatIds: number[] = []
-  messages.forEach((m) => {
-    if (m.chatId && !chatIds.includes(m.chatId)) {
-      chatIds.push(m.chatId)
-    }
-  })
+  const chats: Chat[] = (await models.Chat.findAll({
+    where: { deleted: false, tenant },
+  })) as Chat[]
 
-  const chats: Chat[] =
-    chatIds.length > 0
-      ? ((await models.Chat.findAll({
-          where: { deleted: false, id: chatIds, tenant },
-        })) as Chat[])
-      : []
+  // Get Cache Messages
+  const checkCache = helpers.checkCache()
+  const allMsg = checkCache
+    ? await getFromCache({
+        chats,
+        order,
+        offset,
+        limit,
+        messages,
+        all_messages_length,
+      })
+    : { messages, all_messages_length }
+
   // console.log("=> found all chats", chats && chats.length);
   const chatsById = indexBy(chats, 'id')
   // console.log("=> indexed chats");
   success(res, {
-    new_messages: messages.map((message) =>
+    new_messages: allMsg.messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
-    new_messages_total: all_messages_length,
+    new_messages_total: allMsg.all_messages_length,
     confirmed_messages: [],
   })
 }
@@ -199,7 +206,7 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
 
   const limit = req.query.limit && parseInt(req.query.limit as string)
   const offset = req.query.offset && parseInt(req.query.offset as string)
-  const dateToReturn = req.query.date
+  const dateToReturn = req.query.date as string
   if (!dateToReturn) {
     return getAllMessages(req, res)
   }
@@ -220,39 +227,43 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
       tenant,
     },
   }
-  const numberOfNewMessages: number = (await models.Message.count(
+  let numberOfNewMessages: number = (await models.Message.count(
     clause
   )) as number
   if (limit) {
     clause.limit = limit
     clause.offset = offset
   }
-  const messages: Message[] = (await models.Message.findAll(
-    clause
-  )) as Message[]
+  let messages: Message[] = (await models.Message.findAll(clause)) as Message[]
   sphinxLogger.info(
     `=> got msgs, ${messages && messages.length}`,
     logging.Express
   )
-  const chatIds: number[] = []
-  messages.forEach((m) => {
-    if (m.chatId && !chatIds.includes(m.chatId)) {
-      chatIds.push(m.chatId)
-    }
-  })
 
-  const chats: Chat[] =
-    chatIds.length > 0
-      ? ((await models.Chat.findAll({
-          where: { deleted: false, id: chatIds, tenant },
-        })) as Chat[])
-      : []
+  const chats: Chat[] = (await models.Chat.findAll({
+    where: { deleted: false, tenant },
+  })) as Chat[]
+
+  //Check Cache
+  const checkCache = helpers.checkCache()
+  const allMsg = checkCache
+    ? await getFromCache({
+        chats,
+        order,
+        offset,
+        limit,
+        messages,
+        all_messages_length: numberOfNewMessages,
+        dateToReturn,
+      })
+    : { messages, all_messages_length: numberOfNewMessages }
+
   const chatsById = indexBy(chats, 'id')
   success(res, {
-    new_messages: messages.map((message) =>
+    new_messages: allMsg.messages.map((message) =>
       jsonUtils.messageToJson(message, chatsById[message.chatId])
     ),
-    new_messages_total: numberOfNewMessages,
+    new_messages_total: allMsg.all_messages_length,
   })
 }
 
@@ -483,6 +494,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     force_push,
     hasForwardedSats,
     person,
+    cached,
   } = await helpers.parseReceiveParams(payload)
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
@@ -519,12 +531,16 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
-  const message: Message = (await models.Message.create(msg)) as Message
+  let message: Message | null = null
+
+  if (!cached) {
+    message = (await models.Message.create(msg)) as Message
+  }
 
   socket.sendJson(
     {
       type: 'message',
-      response: jsonUtils.messageToJson(message, chat, sender),
+      response: jsonUtils.messageToJson(message || msg, chat, sender),
     },
     tenant
   )
@@ -538,7 +554,9 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     force_push
   )
 
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  if (!cached) {
+    sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  }
 }
 
 /**
@@ -565,6 +583,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     msg_id,
     force_push,
     hasForwardedSats,
+    cached,
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
@@ -597,6 +616,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     forwardedSats: hasForwardedSats,
   }
   const isTribe = chat_type === constants.chat_types.tribe
+
   if (isTribe) {
     msg.senderAlias = sender_alias
     msg.senderPic = sender_photo_url
@@ -604,17 +624,21 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
-  const message: Message = (await models.Message.create(msg)) as Message
+  let message: Message | null = null
+  if (!cached) {
+    message = (await models.Message.create(msg)) as Message
+  }
 
   socket.sendJson(
     {
       type: 'boost',
-      response: jsonUtils.messageToJson(message, chat, sender),
+      response: jsonUtils.messageToJson(message || msg, chat, sender),
     },
     tenant
   )
-
-  sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  if (!cached) {
+    sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+  }
 
   if (msg.replyUuid) {
     const ogMsg: Message = (await models.Message.findOne({
@@ -843,4 +867,71 @@ export const receiveVoip = async (payload: Payload): Promise<void> => {
   sendVoipNotification(owner, { caller_name: sender.alias, link_url: text })
 
   sendConfirmation({ chat, sender: owner, msg_id, receiver: sender })
+}
+interface GetCacheInput {
+  chats: Chat[]
+  order: string
+  offset: number | '' | undefined
+  limit: number | '' | undefined
+  messages: Message[]
+  all_messages_length: number
+  dateToReturn?: string
+}
+async function getFromCache({
+  chats,
+  order,
+  offset,
+  limit,
+  messages,
+  all_messages_length,
+  dateToReturn,
+}: GetCacheInput) {
+  for (let i = 0; i < chats.length; i++) {
+    const chat = chats[i]
+    if (chat.preview) {
+      const cacheMsg = await getCacheMsg({
+        preview: chat.preview,
+        chat_uuid: chat.uuid,
+        chat_id: chat.id,
+        order,
+        offset,
+        limit,
+        dateToReturn,
+      })
+      messages = [...messages, ...cacheMsg]
+      all_messages_length = all_messages_length + cacheMsg.length
+    }
+  }
+  return removeDuplicateMsg(messages, all_messages_length)
+}
+
+function removeDuplicateMsg(
+  messages: ExtentedMessage[],
+  message_length: number
+) {
+  const filteredMsg: ExtentedMessage[] = []
+  const uuidObject: { [k: string]: ExtentedMessage } = {}
+  let all_message_length = message_length
+  for (let i = 0; i < messages.length; i++) {
+    const message = messages[i]
+    const alreadyStoredMsg = uuidObject[message.uuid]
+    if (
+      helpers.checkMsgTypeInCache(message.type) &&
+      alreadyStoredMsg &&
+      !alreadyStoredMsg.chat_id
+    ) {
+      const msgIndex = filteredMsg.findIndex(
+        (msg) => msg.uuid === alreadyStoredMsg.uuid
+      )
+      filteredMsg.splice(msgIndex, 1)
+      all_message_length -= 1
+      filteredMsg.push(message)
+      uuidObject[message.uuid] = message
+    } else {
+      filteredMsg.push(message)
+      uuidObject[message.uuid] = message
+    }
+  }
+
+  return { messages: filteredMsg, all_messages_length: all_message_length }
 }

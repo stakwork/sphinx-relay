@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RecurringCall = exports.TribeBadge = exports.Badge = exports.ContentFeedStatus = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = void 0;
+exports.RecurringCall = exports.TribeBadge = exports.Badge = exports.ContentFeedStatus = exports.CallRecording = exports.ActionHistory = exports.RequestsTransportTokens = exports.BotMember = exports.Lsat = exports.MediaKey = exports.Accounting = exports.Bot = exports.Timer = exports.ChatBot = exports.Subscription = exports.Invite = exports.ChatMember = exports.Message = exports.Chat = exports.Contact = exports.models = exports.sequelize = exports.isPostgres = void 0;
 // parse BIGINTs to number
 const pg = require("pg");
 pg.defaults.parseInt8 = true;
@@ -60,13 +60,17 @@ const dialect = process.env.DB_DIALECT;
 const storage = process.env.DB_STORAGE;
 if (dialect && storage) {
     config = {
-        dialect,
+        dialect: dialect,
         storage,
     };
 }
 else {
     config = JSON.parse((0, fs_1.readFileSync)(configFile).toString())[env];
 }
+function isPostgres() {
+    return config.dialect === 'postgres';
+}
+exports.isPostgres = isPostgres;
 const appConfig = (0, config_1.loadConfig)();
 const opts = Object.assign(Object.assign({}, config), { logging: appConfig.sql_log === 'true' ? console.log : false, models: [
         chat_1.default,

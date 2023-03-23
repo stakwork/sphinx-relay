@@ -37,14 +37,14 @@ function kickBotTest(t, index1, index2, index3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);
         //NODE1 AWAIT REPLY FROM BOT
         let botAlias = 'MotherBot';
-        const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 1);
         t.truthy(botReply, 'MotherBot should reply');
         //NODE1 Installs kick bot
         const text2 = '/bot install kick';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
         //AWAIT KICK BOT RESPONSE
         botAlias = 'MotherBot';
-        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 2);
         t.truthy(botReply2, 'MotherBot should reply');
         //NODE2 JOINS TRIBE
         if (node1.routeHint)
@@ -56,7 +56,7 @@ function kickBotTest(t, index1, index2, index3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, addPubkey);
         //AWAIT KICK BOT RESPONSE
         botAlias = 'KickBot';
-        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 1);
         t.truthy(botReply3, 'MotherBot should reply');
         //NODE1 CHECKS TRIBE MEMBERS AND NODE2 SHOULD NOT BE A MEMBER
         const member = yield (0, get_1.checkTribeMember)(t, node1, node2, tribe);
@@ -70,7 +70,7 @@ function kickBotTest(t, index1, index2, index3) {
         let join2 = yield (0, save_1.joinTribe)(t, node2, tribe);
         t.true(join2, 'node2 should join tribe');
         botAlias = 'KickBot';
-        const botReply8 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply8 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 2);
         t.truthy(botReply8, 'MotherBot should reply');
         //NODE2 DELETE TRIBE
         let delTribe2 = yield (0, del_1.deleteTribe)(t, node2, tribe);
@@ -83,7 +83,7 @@ function kickBotTest(t, index1, index2, index3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, removePubkey);
         //AWAIT KICK BOT RESPONSE
         botAlias = 'KickBot';
-        const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 3);
         t.truthy(botReply4, 'MotherBot should reply');
         //NODE2 JOINS TRIBE AGAIN AND SHOULD BE ABLE TO JOIN TRIBE
         if (node1.routeHint)
@@ -98,7 +98,7 @@ function kickBotTest(t, index1, index2, index3) {
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, addPubkey2);
         //AWAIT KICK BOT RESPONSE
         botAlias = 'KickBot';
-        const botReply5 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias);
+        const botReply5 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 4);
         t.truthy(botReply5, 'MotherBot should reply');
         //NODE3 TRIES TO JOIN TRIBE
         if (node1.routeHint)

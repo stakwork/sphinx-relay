@@ -484,7 +484,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         msg.senderAlias = sender_alias;
         msg.senderPic = sender_photo_url;
     }
-    const message = yield models_1.models.Message.create(msg);
+    const message = (yield models_1.models.Message.create(msg));
     // console.log('saved attachment', message.dataValues)
     socket.sendJson({
         type: 'attachment',

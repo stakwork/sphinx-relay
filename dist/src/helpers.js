@@ -9,12 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
+exports.checkMsgTypeInCache = exports.checkCache = exports.asyncForEach = exports.parseReceiveParams = exports.sleep = exports.findOrCreateChatByUUID = exports.findOrCreateContactByPubkeyAndRouteHint = exports.performKeysendMessage = exports.sendContactKeys = exports.findOrCreateChat = void 0;
 const models_1 = require("./models");
 const md5 = require("md5");
 const network_1 = require("./network");
 const constants_1 = require("./constants");
 const logger_1 = require("./utils/logger");
+const config_1 = require("./utils/config");
+const config = (0, config_1.loadConfig)();
 const findOrCreateChat = (params) => __awaiter(void 0, void 0, void 0, function* () {
     const { chat_id, owner_id, recipient_id } = params;
     // console.log("chat_id, owner_id, recipient_id", chat_id, owner_id, recipient_id)
@@ -273,6 +275,10 @@ function parseReceiveParams(payload) {
                 where: { uuid: chat_uuid, tenant: owner.id },
             }));
         }
+        const isTribe = chat_type === constants_1.default.chat_types.tribe;
+        const tribeOwner = isTribe && (chat === null || chat === void 0 ? void 0 : chat.ownerPubkey) === (owner === null || owner === void 0 ? void 0 : owner.publicKey);
+        let existInCache = checkMsgTypeInCache(payload.type);
+        const cached = existInCache && !tribeOwner && (chat === null || chat === void 0 ? void 0 : chat.preview) ? true : false;
         return {
             owner: owner,
             dest,
@@ -310,6 +316,7 @@ function parseReceiveParams(payload) {
             recipient_alias,
             recipient_pic,
             person,
+            cached,
         };
     });
 }
@@ -329,4 +336,27 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
         sender: Object.assign(Object.assign(Object.assign(Object.assign({ pub_key: sender.publicKey }, (sender.routeHint && { route_hint: sender.routeHint })), (!dontActuallySendContactKey && { contact_key: sender.contactKey })), (sender.alias && { alias: sender.alias })), (includePhotoUrl && { photo_url: sender.photoUrl })),
     };
 }
+function checkCache() {
+    const store_cache = config.store_cache;
+    if (typeof store_cache === 'string' &&
+        store_cache &&
+        store_cache.length > 0) {
+        return true;
+    }
+    return false;
+}
+exports.checkCache = checkCache;
+function checkMsgTypeInCache(msgType) {
+    const msgTypeInCache = checkCache() && config.store_cache.split(',');
+    if (msgTypeInCache) {
+        for (let i = 0; i < msgTypeInCache.length; i++) {
+            const type = parseInt(msgTypeInCache[i]);
+            if (type === msgType) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+exports.checkMsgTypeInCache = checkMsgTypeInCache;
 //# sourceMappingURL=helpers.js.map

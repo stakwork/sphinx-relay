@@ -8,7 +8,7 @@ import { checkMessageDecryption, sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
 
 /*
-npx ava test-14-tribe3Profile.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribe3Profile.test.ts --verbose --serial --timeout=2m
 */
 
 test('test-14-tribe3Profile: create tribe, two nodes join tribe, change alias and profile pic, check change, delete tribe', async (t) => {

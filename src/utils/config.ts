@@ -31,9 +31,10 @@ const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION =
 const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION =
   './creds/transportTokenPrivateKey.pem'
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1
-const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
-// const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
+// const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
+const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
 const DEFAULT_PROXY_HD_KEYS = false
+const DEFAULT_STORE_CACHE = ''
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
@@ -139,5 +140,7 @@ export function loadConfig() {
       ENV.BOLTWALL_SERVER || config.boltwall_server || DEFAULT_BOLTWALL_SERVER,
     proxy_hd_keys:
       ENV.PROXY_HD_KEYS || config.proxy_hd_keys || DEFAULT_PROXY_HD_KEYS,
+    default_cache_host: ENV.DEFAULT_CACHE_HOST || config.default_cache_host,
+    store_cache: ENV.STORE_CACHE || config.store_cache || DEFAULT_STORE_CACHE,
   }
 }

@@ -567,7 +567,7 @@ export const receiveAttachment = async (payload) => {
     msg.senderPic = sender_photo_url
   }
 
-  const message = await models.Message.create(msg)
+  const message: Message = (await models.Message.create(msg)) as Message
 
   // console.log('saved attachment', message.dataValues)
 

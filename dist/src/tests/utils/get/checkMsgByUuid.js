@@ -9,28 +9,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCacheMsg = void 0;
-const http = require("ava-http");
-const config_1 = require("../../config");
-function getCacheMsg(t, tribe, message, content) {
+exports.getMsgByUuid = void 0;
+const getCheckAllMessages_1 = require("./getCheckAllMessages");
+function getMsgByUuid(t, node1, message) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (config_1.config.cache) {
-            const msgRes = yield http.get(`http://localhost:8008/api/msgs/${tribe.uuid}`);
-            if (msgRes.length > 0) {
-                for (let i = 0; i < msgRes.length; i++) {
-                    const msg = msgRes[i];
-                    if (msg.uuid === message.uuid && msg.message_content === content) {
-                        return true;
-                    }
+        const msg = yield (0, getCheckAllMessages_1.getCheckAllMessages)(t, node1, 1000, 0);
+        if (msg && msg.new_messages && msg.new_messages.length) {
+            for (let i = 0; i < msg.new_messages.length; i++) {
+                const newMsg = msg.new_messages[i];
+                if (newMsg.uuid === message.uuid) {
+                    return newMsg;
                 }
-                return false;
             }
-            else {
-                return false;
-            }
+            return false;
         }
-        return true;
+        else {
+            return false;
+        }
     });
 }
-exports.getCacheMsg = getCacheMsg;
-//# sourceMappingURL=getMsgFromCache.js.map
+exports.getMsgByUuid = getMsgByUuid;
+//# sourceMappingURL=checkMsgByUuid.js.map

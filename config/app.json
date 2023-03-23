@@ -51,6 +51,7 @@
       "save": true,
       "port": "80"
     },
-    "boltwall_server": "https://knowledge-graph.sphinx.chat"
+    "boltwall_server": "https://knowledge-graph.sphinx.chat",
+    "default_cache_host": ""
   }
 }

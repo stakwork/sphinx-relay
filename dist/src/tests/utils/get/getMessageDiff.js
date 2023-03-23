@@ -9,28 +9,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCacheMsg = void 0;
-const http = require("ava-http");
+exports.getMessageDiff = void 0;
 const config_1 = require("../../config");
-function getCacheMsg(t, tribe, message, content) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (config_1.config.cache) {
-            const msgRes = yield http.get(`http://localhost:8008/api/msgs/${tribe.uuid}`);
-            if (msgRes.length > 0) {
-                for (let i = 0; i < msgRes.length; i++) {
-                    const msg = msgRes[i];
-                    if (msg.uuid === message.uuid && msg.message_content === content) {
-                        return true;
+const getMessageDiff = (t, noCacheMsg, cacheMsg) => __awaiter(void 0, void 0, void 0, function* () {
+    const missingField = ['created_at', 'updated_at'];
+    if (config_1.config.cache) {
+        if (cacheMsg.cached && noCacheMsg.cached === undefined) {
+            for (let key in noCacheMsg) {
+                if (key !== 'chat') {
+                    // created_at and updated_at are always null
+                    if (cacheMsg[key] === undefined) {
+                        missingField.push(key);
                     }
                 }
-                return false;
             }
-            else {
-                return false;
-            }
+            return missingField;
         }
-        return true;
-    });
-}
-exports.getCacheMsg = getCacheMsg;
-//# sourceMappingURL=getMsgFromCache.js.map
+        else {
+            return false;
+        }
+    }
+    return true;
+});
+exports.getMessageDiff = getMessageDiff;
+//# sourceMappingURL=getMessageDiff.js.map

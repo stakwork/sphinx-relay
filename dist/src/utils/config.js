@@ -25,9 +25,10 @@ const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt';
 const DEFAULT_TRANSPORT_PUBLIC_KEY_LOCATION = './creds/transportTokenPublicKey.pem';
 const DEFAULT_TRANSPORT_PRIVATE_KEY_LOCATION = './creds/transportTokenPrivateKey.pem';
 const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1;
-const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444';
-// const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
+// const DEFAULT_BOLTWALL_SERVER = 'http://host.docker.internal:8444'
+const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444';
 const DEFAULT_PROXY_HD_KEYS = false;
+const DEFAULT_STORE_CACHE = '';
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
@@ -111,6 +112,8 @@ function loadConfig() {
             DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING,
         boltwall_server: ENV.BOLTWALL_SERVER || config.boltwall_server || DEFAULT_BOLTWALL_SERVER,
         proxy_hd_keys: ENV.PROXY_HD_KEYS || config.proxy_hd_keys || DEFAULT_PROXY_HD_KEYS,
+        default_cache_host: ENV.DEFAULT_CACHE_HOST || config.default_cache_host,
+        store_cache: ENV.STORE_CACHE || config.store_cache || DEFAULT_STORE_CACHE,
     };
 }
 exports.loadConfig = loadConfig;

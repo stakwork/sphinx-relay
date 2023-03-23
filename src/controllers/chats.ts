@@ -26,6 +26,9 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { asyncForEach } from '../helpers'
+import { loadConfig } from '../utils/config'
+
+const config = loadConfig()
 
 /**
  * Updates a chat.
@@ -1008,5 +1011,72 @@ function createGroupChatParams(
     updatedAt: date,
     name: name,
     type: constants.chat_types.group,
+  }
+}
+
+export async function addTribePreivew(
+  req: Req,
+  res: Res
+): Promise<void | Response> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const { chat_id } = req.params
+  const { preview } = req.body
+
+  if (!preview && !config.default_cache_host)
+    return failure(res, 'provide cache server url')
+
+  const cache_url = preview || config.default_cache_host
+  try {
+    const tribe = (await models.Chat.findOne({
+      where: {
+        id: chat_id,
+        tenant,
+        ownerPubkey: req.owner.publicKey,
+        deleted: false,
+      },
+    })) as ChatRecord
+    if (!tribe) {
+      return failure(res, 'Tribe does not exist')
+    }
+    if (tribe.private) {
+      return failure(res, 'You cannot add preview to a private tribe')
+    }
+
+    if (tribe.preview) return failure(res, 'Preview already set for this tribe')
+
+    //verify preview url
+    const cacheServerDetails: { contact_key: string; pubkey: string } =
+      await tribes.verifyTribePreviewUrl(cache_url)
+
+    //add cache server to tribe
+    const date = new Date()
+    const alias = 'cache'
+    await addMemberToTribe({
+      sender_pub_key: cacheServerDetails.pubkey,
+      tenant,
+      chat: tribe,
+      date,
+      senderAlias: alias,
+      sender_photo_url: '',
+      sender_route_hint: '',
+      member: { key: cacheServerDetails.contact_key, alias },
+      isTribeOwner: true,
+    })
+
+    // Update tribe on tribe server
+    await tribes.updateRemoteTribeServer({
+      server: tribe.host,
+      preview_url: cache_url,
+      chat_uuid: tribe.uuid,
+      owner_pubkey: tribe.ownerPubkey,
+    })
+
+    //update preview
+    await tribe.update({ preview: cache_url })
+    return success(res, 'preview added successfully to tribe')
+  } catch (error) {
+    sphinxLogger.error(`=> couldnt add preview to tribe ${error}`)
+    return failure(res, error)
   }
 }

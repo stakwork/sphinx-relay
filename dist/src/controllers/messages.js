@@ -24,6 +24,7 @@ const network = require("../network");
 const short = require("short-uuid");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const tribes_1 = require("../utils/tribes");
 // deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
@@ -123,30 +124,34 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         order: [['id', order]],
         where: { tenant },
     };
-    const all_messages_length = (yield models_1.models.Message.count(clause));
+    let all_messages_length = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    const messages = (yield models_1.models.Message.findAll(clause));
+    let messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
-    const chatIds = [];
-    messages.forEach((m) => {
-        if (m.chatId && !chatIds.includes(m.chatId)) {
-            chatIds.push(m.chatId);
-        }
-    });
-    const chats = chatIds.length > 0
-        ? (yield models_1.models.Chat.findAll({
-            where: { deleted: false, id: chatIds, tenant },
-        }))
-        : [];
+    const chats = (yield models_1.models.Chat.findAll({
+        where: { deleted: false, tenant },
+    }));
+    // Get Cache Messages
+    const checkCache = helpers.checkCache();
+    const allMsg = checkCache
+        ? yield getFromCache({
+            chats,
+            order,
+            offset,
+            limit,
+            messages,
+            all_messages_length,
+        })
+        : { messages, all_messages_length };
     // console.log("=> found all chats", chats && chats.length);
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     // console.log("=> indexed chats");
     (0, res_1.success)(res, {
-        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
-        new_messages_total: all_messages_length,
+        new_messages: allMsg.messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
+        new_messages_total: allMsg.all_messages_length,
         confirmed_messages: [],
     });
 });
@@ -185,28 +190,33 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             tenant,
         },
     };
-    const numberOfNewMessages = (yield models_1.models.Message.count(clause));
+    let numberOfNewMessages = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    const messages = (yield models_1.models.Message.findAll(clause));
+    let messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
-    const chatIds = [];
-    messages.forEach((m) => {
-        if (m.chatId && !chatIds.includes(m.chatId)) {
-            chatIds.push(m.chatId);
-        }
-    });
-    const chats = chatIds.length > 0
-        ? (yield models_1.models.Chat.findAll({
-            where: { deleted: false, id: chatIds, tenant },
-        }))
-        : [];
+    const chats = (yield models_1.models.Chat.findAll({
+        where: { deleted: false, tenant },
+    }));
+    //Check Cache
+    const checkCache = helpers.checkCache();
+    const allMsg = checkCache
+        ? yield getFromCache({
+            chats,
+            order,
+            offset,
+            limit,
+            messages,
+            all_messages_length: numberOfNewMessages,
+            dateToReturn,
+        })
+        : { messages, all_messages_length: numberOfNewMessages };
     const chatsById = (0, underscore_1.indexBy)(chats, 'id');
     (0, res_1.success)(res, {
-        new_messages: messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
-        new_messages_total: numberOfNewMessages,
+        new_messages: allMsg.messages.map((message) => jsonUtils.messageToJson(message, chatsById[message.chatId])),
+        new_messages_total: allMsg.all_messages_length,
     });
 });
 exports.getMsgs = getMsgs;
@@ -401,7 +411,7 @@ Receive a message and store it in the database.
 */
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received message ${payload}`);
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, cached, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -439,13 +449,18 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = (yield models_1.models.Message.create(msg));
+    let message = null;
+    if (!cached) {
+        message = (yield models_1.models.Message.create(msg));
+    }
     socket.sendJson({
         type: 'message',
-        response: jsonUtils.messageToJson(message, chat, sender),
+        response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
     (0, hub_1.sendNotification)(chat, (msg.senderAlias || sender.alias), 'message', owner, undefined, force_push);
-    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    if (!cached) {
+        (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    }
 });
 exports.receiveMessage = receiveMessage;
 /**
@@ -454,7 +469,7 @@ Receives a boost message and stores it in the database.
 @return {Promise<void>} - A promise that resolves when the function completes.
 */
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, cached, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
@@ -491,12 +506,17 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
-    const message = (yield models_1.models.Message.create(msg));
+    let message = null;
+    if (!cached) {
+        message = (yield models_1.models.Message.create(msg));
+    }
     socket.sendJson({
         type: 'boost',
-        response: jsonUtils.messageToJson(message, chat, sender),
+        response: jsonUtils.messageToJson(message || msg, chat, sender),
     }, tenant);
-    (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    if (!cached) {
+        (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
+    }
     if (msg.replyUuid) {
         const ogMsg = (yield models_1.models.Message.findOne({
             where: { uuid: msg.replyUuid, tenant },
@@ -677,4 +697,48 @@ const receiveVoip = (payload) => __awaiter(void 0, void 0, void 0, function* () 
     (0, confirmations_1.sendConfirmation)({ chat, sender: owner, msg_id, receiver: sender });
 });
 exports.receiveVoip = receiveVoip;
+function getFromCache({ chats, order, offset, limit, messages, all_messages_length, dateToReturn, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        for (let i = 0; i < chats.length; i++) {
+            const chat = chats[i];
+            if (chat.preview) {
+                const cacheMsg = yield (0, tribes_1.getCacheMsg)({
+                    preview: chat.preview,
+                    chat_uuid: chat.uuid,
+                    chat_id: chat.id,
+                    order,
+                    offset,
+                    limit,
+                    dateToReturn,
+                });
+                messages = [...messages, ...cacheMsg];
+                all_messages_length = all_messages_length + cacheMsg.length;
+            }
+        }
+        return removeDuplicateMsg(messages, all_messages_length);
+    });
+}
+function removeDuplicateMsg(messages, message_length) {
+    const filteredMsg = [];
+    const uuidObject = {};
+    let all_message_length = message_length;
+    for (let i = 0; i < messages.length; i++) {
+        const message = messages[i];
+        const alreadyStoredMsg = uuidObject[message.uuid];
+        if (helpers.checkMsgTypeInCache(message.type) &&
+            alreadyStoredMsg &&
+            !alreadyStoredMsg.chat_id) {
+            const msgIndex = filteredMsg.findIndex((msg) => msg.uuid === alreadyStoredMsg.uuid);
+            filteredMsg.splice(msgIndex, 1);
+            all_message_length -= 1;
+            filteredMsg.push(message);
+            uuidObject[message.uuid] = message;
+        }
+        else {
+            filteredMsg.push(message);
+            uuidObject[message.uuid] = message;
+        }
+    }
+    return { messages: filteredMsg, all_messages_length: all_message_length };
+}
 //# sourceMappingURL=messages.js.map

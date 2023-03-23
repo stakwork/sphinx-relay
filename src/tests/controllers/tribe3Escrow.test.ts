@@ -7,7 +7,7 @@ import { checkMessageDecryption, sendEscrowMsg } from '../utils/msg'
 import nodes from '../nodes'
 
 /*
-npx ava test-12-tribe3Escrow.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribe3Escrow.test.ts --verbose --serial --timeout=2m
 */
 
 test('test-12-tribe3Escrow: create tribe, two nodes join tribe, send messages, check escrow, delete tribe', async (t) => {

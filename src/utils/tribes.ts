@@ -4,10 +4,17 @@ import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
-import { Contact, models, sequelize, ChatRecord } from '../models'
+import {
+  Contact,
+  models,
+  sequelize,
+  ChatRecord,
+  Message,
+  isPostgres,
+} from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
-import { isProxy, getProxyXpub } from './proxy'
+import { getProxyXpub } from './proxy'
 import { logging, sphinxLogger } from './logger'
 import type { Tribe } from '../models/ts/tribe'
 import { sleep, asyncForEach } from '../helpers'
@@ -18,6 +25,16 @@ const config = loadConfig()
 
 // {pubkey: {host: Client} }
 const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
+
+interface CacheMsgInput {
+  preview: string
+  chat_uuid: string
+  chat_id: number
+  order: string
+  offset: number | '' | undefined
+  limit: number | '' | undefined
+  dateToReturn?: string
+}
 
 const optz: IClientSubscribeOptions = { qos: 0 }
 
@@ -305,7 +322,7 @@ function mqttURL(h: string) {
 // }
 
 export async function getTribeOwnersChatByUUID(uuid: string): Promise<any> {
-  const isOwner = isProxy() ? "'t'" : '1'
+  const isOwner = isPostgres() ? "'t'" : '1'
   try {
     const r = (await sequelize.query(
       `
@@ -714,4 +731,96 @@ function subscribeAndCheck(client: mqtt.Client, topic: string) {
 
 function parseRouteHint(routeHint) {
   return routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length)
+}
+
+export async function getCacheMsg({
+  preview,
+  chat_uuid,
+  chat_id,
+  order,
+  offset,
+  limit,
+  dateToReturn,
+}: CacheMsgInput) {
+  try {
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      `${protocol}://${preview}/api/msgs/${chat_uuid}?limit=${limit}&offset=${offset}&order=${order}&date=${dateToReturn}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw `get cache message for tribe with uuid: ${chat_uuid} ` + r.status
+    }
+    const res = await r.json()
+    const updatedCacheMsg: Message[] = []
+
+    for (let i = 0; i < res.length; i++) {
+      const msg = res[i]
+      updatedCacheMsg.push({ ...msg, chat_id, chatId: chat_id, cached: true })
+    }
+    return updatedCacheMsg
+  } catch (error) {
+    sphinxLogger.error([
+      `unanle to get cache message for tribe with uuid: ${chat_uuid}`,
+      logging.Tribes,
+    ])
+    return []
+  }
+}
+
+export async function verifyTribePreviewUrl(url: string) {
+  try {
+    let protocol = 'https'
+    if (config.tribes_insecure) protocol = 'http'
+
+    const r = await fetch(`${protocol}://${url}/api/pubkeys`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!r.ok) {
+      throw `could not verify cache server` + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    console.log(error)
+    throw `could not verify cache server`
+  }
+}
+
+export async function updateRemoteTribeServer({
+  server,
+  preview_url,
+  chat_uuid,
+  owner_pubkey,
+}: {
+  server: string
+  preview_url: string
+  chat_uuid: string
+  owner_pubkey: string
+}) {
+  try {
+    let protocol = 'https'
+    const token = await genSignedTimestamp(owner_pubkey)
+    if (config.tribes_insecure) protocol = 'http'
+    const r = await fetch(
+      `${protocol}://${server}/tribepreview/${chat_uuid}?preview=${preview_url}&token=${token}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    )
+    if (!r.ok) {
+      throw `could not update tribe server with preview url ` + r.status
+    }
+    const res = await r.json()
+    return res
+  } catch (error) {
+    console.log(error)
+    throw `could not update tribe server with preview url`
+  }
 }

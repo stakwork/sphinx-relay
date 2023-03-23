@@ -9,28 +9,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCacheMsg = void 0;
+exports.setTribePreview = void 0;
 const http = require("ava-http");
+const helpers_1 = require("../helpers");
 const config_1 = require("../../config");
-function getCacheMsg(t, tribe, message, content) {
+function setTribePreview(t, node1, tribe, url) {
     return __awaiter(this, void 0, void 0, function* () {
+        const body = {
+            preview: url,
+        };
         if (config_1.config.cache) {
-            const msgRes = yield http.get(`http://localhost:8008/api/msgs/${tribe.uuid}`);
-            if (msgRes.length > 0) {
-                for (let i = 0; i < msgRes.length; i++) {
-                    const msg = msgRes[i];
-                    if (msg.uuid === message.uuid && msg.message_content === content) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            else {
-                return false;
-            }
+            const preview = yield http.post(`${node1.external_ip}/preview/${tribe.id}`, (0, helpers_1.makeArgs)(node1, body));
+            t.true(preview.success, `Preview should be set for ${tribe.name}`);
         }
         return true;
     });
 }
-exports.getCacheMsg = getCacheMsg;
-//# sourceMappingURL=getMsgFromCache.js.map
+exports.setTribePreview = setTribePreview;
+//# sourceMappingURL=setPreview.js.map

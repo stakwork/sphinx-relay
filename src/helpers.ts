@@ -4,7 +4,9 @@ import { signAndSend } from './network'
 import type { Msg, Payload, ChatMember } from './network/interfaces'
 import constants from './constants'
 import { logging, sphinxLogger } from './utils/logger'
+import { loadConfig } from './utils/config'
 
+const config = loadConfig()
 export const findOrCreateChat = async (params: {
   chat_id: number
   owner_id: number
@@ -327,6 +329,12 @@ export async function parseReceiveParams(payload: Payload): Promise<{
       where: { uuid: chat_uuid, tenant: owner.id },
     })) as ChatRecord
   }
+  const isTribe = chat_type === constants.chat_types.tribe
+  const tribeOwner = isTribe && chat?.ownerPubkey === owner?.publicKey
+
+  let existInCache = checkMsgTypeInCache(payload.type)
+
+  const cached = existInCache && !tribeOwner && chat?.preview ? true : false
   return {
     owner: owner as ContactRecord,
     dest,
@@ -364,6 +372,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
     recipient_alias,
     recipient_pic,
     person,
+    cached,
   }
 }
 
@@ -388,4 +397,29 @@ function newkeyexchangemsg(type, sender, dontActuallySendContactKey) {
       ...(includePhotoUrl && { photo_url: sender.photoUrl }),
     },
   }
+}
+
+export function checkCache() {
+  const store_cache = config.store_cache
+  if (
+    typeof store_cache === 'string' &&
+    store_cache &&
+    store_cache.length > 0
+  ) {
+    return true
+  }
+  return false
+}
+
+export function checkMsgTypeInCache(msgType: number) {
+  const msgTypeInCache = checkCache() && config.store_cache.split(',')
+  if (msgTypeInCache) {
+    for (let i = 0; i < msgTypeInCache.length; i++) {
+      const type = parseInt(msgTypeInCache[i])
+      if (type === msgType) {
+        return true
+      }
+    }
+  }
+  return false
 }

@@ -31,7 +31,7 @@ export async function kickBotTest(t, index1, index2, index3) {
 
   //NODE1 AWAIT REPLY FROM BOT
   let botAlias = 'MotherBot'
-  const botReply = await getCheckBotMsg(t, node1, botAlias)
+  const botReply = await getCheckBotMsg(t, node1, botAlias, tribe, 1)
   t.truthy(botReply, 'MotherBot should reply')
 
   //NODE1 Installs kick bot
@@ -40,7 +40,7 @@ export async function kickBotTest(t, index1, index2, index3) {
 
   //AWAIT KICK BOT RESPONSE
   botAlias = 'MotherBot'
-  const botReply2 = await getCheckBotMsg(t, node1, botAlias)
+  const botReply2 = await getCheckBotMsg(t, node1, botAlias, tribe, 2)
   t.truthy(botReply2, 'MotherBot should reply')
 
   //NODE2 JOINS TRIBE
@@ -54,7 +54,7 @@ export async function kickBotTest(t, index1, index2, index3) {
 
   //AWAIT KICK BOT RESPONSE
   botAlias = 'KickBot'
-  const botReply3 = await getCheckBotMsg(t, node1, botAlias)
+  const botReply3 = await getCheckBotMsg(t, node1, botAlias, tribe, 1)
   t.truthy(botReply3, 'MotherBot should reply')
 
   //NODE1 CHECKS TRIBE MEMBERS AND NODE2 SHOULD NOT BE A MEMBER
@@ -71,7 +71,7 @@ export async function kickBotTest(t, index1, index2, index3) {
   t.true(join2, 'node2 should join tribe')
 
   botAlias = 'KickBot'
-  const botReply8 = await getCheckBotMsg(t, node1, botAlias)
+  const botReply8 = await getCheckBotMsg(t, node1, botAlias, tribe, 2)
   t.truthy(botReply8, 'MotherBot should reply')
 
   //NODE2 DELETE TRIBE
@@ -88,7 +88,7 @@ export async function kickBotTest(t, index1, index2, index3) {
 
   //AWAIT KICK BOT RESPONSE
   botAlias = 'KickBot'
-  const botReply4 = await getCheckBotMsg(t, node1, botAlias)
+  const botReply4 = await getCheckBotMsg(t, node1, botAlias, tribe, 3)
   t.truthy(botReply4, 'MotherBot should reply')
 
   //NODE2 JOINS TRIBE AGAIN AND SHOULD BE ABLE TO JOIN TRIBE
@@ -106,7 +106,7 @@ export async function kickBotTest(t, index1, index2, index3) {
 
   //AWAIT KICK BOT RESPONSE
   botAlias = 'KickBot'
-  const botReply5 = await getCheckBotMsg(t, node1, botAlias)
+  const botReply5 = await getCheckBotMsg(t, node1, botAlias, tribe, 4)
   t.truthy(botReply5, 'MotherBot should reply')
 
   //NODE3 TRIES TO JOIN TRIBE

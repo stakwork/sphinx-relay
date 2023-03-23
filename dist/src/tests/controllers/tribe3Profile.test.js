@@ -17,7 +17,7 @@ const get_1 = require("../utils/get");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
 /*
-npx ava test-14-tribe3Profile.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribe3Profile.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test-14-tribe3Profile: create tribe, two nodes join tribe, change alias and profile pic, check change, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield tribe3Profile(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);

@@ -66,6 +66,7 @@ export async function set(app) {
   )
   app.put('/group/:id', chatTribes.editTribe)
   app.put('/chat_pin/:id', chatTribes.pinToTribe)
+  app.post('/preview/:chat_id', chats.addTribePreivew)
 
   app.post('/upload', uploads.avatarUpload.single('file'), uploads.uploadFile)
 

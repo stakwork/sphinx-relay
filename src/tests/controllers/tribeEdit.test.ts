@@ -6,7 +6,7 @@ import { getTribeId, getChats, getTribeByUuid } from '../utils/get'
 import nodes from '../nodes'
 
 /*
-npx ava test-15-tribeEdit.js --verbose --serial --timeout=2m
+npx ava src/tests/controllers/tribeEdit.test.ts --verbose --serial --timeout=2m
 */
 
 interface Context {}

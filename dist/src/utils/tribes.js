@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
+exports.updateRemoteTribeServer = exports.verifyTribePreviewUrl = exports.getCacheMsg = exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
 const zbase32 = require("./zbase32");
 const LND = require("../grpc/lightning");
@@ -305,7 +305,7 @@ function mqttURL(h) {
 // }
 function getTribeOwnersChatByUUID(uuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        const isOwner = (0, proxy_1.isProxy)() ? "'t'" : '1';
+        const isOwner = (0, models_1.isPostgres)() ? "'t'" : '1';
         try {
             const r = (yield models_1.sequelize.query(`
       SELECT sphinx_chats.* FROM sphinx_chats
@@ -643,4 +643,82 @@ function subscribeAndCheck(client, topic) {
 function parseRouteHint(routeHint) {
     return routeHint.substring(routeHint.indexOf(':') + 1, routeHint.length);
 }
+function getCacheMsg({ preview, chat_uuid, chat_id, order, offset, limit, dateToReturn, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${preview}/api/msgs/${chat_uuid}?limit=${limit}&offset=${offset}&order=${order}&date=${dateToReturn}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw `get cache message for tribe with uuid: ${chat_uuid} ` + r.status;
+            }
+            const res = yield r.json();
+            const updatedCacheMsg = [];
+            for (let i = 0; i < res.length; i++) {
+                const msg = res[i];
+                updatedCacheMsg.push(Object.assign(Object.assign({}, msg), { chat_id, chatId: chat_id, cached: true }));
+            }
+            return updatedCacheMsg;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error([
+                `unanle to get cache message for tribe with uuid: ${chat_uuid}`,
+                logger_1.logging.Tribes,
+            ]);
+            return [];
+        }
+    });
+}
+exports.getCacheMsg = getCacheMsg;
+function verifyTribePreviewUrl(url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let protocol = 'https';
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${url}/api/pubkeys`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw `could not verify cache server` + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            console.log(error);
+            throw `could not verify cache server`;
+        }
+    });
+}
+exports.verifyTribePreviewUrl = verifyTribePreviewUrl;
+function updateRemoteTribeServer({ server, preview_url, chat_uuid, owner_pubkey, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            let protocol = 'https';
+            const token = yield genSignedTimestamp(owner_pubkey);
+            if (config.tribes_insecure)
+                protocol = 'http';
+            const r = yield (0, node_fetch_1.default)(`${protocol}://${server}/tribepreview/${chat_uuid}?preview=${preview_url}&token=${token}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!r.ok) {
+                throw `could not update tribe server with preview url ` + r.status;
+            }
+            const res = yield r.json();
+            return res;
+        }
+        catch (error) {
+            console.log(error);
+            throw `could not update tribe server with preview url`;
+        }
+    });
+}
+exports.updateRemoteTribeServer = updateRemoteTribeServer;
 //# sourceMappingURL=tribes.js.map
