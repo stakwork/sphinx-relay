@@ -124,12 +124,12 @@ const getAllMessages = (req, res) => __awaiter(void 0, void 0, void 0, function*
         order: [['id', order]],
         where: { tenant },
     };
-    let all_messages_length = (yield models_1.models.Message.count(clause));
+    const all_messages_length = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    let messages = (yield models_1.models.Message.findAll(clause));
+    const messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chats = (yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
@@ -190,12 +190,12 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             tenant,
         },
     };
-    let numberOfNewMessages = (yield models_1.models.Message.count(clause));
+    const numberOfNewMessages = (yield models_1.models.Message.count(clause));
     if (limit) {
         clause.limit = limit;
         clause.offset = offset;
     }
-    let messages = (yield models_1.models.Message.findAll(clause));
+    const messages = (yield models_1.models.Message.findAll(clause));
     logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
     const chats = (yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
