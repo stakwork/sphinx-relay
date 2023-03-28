@@ -335,16 +335,13 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     (0, res_1.success)(res, jsonUtils.contactToJson(owner));
     // first time creating contact key: auto join tribes now
     if (isTheSignup && (0, proxy_1.isProxy)()) {
-        console.log('first contact_key set! isTheSignup', tenant);
+        console.log('=> first contact_key set! isTheSignup', tenant);
         const theAdmin = (yield models_1.models.Contact.findOne({
             where: { isAdmin: true },
         }));
         if (theAdmin) {
             yield joinDefaultTribes(owner, theAdmin);
         }
-    }
-    else {
-        console.log('updateContact not a signup...', tenant);
     }
     if (!contact.isOwner)
         return;
