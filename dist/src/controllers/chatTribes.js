@@ -48,7 +48,7 @@ exports.joinTribe = joinTribe;
 function doJoinTribe(body, owner) {
     return __awaiter(this, void 0, void 0, function* () {
         const { uuid, group_key, name, host, amount, img, owner_pubkey, owner_route_hint, owner_alias, my_alias, my_photo_url, } = body;
-        logger_1.sphinxLogger.info(['received owner route hint', owner_route_hint], logger_1.logging.Express);
+        logger_1.sphinxLogger.info(['doJoinTribe: with a tribe owner route hint', owner_route_hint], logger_1.logging.Express);
         const is_private = body.private ? true : false;
         const tenant = owner.id;
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
@@ -72,7 +72,7 @@ function doJoinTribe(body, owner) {
             const contactIds = [owner.id];
             if (tribeOwner) {
                 theTribeOwner = tribeOwner; // might already include??
-                if (tribeOwner.routeHint !== owner_route_hint) {
+                if (owner_route_hint && owner_route_hint !== tribeOwner.routeHint) {
                     yield tribeOwner.update({ routeHint: owner_route_hint });
                 }
                 if (!contactIds.includes(tribeOwner.id))
@@ -123,8 +123,8 @@ function doJoinTribe(body, owner) {
             const contactIdsToSend = is_private
                 ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
                 : JSON.stringify(contactIds);
-            // console.log("=> joinTribe: typeToSend", typeToSend);
-            // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
+            console.log('=> joinTribe: typeToSend', typeToSend);
+            console.log('=> joinTribe: contactIdsToSend', contactIdsToSend);
             // set my alias to be the custom one
             const theOwner = owner;
             if (my_alias)
@@ -146,7 +146,7 @@ function doJoinTribe(body, owner) {
                 },
                 success: function () {
                     return __awaiter(this, void 0, void 0, function* () {
-                        // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
+                        console.log('=> joinTribe: sent groupJoin');
                         const chat = (yield models_1.models.Chat.create(chatParams));
                         models_1.models.ChatMember.create({
                             contactId: theTribeOwner.id,
@@ -156,7 +156,6 @@ function doJoinTribe(body, owner) {
                             status: constants_1.default.chat_statuses.approved,
                             tenant,
                         });
-                        // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
                         tribes.addExtraHost(theOwner.publicKey, host, network.receiveMqttMessage);
                         resolve(jsonUtils.chatToJson(chat));
                     });
