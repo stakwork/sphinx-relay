@@ -166,6 +166,7 @@ function lazyClient(pubkey, host, onMessage, isFirstUser) {
 // never from the admin
 function newSubscription(c, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> newSubscription:', c.publicKey);
         const host = getHost();
         const client = yield lazyClient(c.publicKey, host, onMessage);
         specialSubscribe(client, c);

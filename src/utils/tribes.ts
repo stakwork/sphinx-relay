@@ -178,6 +178,7 @@ export async function newSubscription(
   c: Contact,
   onMessage: (topic: string, message: Buffer) => void
 ) {
+  console.log('=> newSubscription:', c.publicKey)
   const host = getHost()
   const client = await lazyClient(c.publicKey, host, onMessage)
   specialSubscribe(client, c)
