@@ -748,11 +748,13 @@ function removeDuplicateMsg(messages, message_length) {
 }
 const initializeDeleteMessageCronJobs = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        logger_1.sphinxLogger.info(['=> initializing delete message cron job']);
-        const contacts = (yield models_1.models.Contact.findAll({
-            where: { isOwner: true },
-        }));
-        startDeleteMsgCronJob(contacts);
+        if (config.default_prune) {
+            logger_1.sphinxLogger.info(['=> initializing delete message cron job']);
+            const contacts = (yield models_1.models.Contact.findAll({
+                where: { isOwner: true },
+            }));
+            startDeleteMsgCronJob(contacts);
+        }
     }
     catch (error) {
         logger_1.sphinxLogger.error(['=> error initializing delete message cron job', error]);

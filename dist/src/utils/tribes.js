@@ -46,9 +46,11 @@ function initAndSubscribeTopics(onMessage) {
             if (!(allOwners && allOwners.length))
                 return;
             (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
-                // if no auth token dont subscribe yet... will subscribe when signed up
-                if (c.publicKey && c.publicKey.length === 66 && c.authToken) {
+                if (c.publicKey && c.publicKey.length === 66) {
                     const firstUser = c.id === 1;
+                    // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
+                    if ((0, proxy_1.isProxy)() && !c.authToken)
+                        return;
                     const cl = yield lazyClient(c.publicKey, host, onMessage, firstUser);
                     yield specialSubscribe(cl, c);
                     // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
@@ -161,11 +163,12 @@ function lazyClient(pubkey, host, onMessage, isFirstUser) {
         return cl;
     });
 }
-// never from the admin
 function newSubscription(c, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('=> newSubscription:', c.publicKey);
         const host = getHost();
-        const client = yield lazyClient(c.publicKey, host, onMessage);
+        const isFirstUser = c.id === 1;
+        const client = yield lazyClient(c.publicKey, host, onMessage, isFirstUser);
         specialSubscribe(client, c);
     });
 }
