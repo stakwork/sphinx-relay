@@ -14,7 +14,7 @@ import {
 } from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
-import { getProxyXpub } from './proxy'
+import { getProxyXpub, isProxy } from './proxy'
 import { logging, sphinxLogger } from './logger'
 import type { Tribe } from '../models/ts/tribe'
 import { sleep, asyncForEach } from '../helpers'
@@ -59,9 +59,10 @@ async function initAndSubscribeTopics(
     })) as Contact[]
     if (!(allOwners && allOwners.length)) return
     asyncForEach(allOwners, async (c) => {
-      // if no auth token dont subscribe yet... will subscribe when signed up
-      if (c.publicKey && c.publicKey.length === 66 && c.authToken) {
+      if (c.publicKey && c.publicKey.length === 66) {
         const firstUser = c.id === 1
+        // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
+        if (isProxy() && !c.authToken) return
         const cl = await lazyClient(c.publicKey, host, onMessage, firstUser)
         await specialSubscribe(cl, c)
         // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
