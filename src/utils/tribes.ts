@@ -173,14 +173,14 @@ async function lazyClient(
   return cl
 }
 
-// never from the admin
 export async function newSubscription(
   c: Contact,
   onMessage: (topic: string, message: Buffer) => void
 ) {
   console.log('=> newSubscription:', c.publicKey)
   const host = getHost()
-  const client = await lazyClient(c.publicKey, host, onMessage)
+  const isFirstUser = c.id === 1
+  const client = await lazyClient(c.publicKey, host, onMessage, isFirstUser)
   specialSubscribe(client, c)
 }
 

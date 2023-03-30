@@ -163,12 +163,12 @@ function lazyClient(pubkey, host, onMessage, isFirstUser) {
         return cl;
     });
 }
-// never from the admin
 function newSubscription(c, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> newSubscription:', c.publicKey);
         const host = getHost();
-        const client = yield lazyClient(c.publicKey, host, onMessage);
+        const isFirstUser = c.id === 1;
+        const client = yield lazyClient(c.publicKey, host, onMessage, isFirstUser);
         specialSubscribe(client, c);
     });
 }
