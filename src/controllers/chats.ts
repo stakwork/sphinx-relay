@@ -625,6 +625,8 @@ async function addMemberToTribe({
       })) as Contact
       theSender = createdContact
       contactIds.push(createdContact.id)
+    } else {
+      console.log('=> error in addMemberToTribe: no contact_key')
     }
   }
   if (!theSender) throw new Error(`no sender`) // fail (no contact key?)
@@ -677,6 +679,12 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
     sender_route_hint,
     chat_name,
   } = await helpers.parseReceiveParams(payload)
+
+  sphinxLogger.info(
+    `=> receiveGroupJoin from ${sender_pub_key} in ${chat.id}. tenant ${owner.id}`,
+    logging.Network
+  )
+
   const tenant: number = owner.id
 
   if (!chat) return
@@ -753,7 +761,8 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
       sendNotification(chat, chat_name, 'group_join', owner)
     }
   } catch (e) {
-    return sphinxLogger.error(`no sender`)
+    console.log('failed to add member to tribe', e)
+    return sphinxLogger.error(`failed to add member to tribe ${chat.id}`)
   }
 }
 

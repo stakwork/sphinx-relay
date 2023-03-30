@@ -477,7 +477,6 @@ Receive a message and store it in the database.
 @returns {Promise<void>} - A promise that resolves when the message has been received and stored.
 */
 export const receiveMessage = async (payload: Payload): Promise<void> => {
-  sphinxLogger.info(`received message ${payload}`)
   const {
     owner,
     sender,
@@ -500,6 +499,8 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     person,
     cached,
   } = await helpers.parseReceiveParams(payload)
+  sphinxLogger.info(`received message on tenant ${owner.id} chat ${chat.id}`)
+
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
   }
