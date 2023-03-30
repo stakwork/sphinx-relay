@@ -61,8 +61,8 @@ const sendNotification = (chat, name, type, owner, amount, push) => __awaiter(vo
     }
     if (!owner.deviceId) {
         if (logger_1.logging.Notification)
-            // sphinxLogger.info(`[send notification] skipping. owner.deviceId not set.`)
-            return;
+            logger_2.sphinxLogger.info(`[send notification] skipping. owner.deviceId not set.`);
+        return;
     }
     const device_id = owner.deviceId;
     const isIOS = device_id.length === 64;

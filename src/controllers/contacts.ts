@@ -259,6 +259,7 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
       // there can be only 1 admin
       if (theAdmin) {
         isAdmin = false
+        await joinDefaultTribes(owner, theAdmin)
       }
       tribes.newSubscription(owner, network.receiveMqttMessage)
     }
@@ -352,23 +353,10 @@ export const updateContact = async (req: Req, res: Res): Promise<void> => {
   const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias']
   const photoChanged =
     attrs['photo_url'] && contact.photoUrl !== attrs['photo_url']
-  const isTheSignup = attrs['contact_key'] && !contact.contactKey
 
   // update contact
   const owner = await contact.update(jsonUtils.jsonToContact(attrs))
   success(res, jsonUtils.contactToJson(owner))
-
-  // first time creating contact key: auto join tribes now
-
-  if (isTheSignup && isProxy()) {
-    console.log('=> first contact_key set! isTheSignup', tenant)
-    const theAdmin = (await models.Contact.findOne({
-      where: { isAdmin: true },
-    })) as Contact
-    if (theAdmin) {
-      await joinDefaultTribes(owner, theAdmin)
-    }
-  }
 
   if (!contact.isOwner) return
   if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {

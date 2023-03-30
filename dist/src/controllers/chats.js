@@ -545,9 +545,6 @@ function addMemberToTribe({ sender_pub_key, tenant, chat, date, senderAlias, mem
                 theSender = createdContact;
                 contactIds.push(createdContact.id);
             }
-            else {
-                console.log('=> error in addMemberToTribe: no contact_key');
-            }
         }
         if (!theSender)
             throw new Error(`no sender`); // fail (no contact key?)
@@ -585,7 +582,6 @@ function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> receiveGroupJoin`, logger_1.logging.Network);
         const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, chat_name, } = yield helpers.parseReceiveParams(payload);
-        logger_1.sphinxLogger.info(`=> receiveGroupJoin from ${sender_pub_key} in ${chat.id}. tenant ${owner.id}`, logger_1.logging.Network);
         const tenant = owner.id;
         if (!chat)
             return;
@@ -653,8 +649,7 @@ function receiveGroupJoin(payload) {
             }
         }
         catch (e) {
-            console.log('failed to add member to tribe', e);
-            return logger_1.sphinxLogger.error(`failed to add member to tribe ${chat.id}`);
+            return logger_1.sphinxLogger.error(`no sender`);
         }
     });
 }

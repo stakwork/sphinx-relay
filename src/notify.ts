@@ -98,8 +98,8 @@ export const sendNotification = async (
 
   if (!owner.deviceId) {
     if (logging.Notification)
-      // sphinxLogger.info(`[send notification] skipping. owner.deviceId not set.`)
-      return
+      sphinxLogger.info(`[send notification] skipping. owner.deviceId not set.`)
+    return
   }
   const device_id = owner.deviceId
   const isIOS = device_id.length === 64

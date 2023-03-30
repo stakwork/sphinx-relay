@@ -59,8 +59,7 @@ async function initAndSubscribeTopics(
     })) as Contact[]
     if (!(allOwners && allOwners.length)) return
     asyncForEach(allOwners, async (c) => {
-      // if no auth token dont subscribe yet... will subscribe when signed up
-      if (c.publicKey && c.publicKey.length === 66 && c.authToken) {
+      if (c.publicKey && c.publicKey.length === 66) {
         const firstUser = c.id === 1
         const cl = await lazyClient(c.publicKey, host, onMessage, firstUser)
         await specialSubscribe(cl, c)
