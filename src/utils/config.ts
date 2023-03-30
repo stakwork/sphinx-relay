@@ -36,6 +36,9 @@ const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444'
 const DEFAULT_PROXY_HD_KEYS = false
 const DEFAULT_STORE_CACHE = ''
 const DEFAULT_PRUNE = 30
+const DEFAULT_PEOPLE_HOST = 'people.sphinx.chat'
+const DEFAULT_TRIBES_HOST = 'tribes.sphinx.chat'
+const DEFAULT_MQTT_HOST = 'tribes.sphinx.chat'
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
@@ -91,10 +94,10 @@ export function loadConfig() {
     hub_check_invite_url:
       ENV.HUB_CHECK_INVITE_URL || config.hub_check_invite_url,
     media_host: ENV.MEDIA_HOST || config.media_host,
-    tribes_host: ENV.TRIBES_HOST || config.tribes_host,
-    people_host: ENV.PEOPLE_HOST || config.people_host || 'people.sphinx.chat',
+    tribes_host: ENV.TRIBES_HOST || config.tribes_host || DEFAULT_TRIBES_HOST,
+    people_host: ENV.PEOPLE_HOST || config.people_host || DEFAULT_PEOPLE_HOST,
     tribes_mqtt_port: ENV.TRIBES_MQTT_PORT || config.tribes_mqtt_port,
-    mqtt_host: ENV.MQTT_HOST || config.mqtt_host,
+    mqtt_host: ENV.MQTT_HOST || config.mqtt_host || DEFAULT_MQTT_HOST,
     tribes_insecure: ENV.TRIBES_INSECURE || config.tribes_insecure,
     public_url: ENV.PUBLIC_URL || config.public_url,
     connection_string_path:

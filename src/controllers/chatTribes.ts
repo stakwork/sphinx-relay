@@ -56,7 +56,7 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
     my_photo_url,
   } = body
   sphinxLogger.info(
-    ['received owner route hint', owner_route_hint],
+    ['doJoinTribe: with a tribe owner route hint', owner_route_hint],
     logging.Express
   )
   const is_private = body.private ? true : false
@@ -66,6 +66,7 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
     const existing: Chat = (await models.Chat.findOne({
       where: { uuid, tenant },
     })) as Chat
+
     if (existing) {
       sphinxLogger.error('You are already in this tribe', logging.Tribes)
       reject('cant find tribe')
@@ -88,7 +89,7 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
     const contactIds = [owner.id]
     if (tribeOwner) {
       theTribeOwner = tribeOwner // might already include??
-      if (tribeOwner.routeHint !== owner_route_hint) {
+      if (owner_route_hint && owner_route_hint !== tribeOwner.routeHint) {
         await tribeOwner.update({ routeHint: owner_route_hint })
       }
       if (!contactIds.includes(tribeOwner.id)) contactIds.push(tribeOwner.id)
@@ -137,8 +138,8 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
     const contactIdsToSend: string = is_private
       ? JSON.stringify([theTribeOwner.id]) // ONLY SEND TO TRIBE OWNER IF ITS A REQUEST
       : JSON.stringify(contactIds)
-    // console.log("=> joinTribe: typeToSend", typeToSend);
-    // console.log("=> joinTribe: contactIdsToSend", contactIdsToSend);
+    console.log('=> joinTribe: typeToSend', typeToSend)
+    console.log('=> joinTribe: contactIdsToSend', contactIdsToSend)
     // set my alias to be the custom one
     const theOwner = owner
     if (my_alias) theOwner.alias = my_alias
@@ -162,8 +163,10 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
         reject(e)
       },
       success: async function () {
-        // console.log("=> joinTribe: CREATE CHAT RECORD NOW");
-        const chat: Chat = (await models.Chat.create(chatParams)) as Chat
+        console.log('=> joinTribe: sent groupJoin')
+        const chat: ChatRecord = (await models.Chat.create(
+          chatParams
+        )) as ChatRecord
         models.ChatMember.create({
           contactId: theTribeOwner.id,
           chatId: chat.id,
@@ -172,7 +175,6 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
           status: constants.chat_statuses.approved,
           tenant,
         })
-        // console.log("=> joinTribe: CREATED CHAT", chat.dataValues);
         tribes.addExtraHost(
           theOwner.publicKey,
           host,

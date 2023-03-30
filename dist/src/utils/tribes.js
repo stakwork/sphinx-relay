@@ -46,7 +46,8 @@ function initAndSubscribeTopics(onMessage) {
             if (!(allOwners && allOwners.length))
                 return;
             (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
-                if (c.publicKey && c.publicKey.length === 66) {
+                // if no auth token dont subscribe yet... will subscribe when signed up
+                if (c.publicKey && c.publicKey.length === 66 && c.authToken) {
                     const firstUser = c.id === 1;
                     const cl = yield lazyClient(c.publicKey, host, onMessage, firstUser);
                     yield specialSubscribe(cl, c);

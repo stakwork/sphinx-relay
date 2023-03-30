@@ -240,7 +240,6 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             // there can be only 1 admin
             if (theAdmin) {
                 isAdmin = false;
-                yield joinDefaultTribes(owner, theAdmin);
             }
             tribes.newSubscription(owner, network.receiveMqttMessage);
         }
@@ -330,9 +329,20 @@ const updateContact = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const contactKeyChanged = attrs['contact_key'] && contact.contactKey !== attrs['contact_key'];
     const aliasChanged = attrs['alias'] && contact.alias !== attrs['alias'];
     const photoChanged = attrs['photo_url'] && contact.photoUrl !== attrs['photo_url'];
+    const isTheSignup = attrs['contact_key'] && !contact.contactKey;
     // update contact
     const owner = yield contact.update(jsonUtils.jsonToContact(attrs));
     (0, res_1.success)(res, jsonUtils.contactToJson(owner));
+    // first time creating contact key: auto join tribes now
+    if (isTheSignup && (0, proxy_1.isProxy)()) {
+        console.log('=> first contact_key set! isTheSignup', tenant);
+        const theAdmin = (yield models_1.models.Contact.findOne({
+            where: { isAdmin: true },
+        }));
+        if (theAdmin) {
+            yield joinDefaultTribes(owner, theAdmin);
+        }
+    }
     if (!contact.isOwner)
         return;
     if (!(attrs['contact_key'] || attrs['alias'] || attrs['photo_url'])) {
