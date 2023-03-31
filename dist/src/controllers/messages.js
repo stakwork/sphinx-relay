@@ -772,7 +772,7 @@ function deleteMessages(contacts) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             for (let i = 0; i < contacts.length; i++) {
-                let contact = contacts[i];
+                const contact = contacts[i];
                 const date = new Date();
                 date.setDate(date.getDate() - (contact.prune || parseInt(config.default_prune)));
                 yield handleMessageDelete({
