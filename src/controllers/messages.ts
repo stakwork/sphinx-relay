@@ -976,7 +976,7 @@ async function startDeleteMsgCronJob(contacts: ContactRecord[]) {
 async function deleteMessages(contacts: ContactRecord[]) {
   try {
     for (let i = 0; i < contacts.length; i++) {
-      let contact: ContactRecord = contacts[i]
+      const contact: ContactRecord = contacts[i]
       const date = new Date()
       date.setDate(
         date.getDate() - (contact.prune || parseInt(config.default_prune))
