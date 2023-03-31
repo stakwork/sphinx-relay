@@ -24,6 +24,7 @@ const builtinBots = [
   'callRecording',
   'kick',
   'sentiment',
+  'jarvis',
 ]
 
 // else just message type
@@ -38,12 +39,18 @@ const builtInBotMsgTypes = {
     constants.message_types.direct_payment,
   ],
   kick: [constants.message_types.group_join, constants.message_types.message],
+  jarvis: [
+    constants.message_types.message,
+    constants.message_types.boost,
+    constants.message_types.attachment,
+  ],
 }
 
 const builtInHiddenCmd = {
   callRecording: ['hide', 'update'],
   kick: ['hide', 'add', 'remove'],
   sentiment: ['threshold', 'timer', 'url'],
+  jarvis: ['link', 'hide'],
 }
 
 const builtInBotNames = {
@@ -54,6 +61,7 @@ const builtInBotNames = {
   callRecording: 'CallRecordingBot',
   kick: 'KickBot',
   sentiment: 'SentimentBot',
+  jarvis: 'JarvisBot',
 }
 
 export function init() {
