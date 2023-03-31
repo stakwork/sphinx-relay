@@ -694,6 +694,7 @@ function extractAttrs(body): {
   price_to_meet?: number
   push_kit_token?: string
   tenant?: number
+  prune?: number
 } {
   const fields_to_update = [
     'public_key',
@@ -710,6 +711,7 @@ function extractAttrs(body): {
     'route_hint',
     'price_to_meet',
     'push_kit_token',
+    'prune',
   ]
   const attrs = {}
   Object.keys(body).forEach((key) => {

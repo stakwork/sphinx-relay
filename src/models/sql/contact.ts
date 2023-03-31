@@ -97,6 +97,9 @@ export default class Contact extends Model<Contact> {
 
   @Column
   pushKitToken: string
+
+  @Column
+  prune: number
 }
 
 export interface ContactRecord extends Contact {

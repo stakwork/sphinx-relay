@@ -29,6 +29,7 @@ const DEFAULT_LENGTH_DELAY_FOR_TRANSPORT_TOKEN_DB_CLEARING = 1;
 const DEFAULT_BOLTWALL_SERVER = 'http://localhost:8444';
 const DEFAULT_PROXY_HD_KEYS = false;
 const DEFAULT_STORE_CACHE = '';
+const DEFAULT_PRUNE = null;
 const DEFAULT_PEOPLE_HOST = 'people.sphinx.chat';
 // const DEFAULT_TRIBES_HOST = 'tribes.sphinx.chat'
 // const DEFAULT_MQTT_HOST = 'tribes.sphinx.chat'
@@ -117,6 +118,7 @@ function loadConfig() {
         proxy_hd_keys: ENV.PROXY_HD_KEYS || config.proxy_hd_keys || DEFAULT_PROXY_HD_KEYS,
         default_cache_host: ENV.DEFAULT_CACHE_HOST || config.default_cache_host,
         store_cache: ENV.STORE_CACHE || config.store_cache || DEFAULT_STORE_CACHE,
+        default_prune: ENV.DEFAULT_PRUNE || config.default_prune || DEFAULT_PRUNE,
     };
 }
 exports.loadConfig = loadConfig;
