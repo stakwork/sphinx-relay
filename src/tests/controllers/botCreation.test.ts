@@ -3,8 +3,9 @@ import { deleteTribe, leaveTribe } from '../utils/del'
 import { botDecrypt } from '../utils/bots'
 import { createTribe, joinTribe } from '../utils/save'
 import { getCheckBotMsg } from '../utils/get'
-import { sendTribeMessage } from '../utils/msg'
+import { sendImage, sendTribeMessage } from '../utils/msg'
 import nodes from '../nodes'
+import { greenSquare } from '../utils/base64images'
 
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
@@ -14,7 +15,7 @@ npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2
 */
 
 test('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', async (t) => {
-  await botCreation(t, nodes[0], nodes[1], nodes[2])
+  await botCreation(t, nodes[4], nodes[1], nodes[2])
 })
 
 async function botCreation(t, node1, node2, node3) {
@@ -41,6 +42,9 @@ async function botCreation(t, node1, node2, node3) {
   t.truthy(botReply, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply))
 
+  const text21 = '/bot install jarvis'
+  await sendTribeMessage(t, node1, tribe, text21)
+
   //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
   const text2 = '/bot install welcome'
   await sendTribeMessage(t, node1, tribe, text2)
@@ -50,6 +54,9 @@ async function botCreation(t, node1, node2, node3) {
   const botReply2 = await getCheckBotMsg(t, node1, botAlias, tribe, 2)
   t.truthy(botReply2, 'MotherBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply2))
+
+  const text22 = '/jarvis link https://demo6543383.mockable.io/ts'
+  await sendTribeMessage(t, node1, tribe, text22)
 
   //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
   const setMessage = '/welcome setmessage '
@@ -73,6 +80,10 @@ async function botCreation(t, node1, node2, node3) {
   const botReply4 = await getCheckBotMsg(t, node3, botAlias, tribe, 2)
   t.truthy(botReply4, 'WelcomeBot should reply')
   // console.log("BOTREPLY === ", JSON.stringify(botReply3))
+
+  const image = greenSquare
+  const imageSent = await sendImage(t, node1, node2, image, tribe)
+  t.true(imageSent, 'message should have been sent')
 
   //CHECK THAT BOT'S DECRYPTED MESSAGE IS SAME AS INPUT
   const n3check = await botDecrypt(t, node3, newWelcomeMessage, botReply4)

@@ -16,13 +16,14 @@ const save_1 = require("../utils/save");
 const get_1 = require("../utils/get");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
+const base64images_1 = require("../utils/base64images");
 //var h = require('../utils/helpers')
 //var r = require('../test-config')
 /*
 npx ava src/tests/controllers/botCreation.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test-30-botCreation: create tribe, create bot, add bot to tribe, delete bot, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield botCreation(t, nodes_1.default[0], nodes_1.default[1], nodes_1.default[2]);
+    yield botCreation(t, nodes_1.default[4], nodes_1.default[1], nodes_1.default[2]);
 }));
 function botCreation(t, node1, node2, node3) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -44,6 +45,8 @@ function botCreation(t, node1, node2, node3) {
         const botReply = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 1);
         t.truthy(botReply, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply))
+        const text21 = '/bot install jarvis';
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text21);
         //NODE1 SENDS A BOT INSTALL MESSAGE IN TRIBE
         const text2 = '/bot install welcome';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
@@ -52,6 +55,8 @@ function botCreation(t, node1, node2, node3) {
         const botReply2 = yield (0, get_1.getCheckBotMsg)(t, node1, botAlias, tribe, 2);
         t.truthy(botReply2, 'MotherBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply2))
+        const text22 = '/jarvis link https://demo6543383.mockable.io/ts';
+        yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text22);
         //NODE1 SENDS A BOT SET WELCOME MESSAGE IN TRIBE
         const setMessage = '/welcome setmessage ';
         const newWelcomeMessage = "You're in my test tribe now";
@@ -72,6 +77,9 @@ function botCreation(t, node1, node2, node3) {
         const botReply4 = yield (0, get_1.getCheckBotMsg)(t, node3, botAlias, tribe, 2);
         t.truthy(botReply4, 'WelcomeBot should reply');
         // console.log("BOTREPLY === ", JSON.stringify(botReply3))
+        const image = base64images_1.greenSquare;
+        const imageSent = yield (0, msg_1.sendImage)(t, node1, node2, image, tribe);
+        t.true(imageSent, 'message should have been sent');
         //CHECK THAT BOT'S DECRYPTED MESSAGE IS SAME AS INPUT
         const n3check = yield (0, bots_1.botDecrypt)(t, node3, newWelcomeMessage, botReply4);
         t.true(n3check, "node3 should have read and decrypted bot's message");

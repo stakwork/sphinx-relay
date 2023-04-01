@@ -3,7 +3,7 @@ import { sphinxLogger, logging } from '../utils/logger'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models } from '../models'
 const msg_types = Sphinx.MSG_TYPE
-import { updateLink } from './utill/jarvis'
+import { updateLink, sendMessageToJarvis } from './utill/jarvis'
 
 let initted = false
 const botPrefix = '/jarvis'
@@ -25,12 +25,16 @@ export function init() {
       const tribe = (await models.Chat.findOne({
         where: { uuid: message.channel.id },
       })) as ChatRecord
+      const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
       if (arr[0] === botPrefix) {
-        const isAdmin = message.member.roles.find(
-          (role) => role.name === 'Admin'
-        )
         if (!isAdmin) {
           //Save message
+          await sendMessageToJarvis({
+            isAdmin: isAdmin ? true : false,
+            message,
+            tribe,
+            botPrefix,
+          })
           return
         }
         switch (cmd) {
@@ -45,11 +49,16 @@ export function init() {
               isAdmin: isAdmin ? true : false,
               botName,
             })
-            //Save Message
-            //Response
             return
           default:
             //Save Message
+            await sendMessageToJarvis({
+              isAdmin: isAdmin ? true : false,
+              message,
+              tribe,
+              botPrefix,
+            })
+            //Response to user
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('JarvisBot')
               .setTitle('Bot Commands:')
@@ -65,7 +74,12 @@ export function init() {
             return
         }
       } else {
-        console.log('==> message content', message.content)
+        await sendMessageToJarvis({
+          isAdmin: isAdmin ? true : false,
+          message,
+          tribe,
+          botPrefix,
+        })
         return
       }
     } catch (error) {

@@ -487,9 +487,15 @@ function buildBotPayload(msg, botPrefix) {
             send: function () { },
             pay: function () { },
         },
-        content: msg.message.content,
+        content: msg.type === constants_1.default.message_types.attachment
+            ? JSON.stringify({
+                content: msg.message.content,
+                media_key: msg.message.mediaKey,
+            })
+            : msg.message.content,
         amount: msg.message.amount,
         type: msg.type,
+        media_key: msg.message.mediaKey,
         member: {
             id: msg.sender.id ? msg.sender.id + '' : '0',
             nickname: msg.sender.alias,

@@ -36,10 +36,16 @@ function init() {
             const tribe = (yield models_1.models.Chat.findOne({
                 where: { uuid: message.channel.id },
             }));
+            const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
             if (arr[0] === botPrefix) {
-                const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
                 if (!isAdmin) {
                     //Save message
+                    yield (0, jarvis_1.sendMessageToJarvis)({
+                        isAdmin: isAdmin ? true : false,
+                        message,
+                        tribe,
+                        botPrefix,
+                    });
                     return;
                 }
                 switch (cmd) {
@@ -54,11 +60,16 @@ function init() {
                             isAdmin: isAdmin ? true : false,
                             botName,
                         });
-                        //Save Message
-                        //Response
                         return;
                     default:
                         //Save Message
+                        yield (0, jarvis_1.sendMessageToJarvis)({
+                            isAdmin: isAdmin ? true : false,
+                            message,
+                            tribe,
+                            botPrefix,
+                        });
+                        //Response to user
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('JarvisBot')
                             .setTitle('Bot Commands:')
@@ -75,7 +86,12 @@ function init() {
                 }
             }
             else {
-                console.log('==> message content', message.content);
+                yield (0, jarvis_1.sendMessageToJarvis)({
+                    isAdmin: isAdmin ? true : false,
+                    message,
+                    tribe,
+                    botPrefix,
+                });
                 return;
             }
         }
