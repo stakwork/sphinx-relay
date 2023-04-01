@@ -68,10 +68,9 @@ export async function sendMessageToJarvis({
   tribe,
   botPrefix,
 }: SendMessageToJarvisInput) {
-  console.log('=====> save message hit<======')
   let isAdminOnlyMessage: boolean = false
   if (isAdmin) {
-    checkAdminOnlyMessage()
+    isAdminOnlyMessage = await checkAdminOnlyMessage({ tribe, message })
   }
   if (!isAdminOnlyMessage) {
     try {
@@ -95,7 +94,6 @@ export async function sendMessageToJarvis({
 
       //Make Api call to Javis
       if (meta?.url) {
-        console.log('====> Url set <====', jarvisMsg)
         const res = await fetch(meta.url, {
           method: 'POST',
           headers: {
@@ -103,7 +101,12 @@ export async function sendMessageToJarvis({
           },
           body: JSON.stringify(jarvisMsg),
         })
-        console.log(await res.json())
+        if (!res.ok) {
+          sphinxLogger.error([
+            `JARVIS BOT ERROR WHILE SENDING TO JARVIS BACKEND ${res}`,
+            logging.Bots,
+          ])
+        }
       }
     } catch (error) {
       sphinxLogger.error([
@@ -115,7 +118,39 @@ export async function sendMessageToJarvis({
   return
 }
 
-export async function checkAdminOnlyMessage() {}
+export async function checkAdminOnlyMessage({
+  tribe,
+  message,
+}: {
+  tribe: ChatRecord
+  message: Sphinx.Message
+}) {
+  try {
+    if (message.type !== constants.message_types.message || !message.content) {
+      return false
+    }
+    const arr = message.content.split(' ')
+    const botPrefix = arr[0]
+    const command = arr[1]
+    const bots = (await models.ChatBot.findAll({
+      where: { chatId: tribe.id, tenant: tribe.tenant },
+    })) as ChatBotRecord[]
+    for (let i = 0; i < bots.length; i++) {
+      const bot = bots[i]
+      if (bot.botPrefix === botPrefix) {
+        const commands = JSON.parse(bot.hiddenCommands || '[]')
+        if (commands.includes(command)) return true
+      }
+    }
+    return false
+  } catch (error) {
+    sphinxLogger.error([
+      `JARVIS BOT ERROR WHILE GETTING IF ITS A HIDDEN COMMAND ${error}`,
+      logging.Bots,
+    ])
+    return false
+  }
+}
 
 function parseMessage(message: MessageRecord) {
   return {

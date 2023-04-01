@@ -34,10 +34,9 @@ function updateLink({ botPrefix, command, botMessage, tribe, url, isAdmin, botNa
 exports.updateLink = updateLink;
 function sendMessageToJarvis({ isAdmin, message, tribe, botPrefix, }) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('=====> save message hit<======');
         let isAdminOnlyMessage = false;
         if (isAdmin) {
-            checkAdminOnlyMessage();
+            isAdminOnlyMessage = yield checkAdminOnlyMessage({ tribe, message });
         }
         if (!isAdminOnlyMessage) {
             try {
@@ -57,7 +56,6 @@ function sendMessageToJarvis({ isAdmin, message, tribe, botPrefix, }) {
                 }
                 //Make Api call to Javis
                 if (meta === null || meta === void 0 ? void 0 : meta.url) {
-                    console.log('====> Url set <====', jarvisMsg);
                     const res = yield (0, node_fetch_1.default)(meta.url, {
                         method: 'POST',
                         headers: {
@@ -65,7 +63,12 @@ function sendMessageToJarvis({ isAdmin, message, tribe, botPrefix, }) {
                         },
                         body: JSON.stringify(jarvisMsg),
                     });
-                    console.log(yield res.json());
+                    if (!res.ok) {
+                        logger_1.sphinxLogger.error([
+                            `JARVIS BOT ERROR WHILE SENDING TO JARVIS BACKEND ${res}`,
+                            logger_1.logging.Bots,
+                        ]);
+                    }
                 }
             }
             catch (error) {
@@ -79,8 +82,36 @@ function sendMessageToJarvis({ isAdmin, message, tribe, botPrefix, }) {
     });
 }
 exports.sendMessageToJarvis = sendMessageToJarvis;
-function checkAdminOnlyMessage() {
-    return __awaiter(this, void 0, void 0, function* () { });
+function checkAdminOnlyMessage({ tribe, message, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            if (message.type !== constants_1.default.message_types.message || !message.content) {
+                return false;
+            }
+            const arr = message.content.split(' ');
+            const botPrefix = arr[0];
+            const command = arr[1];
+            const bots = (yield models_1.models.ChatBot.findAll({
+                where: { chatId: tribe.id, tenant: tribe.tenant },
+            }));
+            for (let i = 0; i < bots.length; i++) {
+                const bot = bots[i];
+                if (bot.botPrefix === botPrefix) {
+                    const commands = JSON.parse(bot.hiddenCommands || '[]');
+                    if (commands.includes(command))
+                        return true;
+                }
+            }
+            return false;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error([
+                `JARVIS BOT ERROR WHILE GETTING IF ITS A HIDDEN COMMAND ${error}`,
+                logger_1.logging.Bots,
+            ]);
+            return false;
+        }
+    });
 }
 exports.checkAdminOnlyMessage = checkAdminOnlyMessage;
 function parseMessage(message) {
