@@ -82,11 +82,10 @@ export async function sendMessageToJarvis({
       const parsedJarvisMsg = parseMessage(savedMessage)
       let jarvisMsg
       if (savedMessage.type === constants.message_types.attachment) {
-        const msgContent = JSON.parse(message.content || `{}`)
         jarvisMsg = {
           ...parsedJarvisMsg,
-          media_key: msgContent.media_key,
-          message_content: msgContent.content,
+          media_key: message.media_key,
+          message_content: message.content,
         }
       } else {
         jarvisMsg = { ...parsedJarvisMsg, message_content: message.content }

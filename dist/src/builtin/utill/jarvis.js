@@ -48,8 +48,7 @@ function sendMessageToJarvis({ isAdmin, message, tribe, botPrefix, }) {
                 const parsedJarvisMsg = parseMessage(savedMessage);
                 let jarvisMsg;
                 if (savedMessage.type === constants_1.default.message_types.attachment) {
-                    const msgContent = JSON.parse(message.content || `{}`);
-                    jarvisMsg = Object.assign(Object.assign({}, parsedJarvisMsg), { media_key: msgContent.media_key, message_content: msgContent.content });
+                    jarvisMsg = Object.assign(Object.assign({}, parsedJarvisMsg), { media_key: message.media_key, message_content: message.content });
                 }
                 else {
                     jarvisMsg = Object.assign(Object.assign({}, parsedJarvisMsg), { message_content: message.content });
