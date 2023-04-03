@@ -80,13 +80,13 @@ jobs:
             docker ps
             docker logs meme.sphinx
             docker logs dave.sphinx
-            docker wait stack_relaysetup_1;
+            docker wait stack_relaysetup_1
+            cat stack/relay/NODES.json;
       - name: copy file
         uses: canastro/copy-file-action@master
         with:
           source: 'stack/relay/NODES.json'
           target: 'relay/src/tests/configs/nodes.json'
-        run: cat stack/relay/NODES.json
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
