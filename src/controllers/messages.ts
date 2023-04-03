@@ -1,4 +1,4 @@
-import { models, Message, Chat } from '../models'
+import { models, Message, Chat, ContactRecord } from '../models'
 import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
 import {
@@ -21,10 +21,17 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { ChatPlusMembers } from '../network/send'
 import { getCacheMsg } from '../utils/tribes'
+import { CronJob } from 'cron'
+import { loadConfig } from '../utils/config'
 
 interface ExtentedMessage extends Message {
   chat_id?: number
 }
+
+// store all current running jobs in memory
+const jobs = {}
+
+const config = loadConfig()
 
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
@@ -939,4 +946,67 @@ function removeDuplicateMsg(
   }
 
   return { messages: filteredMsg, all_messages_length: all_message_length }
+}
+
+export const initializeDeleteMessageCronJobs = async () => {
+  try {
+    if (config.default_prune) {
+      sphinxLogger.info(['=> initializing delete message cron job'])
+      const contacts = (await models.Contact.findAll({
+        where: { isOwner: true },
+      })) as ContactRecord[]
+      startDeleteMsgCronJob(contacts)
+    }
+  } catch (error) {
+    sphinxLogger.error(['=> error initializing delete message cron job', error])
+  }
+}
+
+async function startDeleteMsgCronJob(contacts: ContactRecord[]) {
+  jobs['del_msg'] = new CronJob(
+    '0 5 * * *',
+    () => {
+      deleteMessages(contacts)
+    },
+    null,
+    true
+  )
+}
+
+async function deleteMessages(contacts: ContactRecord[]) {
+  try {
+    for (let i = 0; i < contacts.length; i++) {
+      const contact: ContactRecord = contacts[i]
+      const date = new Date()
+      date.setDate(
+        date.getDate() - (contact.prune || parseInt(config.default_prune))
+      )
+      await handleMessageDelete({
+        tenant: contact.tenant,
+        date: date.toISOString(),
+      })
+    }
+  } catch (error) {
+    sphinxLogger.error([
+      '=> error iterating through contacts to delete message cron job',
+      error,
+    ])
+  }
+}
+
+async function handleMessageDelete({
+  tenant,
+  date,
+}: {
+  tenant: number
+  date: string
+}) {
+  try {
+    await models.Message.destroy({
+      where: { tenant, createdAt: { [Op.lt]: date } },
+    })
+    sphinxLogger.info(['=> message deleted by cron job'])
+  } catch (error) {
+    sphinxLogger.error(['=> error deleting message by cron job', error])
+  }
 }

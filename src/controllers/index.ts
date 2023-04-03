@@ -42,6 +42,10 @@ export async function set(app) {
     initializeCronJobsForCallRecordings()
   }
 
+  if (models && models.Contact) {
+    messages.initializeDeleteMessageCronJobs()
+  }
+
   // media.cycleMediaToken()
 
   timers.reloadTimers()

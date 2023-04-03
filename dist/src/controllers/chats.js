@@ -585,10 +585,10 @@ function receiveGroupJoin(payload) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info(`=> receiveGroupJoin`, logger_1.logging.Network);
         const { owner, chat, sender_pub_key, sender_alias, chat_members, chat_type, isTribeOwner, date_string, network_type, sender_photo_url, sender_route_hint, chat_name, } = yield helpers.parseReceiveParams(payload);
-        logger_1.sphinxLogger.info(`=> receiveGroupJoin from ${sender_pub_key} in ${chat.id}. tenant ${owner.id}`, logger_1.logging.Network);
-        const tenant = owner.id;
         if (!chat)
             return;
+        logger_1.sphinxLogger.info(`=> receiveGroupJoin from ${sender_pub_key} in ${chat.id}. tenant ${owner.id}`, logger_1.logging.Network);
+        const tenant = owner.id;
         const isTribe = chat_type === constants_1.default.chat_types.tribe;
         let date = new Date();
         date.setMilliseconds(0);

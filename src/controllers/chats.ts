@@ -680,14 +680,14 @@ export async function receiveGroupJoin(payload: Payload): Promise<void> {
     chat_name,
   } = await helpers.parseReceiveParams(payload)
 
+  if (!chat) return
+
   sphinxLogger.info(
     `=> receiveGroupJoin from ${sender_pub_key} in ${chat.id}. tenant ${owner.id}`,
     logging.Network
   )
 
   const tenant: number = owner.id
-
-  if (!chat) return
 
   const isTribe = chat_type === constants.chat_types.tribe
 
