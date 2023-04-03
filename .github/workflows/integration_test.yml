@@ -80,7 +80,6 @@ jobs:
             docker ps
             docker logs meme.sphinx
             docker logs dave.sphinx
-            docker logs carol.sphinx
             docker wait stack_relaysetup_1
             cat stack/relay/NODES.json;
       - name: copy file
@@ -91,7 +90,3 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
-        continue-on-error: true
-      - name: log carol.sphinx
-        run: |
-          docker logs carol.sphinx
