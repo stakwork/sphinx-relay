@@ -828,9 +828,9 @@ export async function replayChatHistory(chat, contact, ownerRecord) {
       }
       const sender = {
         ...owner,
-        ...(m.senderAlias && { alias: m.senderAlias }),
+        ...{ alias: m.senderAlias || '' }, //might use unknown here instead of leaving an empty string
         role: constants.chat_roles.reader,
-        ...(m.senderPic && { photoUrl: m.senderPic }),
+        ...{ photoUrl: m.senderPic || '' },
       }
       let content = ''
       try {
