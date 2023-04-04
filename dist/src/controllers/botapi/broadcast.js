@@ -70,7 +70,7 @@ function broadcast(a) {
         if (!only_owner) {
             yield network.sendMessage({
                 chat: chat,
-                sender: Object.assign(Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader }), { photoUrl: bot_pic || '' }),
+                sender: Object.assign(Object.assign({}, owner.dataValues), { alias, id: botContactId, role: constants_1.default.chat_roles.reader, photoUrl: bot_pic || '' }),
                 message: {
                     content: textMap,
                     id: message.id,
