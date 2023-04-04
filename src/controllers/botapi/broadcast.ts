@@ -77,7 +77,7 @@ export default async function broadcast(a: Action): Promise<void> {
         alias,
         id: botContactId,
         role: constants.chat_roles.reader,
-        ...(bot_pic && { photoUrl: bot_pic }),
+        photoUrl: bot_pic || '',
       },
       message: {
         content: textMap,

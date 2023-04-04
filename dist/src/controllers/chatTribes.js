@@ -771,7 +771,7 @@ function replayChatHistory(chat, contact, ownerRecord) {
                         return; // no join or leave announcements if set this way
                     }
                 }
-                const sender = Object.assign(Object.assign(Object.assign(Object.assign({}, owner), (m.senderAlias && { alias: m.senderAlias })), { role: constants_1.default.chat_roles.reader }), (m.senderPic && { photoUrl: m.senderPic }));
+                const sender = Object.assign(Object.assign({}, owner), { alias: m.senderAlias || 'unknown', role: constants_1.default.chat_roles.reader, photoUrl: m.senderPic || '' });
                 let content = '';
                 try {
                     content = JSON.parse(m.remoteMessageContent);
