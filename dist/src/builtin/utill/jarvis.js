@@ -114,6 +114,7 @@ function checkAdminOnlyMessage({ tribe, message, }) {
 }
 exports.checkAdminOnlyMessage = checkAdminOnlyMessage;
 function parseMessage(message) {
+    console.log(message);
     return {
         amount: message.amount || 0,
         amount_msat: message.amountMsat || 0,
@@ -126,7 +127,7 @@ function parseMessage(message) {
         media_token: message.mediaToken || '',
         media_type: message.mediaType || '',
         message_content: message.messageContent || '',
-        network_type: message.network_type || '',
+        network_type: message.network_type,
         original_muid: message.originalMuid || '',
         parent_id: message.parentId || '',
         payment_hash: message.paymentHash || '',
@@ -134,11 +135,11 @@ function parseMessage(message) {
         recipient_alias: message.recipientAlias || '',
         recipient_pic: message.recipientPic || '',
         reply_uuid: message.replyUuid || '',
-        sender: message.sender || '',
+        sender: message.sender,
         sender_alias: message.senderAlias || '',
         sender_pic: message.senderPic || '',
-        status: message.status || '',
-        type: message.type || '',
+        status: message.status,
+        type: message.type,
         updated_at: message.updatedAt || '',
         uuid: message.uuid || '',
     };
