@@ -23,7 +23,7 @@ function updateLink({ botPrefix, command, botMessage, tribe, url, isAdmin, botNa
             meta.url = url;
             yield bot.update({ meta: JSON.stringify(meta) });
             sendMessageToJarvis({ isAdmin, message: botMessage, tribe, botPrefix });
-            return yield (0, _1.botResponse)(botName, 'Jarvis link updated successfullt', botPrefix, tribe.id, botMessage, command);
+            return yield (0, _1.botResponse)(botName, 'Jarvis link updated successfully', botPrefix, tribe.id, botMessage, command);
         }
         catch (error) {
             logger_1.sphinxLogger.error([`JARVIS BOT ERROR ${error}`, logger_1.logging.Bots]);

@@ -43,7 +43,7 @@ export async function updateLink({
     sendMessageToJarvis({ isAdmin, message: botMessage, tribe, botPrefix })
     return await botResponse(
       botName,
-      'Jarvis link updated successfullt',
+      'Jarvis link updated successfully',
       botPrefix,
       tribe.id,
       botMessage,
