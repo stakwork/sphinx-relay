@@ -53,7 +53,7 @@ export async function threshold(
   try {
     const bot = (await models.ChatBot.findOne({
       where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },
-    })) as ChatRecord
+    })) as ChatBotRecord
 
     if (!bot) {
       sphinxLogger.error([`SENTIMENT BOT ERROR, BOT NOT FOUND`, logging.Bots])

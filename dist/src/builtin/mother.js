@@ -32,6 +32,7 @@ const builtinBots = [
     'callRecording',
     'kick',
     'sentiment',
+    'jarvis',
 ];
 // else just message type
 const builtInBotMsgTypes = {
@@ -45,11 +46,17 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.direct_payment,
     ],
     kick: [constants_1.default.message_types.group_join, constants_1.default.message_types.message],
+    jarvis: [
+        constants_1.default.message_types.message,
+        constants_1.default.message_types.boost,
+        constants_1.default.message_types.attachment,
+    ],
 };
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],
     kick: ['hide', 'add', 'remove'],
     sentiment: ['threshold', 'timer', 'url'],
+    jarvis: ['link', 'hide'],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
@@ -59,6 +66,7 @@ const builtInBotNames = {
     callRecording: 'CallRecordingBot',
     kick: 'KickBot',
     sentiment: 'SentimentBot',
+    jarvis: 'JarvisBot',
 };
 function init() {
     const client = new Sphinx.Client();

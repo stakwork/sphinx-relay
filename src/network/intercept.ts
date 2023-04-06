@@ -92,9 +92,7 @@ export async function isBotMsg(
           const msgTypes = JSON.parse(botInTribe.msgTypes)
           if (msgTypes.includes(msgType)) {
             const isMsgAndHasText =
-              msgType === constants.message_types.message &&
-              txt &&
-              txt.startsWith(`${botInTribe.botPrefix} `)
+              msgType === constants.message_types.message && txt
             const isNotMsg = msgType !== constants.message_types.message
             if (
               isMsgAndHasText ||

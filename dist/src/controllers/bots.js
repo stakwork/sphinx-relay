@@ -490,6 +490,7 @@ function buildBotPayload(msg, botPrefix) {
         content: msg.message.content,
         amount: msg.message.amount,
         type: msg.type,
+        media_key: msg.message.mediaKey,
         member: {
             id: msg.sender.id ? msg.sender.id + '' : '0',
             nickname: msg.sender.alias,
