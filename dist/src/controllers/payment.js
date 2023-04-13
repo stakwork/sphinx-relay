@@ -36,8 +36,15 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             (0, res_1.success)(res, body);
         }, function (error) {
             logger_1.sphinxLogger.info(`[send payment] ERROR ${error}`);
+            let errorMsg = '';
+            if (typeof error === 'string') {
+                errorMsg = errorMsg;
+            }
+            else {
+                errorMsg = error === null || error === void 0 ? void 0 : error.message;
+            }
             res.status(200);
-            res.json({ success: false, error });
+            res.json({ success: false, error: errorMsg || error });
             res.end();
         }, {});
         return;
