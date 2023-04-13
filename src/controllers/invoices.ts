@@ -86,7 +86,10 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
     success(res, jsonUtils.messageToJson(paidMessage, chat))
   } catch (e) {
     sphinxLogger.error(`ERR paying invoice ${e}`)
-    return failure(res, 'could not pay invoice')
+    if (typeof e === 'string') {
+      return failure(res, e)
+    }
+    return failure(res, e?.message || 'could not pay invoice')
   }
 }
 
