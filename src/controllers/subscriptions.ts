@@ -18,51 +18,59 @@ const jobs = {}
 
 // init jobs from DB
 export const initializeCronJobs = async () => {
-  await helpers.sleep(1000)
-  const subs = await getRawSubs({ where: { ended: false } })
-  subs.length &&
-    subs.forEach((sub) => {
-      sphinxLogger.info([
-        '=> starting subscription cron job',
-        sub.id + ':',
-        sub.cron,
-      ])
-      startCronJob(sub)
-    })
+  try {
+    await helpers.sleep(1000)
+    const subs = await getRawSubs({ where: { ended: false } })
+    subs.length &&
+      subs.forEach((sub) => {
+        sphinxLogger.info([
+          '=> starting subscription cron job',
+          sub.id + ':',
+          sub.cron,
+        ])
+        startCronJob(sub)
+      })
+  } catch (error) {
+    sphinxLogger.error(['ERROR initializingCronJobs', error])
+  }
 }
 
 async function startCronJob(sub) {
   jobs[sub.id] = new CronJob(
     sub.cron,
     async function () {
-      const subscription: Subscription = (await models.Subscription.findOne({
-        where: { id: sub.id },
-      })) as Subscription
-      if (!subscription) {
-        delete jobs[sub.id]
-        return this.stop()
-      }
+      try {
+        const subscription: Subscription = (await models.Subscription.findOne({
+          where: { id: sub.id },
+        })) as Subscription
+        if (!subscription) {
+          delete jobs[sub.id]
+          return this.stop()
+        }
 
-      sphinxLogger.info(['EXEC CRON =>', subscription.id])
-      if (subscription.paused) {
-        // skip, still in jobs{} tho
-        return this.stop()
-      }
-      const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
-      if (STOP) {
-        // end the job and return
-        sphinxLogger.info('stop')
-        subscription.update({ ended: true })
-        delete jobs[subscription.id]
-        return this.stop()
-      }
+        sphinxLogger.info(['EXEC CRON =>', subscription.id])
+        if (subscription.paused) {
+          // skip, still in jobs{} tho
+          return this.stop()
+        }
+        const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription)
+        if (STOP) {
+          // end the job and return
+          sphinxLogger.info('stop')
+          subscription.update({ ended: true })
+          delete jobs[subscription.id]
+          return this.stop()
+        }
 
-      const tenant = subscription.tenant
-      const owner: Contact = (await models.Contact.findOne({
-        where: { id: tenant },
-      })) as Contact
-      // SEND PAYMENT!!!
-      sendSubscriptionPayment(subscription, false, owner)
+        const tenant = subscription.tenant
+        const owner: Contact = (await models.Contact.findOne({
+          where: { id: tenant },
+        })) as Contact
+        // SEND PAYMENT!!!
+        sendSubscriptionPayment(subscription, false, owner)
+      } catch (error) {
+        sphinxLogger.error(['ERROR initializingCronJobs', error])
+      }
     },
     null,
     true
@@ -125,100 +133,105 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
   const date = new Date()
   date.setMilliseconds(0)
 
-  const subscription: Subscription = (await models.Subscription.findOne({
-    where: { id: sub.id, tenant },
-  })) as Subscription
-  if (!subscription) {
-    return
+  try {
+    const subscription: Subscription = (await models.Subscription.findOne({
+      where: { id: sub.id, tenant },
+    })) as Subscription
+    if (!subscription) {
+      return
+    }
+    const chat: Chat = (await models.Chat.findOne({
+      where: { id: subscription.chatId, tenant },
+    })) as Chat
+    if (!subscription) {
+      sphinxLogger.error('=> no sub for this payment!!!')
+      return
+    }
+
+    const forMe = false
+    const text = msgForSubPayment(owner, sub, isFirstMessage, forMe)
+
+    const contact: Contact = (await models.Contact.findByPk(
+      sub.contactId
+    )) as Contact
+    const enc = rsa.encrypt(contact.contactKey, text)
+
+    network.sendMessage({
+      chat: chat,
+      sender: owner,
+      type: constants.message_types.direct_payment,
+      message: { amount: sub.amount, content: enc },
+      amount: sub.amount,
+      success: async (data) => {
+        const shouldEnd =
+          checkSubscriptionShouldEndAfterThisPayment(subscription)
+        const obj = {
+          totalPaid: (subscription.totalPaid || 0) + subscription.amount,
+          count: (subscription.count || 0) + 1,
+          ended: false,
+        }
+        if (shouldEnd) {
+          obj.ended = true
+          if (jobs[sub.id]) jobs[subscription.id].stop()
+          delete jobs[subscription.id]
+        }
+        await subscription.update(obj)
+
+        const forMe = true
+        const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe)
+        const encText = rsa.encrypt(owner.contactKey, text2)
+        const message: Message = (await models.Message.create({
+          chatId: chat.id,
+          sender: owner.id,
+          type: constants.message_types.direct_payment,
+          status: constants.statuses.confirmed,
+          messageContent: encText,
+          amount: subscription.amount,
+          amountMsat: subscription.amount * 1000,
+          date: date,
+          createdAt: date,
+          updatedAt: date,
+          subscriptionId: subscription.id,
+          tenant,
+        })) as Message
+        socket.sendJson(
+          {
+            type: 'direct_payment',
+            response: jsonUtils.messageToJson(message, chat),
+          },
+          tenant
+        )
+      },
+      failure: async (err) => {
+        sphinxLogger.error('SEND PAY ERROR')
+        let errMessage = constants.payment_errors[err] || 'Unknown'
+        errMessage = 'Payment Failed: ' + errMessage
+        const message: Message = (await models.Message.create({
+          chatId: chat.id,
+          sender: owner.id,
+          type: constants.message_types.direct_payment,
+          status: constants.statuses.failed,
+          messageContent: errMessage,
+          amount: sub.amount,
+          amountMsat: sub.amount * 1000,
+          date: date,
+          createdAt: date,
+          updatedAt: date,
+          subscriptionId: sub.id,
+          tenant,
+        })) as Message
+        socket.sendJson(
+          {
+            type: 'direct_payment',
+            response: jsonUtils.messageToJson(message, chat),
+          },
+          tenant
+        )
+      },
+    })
+  } catch (error) {
+    sphinxLogger.error(['ERROR sendingSubPayment', error])
   }
-  const chat: Chat = (await models.Chat.findOne({
-    where: { id: subscription.chatId, tenant },
-  })) as Chat
-  if (!subscription) {
-    sphinxLogger.error('=> no sub for this payment!!!')
-    return
-  }
-
-  const forMe = false
-  const text = msgForSubPayment(owner, sub, isFirstMessage, forMe)
-
-  const contact: Contact = (await models.Contact.findByPk(
-    sub.contactId
-  )) as Contact
-  const enc = rsa.encrypt(contact.contactKey, text)
-
-  network.sendMessage({
-    chat: chat,
-    sender: owner,
-    type: constants.message_types.direct_payment,
-    message: { amount: sub.amount, content: enc },
-    amount: sub.amount,
-    success: async (data) => {
-      const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription)
-      const obj = {
-        totalPaid: (subscription.totalPaid || 0) + subscription.amount,
-        count: (subscription.count || 0) + 1,
-        ended: false,
-      }
-      if (shouldEnd) {
-        obj.ended = true
-        if (jobs[sub.id]) jobs[subscription.id].stop()
-        delete jobs[subscription.id]
-      }
-      await subscription.update(obj)
-
-      const forMe = true
-      const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe)
-      const encText = rsa.encrypt(owner.contactKey, text2)
-      const message: Message = (await models.Message.create({
-        chatId: chat.id,
-        sender: owner.id,
-        type: constants.message_types.direct_payment,
-        status: constants.statuses.confirmed,
-        messageContent: encText,
-        amount: subscription.amount,
-        amountMsat: subscription.amount * 1000,
-        date: date,
-        createdAt: date,
-        updatedAt: date,
-        subscriptionId: subscription.id,
-        tenant,
-      })) as Message
-      socket.sendJson(
-        {
-          type: 'direct_payment',
-          response: jsonUtils.messageToJson(message, chat),
-        },
-        tenant
-      )
-    },
-    failure: async (err) => {
-      sphinxLogger.error('SEND PAY ERROR')
-      let errMessage = constants.payment_errors[err] || 'Unknown'
-      errMessage = 'Payment Failed: ' + errMessage
-      const message: Message = (await models.Message.create({
-        chatId: chat.id,
-        sender: owner.id,
-        type: constants.message_types.direct_payment,
-        status: constants.statuses.failed,
-        messageContent: errMessage,
-        amount: sub.amount,
-        amountMsat: sub.amount * 1000,
-        date: date,
-        createdAt: date,
-        updatedAt: date,
-        subscriptionId: sub.id,
-        tenant,
-      })) as Message
-      socket.sendJson(
-        {
-          type: 'direct_payment',
-          response: jsonUtils.messageToJson(message, chat),
-        },
-        tenant
-      )
-    },
-  })
 }
 
 // pause sub
@@ -408,7 +421,7 @@ export async function editSubscription(req: Req, res) {
     tenant,
   })
   try {
-    if (!id || !s.chatId || !s.cron) {
+    if (!id || !s.chatId || !s.cron || isNaN(id)) {
       return failure(res, 'Invalid data')
     }
     const subRecord: Subscription = (await models.Subscription.findOne({
