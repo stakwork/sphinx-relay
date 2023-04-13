@@ -42,38 +42,44 @@ const payInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const invite_string = req.params['invite_string'];
-    const dbInvite = (yield models_1.models.Invite.findOne({
-        where: { inviteString: invite_string, tenant },
-    }));
-    const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
-        // const invite = response.object
-        // console.log("response", invite)
-        // if (dbInvite.status != invite.invite_status) {
-        // 	dbInvite.update({ status: invite.invite_status })
-        // }
-        if (response.payment_error) {
-            logger_1.sphinxLogger.error(`=> payInvite ERROR ${response.payment_error}`);
+    try {
+        const dbInvite = (yield models_1.models.Invite.findOne({
+            where: { inviteString: invite_string, tenant },
+        }));
+        const onSuccess = (response) => __awaiter(void 0, void 0, void 0, function* () {
+            // const invite = response.object
+            // console.log("response", invite)
+            // if (dbInvite.status != invite.invite_status) {
+            // 	dbInvite.update({ status: invite.invite_status })
+            // }
+            if (response.payment_error) {
+                logger_1.sphinxLogger.error(`=> payInvite ERROR ${response.payment_error}`);
+                res.status(200);
+                res.json({ success: false, error: response.payment_error });
+                res.end();
+            }
+            else {
+                res.status(200);
+                res.json({
+                    success: true,
+                    response: { invite: jsonUtils.inviteToJson(dbInvite) },
+                });
+                res.end();
+            }
+        });
+        const onFailure = (response) => {
+            logger_1.sphinxLogger.error(`=> payInvite ERROR ${response}`);
             res.status(200);
-            res.json({ success: false, error: response.payment_error });
+            res.json({ success: false });
             res.end();
-        }
-        else {
-            res.status(200);
-            res.json({
-                success: true,
-                response: { invite: jsonUtils.inviteToJson(dbInvite) },
-            });
-            res.end();
-        }
-    });
-    const onFailure = (response) => {
-        logger_1.sphinxLogger.error(`=> payInvite ERROR ${response}`);
-        res.status(200);
-        res.json({ success: false });
-        res.end();
-    };
-    // payInviteInHub(invite_string, params, onSuccess, onFailure)
-    (0, hub_1.payInviteInvoice)(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
+        };
+        // payInviteInHub(invite_string, params, onSuccess, onFailure)
+        (0, hub_1.payInviteInvoice)(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure);
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(`=> payInvite ERROR ${error}`);
+        return (0, res_1.failure)(res, error);
+    }
 });
 exports.payInvite = payInvite;
 const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

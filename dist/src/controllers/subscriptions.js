@@ -27,49 +27,59 @@ const logger_1 = require("../utils/logger");
 const jobs = {};
 // init jobs from DB
 const initializeCronJobs = () => __awaiter(void 0, void 0, void 0, function* () {
-    yield helpers.sleep(1000);
-    const subs = yield getRawSubs({ where: { ended: false } });
-    subs.length &&
-        subs.forEach((sub) => {
-            logger_1.sphinxLogger.info([
-                '=> starting subscription cron job',
-                sub.id + ':',
-                sub.cron,
-            ]);
-            startCronJob(sub);
-        });
+    try {
+        yield helpers.sleep(1000);
+        const subs = yield getRawSubs({ where: { ended: false } });
+        subs.length &&
+            subs.forEach((sub) => {
+                logger_1.sphinxLogger.info([
+                    '=> starting subscription cron job',
+                    sub.id + ':',
+                    sub.cron,
+                ]);
+                startCronJob(sub);
+            });
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(['ERROR initializingCronJobs', error]);
+    }
 });
 exports.initializeCronJobs = initializeCronJobs;
 function startCronJob(sub) {
     return __awaiter(this, void 0, void 0, function* () {
         jobs[sub.id] = new cron_1.CronJob(sub.cron, function () {
             return __awaiter(this, void 0, void 0, function* () {
-                const subscription = (yield models_1.models.Subscription.findOne({
-                    where: { id: sub.id },
-                }));
-                if (!subscription) {
-                    delete jobs[sub.id];
-                    return this.stop();
+                try {
+                    const subscription = (yield models_1.models.Subscription.findOne({
+                        where: { id: sub.id },
+                    }));
+                    if (!subscription) {
+                        delete jobs[sub.id];
+                        return this.stop();
+                    }
+                    logger_1.sphinxLogger.info(['EXEC CRON =>', subscription.id]);
+                    if (subscription.paused) {
+                        // skip, still in jobs{} tho
+                        return this.stop();
+                    }
+                    const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription);
+                    if (STOP) {
+                        // end the job and return
+                        logger_1.sphinxLogger.info('stop');
+                        subscription.update({ ended: true });
+                        delete jobs[subscription.id];
+                        return this.stop();
+                    }
+                    const tenant = subscription.tenant;
+                    const owner = (yield models_1.models.Contact.findOne({
+                        where: { id: tenant },
+                    }));
+                    // SEND PAYMENT!!!
+                    sendSubscriptionPayment(subscription, false, owner);
                 }
-                logger_1.sphinxLogger.info(['EXEC CRON =>', subscription.id]);
-                if (subscription.paused) {
-                    // skip, still in jobs{} tho
-                    return this.stop();
+                catch (error) {
+                    logger_1.sphinxLogger.error(['ERROR initializingCronJobs', error]);
                 }
-                const STOP = checkSubscriptionShouldAlreadyHaveEnded(subscription);
-                if (STOP) {
-                    // end the job and return
-                    logger_1.sphinxLogger.info('stop');
-                    subscription.update({ ended: true });
-                    delete jobs[subscription.id];
-                    return this.stop();
-                }
-                const tenant = subscription.tenant;
-                const owner = (yield models_1.models.Contact.findOne({
-                    where: { id: tenant },
-                }));
-                // SEND PAYMENT!!!
-                sendSubscriptionPayment(subscription, false, owner);
             });
         }, null, true);
     });
@@ -128,89 +138,94 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         const tenant = owner.id;
         const date = new Date();
         date.setMilliseconds(0);
-        const subscription = (yield models_1.models.Subscription.findOne({
-            where: { id: sub.id, tenant },
-        }));
-        if (!subscription) {
-            return;
+        try {
+            const subscription = (yield models_1.models.Subscription.findOne({
+                where: { id: sub.id, tenant },
+            }));
+            if (!subscription) {
+                return;
+            }
+            const chat = (yield models_1.models.Chat.findOne({
+                where: { id: subscription.chatId, tenant },
+            }));
+            if (!subscription) {
+                logger_1.sphinxLogger.error('=> no sub for this payment!!!');
+                return;
+            }
+            const forMe = false;
+            const text = msgForSubPayment(owner, sub, isFirstMessage, forMe);
+            const contact = (yield models_1.models.Contact.findByPk(sub.contactId));
+            const enc = rsa.encrypt(contact.contactKey, text);
+            network.sendMessage({
+                chat: chat,
+                sender: owner,
+                type: constants_1.default.message_types.direct_payment,
+                message: { amount: sub.amount, content: enc },
+                amount: sub.amount,
+                success: (data) => __awaiter(this, void 0, void 0, function* () {
+                    const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription);
+                    const obj = {
+                        totalPaid: (subscription.totalPaid || 0) + subscription.amount,
+                        count: (subscription.count || 0) + 1,
+                        ended: false,
+                    };
+                    if (shouldEnd) {
+                        obj.ended = true;
+                        if (jobs[sub.id])
+                            jobs[subscription.id].stop();
+                        delete jobs[subscription.id];
+                    }
+                    yield subscription.update(obj);
+                    const forMe = true;
+                    const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe);
+                    const encText = rsa.encrypt(owner.contactKey, text2);
+                    const message = (yield models_1.models.Message.create({
+                        chatId: chat.id,
+                        sender: owner.id,
+                        type: constants_1.default.message_types.direct_payment,
+                        status: constants_1.default.statuses.confirmed,
+                        messageContent: encText,
+                        amount: subscription.amount,
+                        amountMsat: subscription.amount * 1000,
+                        date: date,
+                        createdAt: date,
+                        updatedAt: date,
+                        subscriptionId: subscription.id,
+                        tenant,
+                    }));
+                    socket.sendJson({
+                        type: 'direct_payment',
+                        response: jsonUtils.messageToJson(message, chat),
+                    }, tenant);
+                }),
+                failure: (err) => __awaiter(this, void 0, void 0, function* () {
+                    logger_1.sphinxLogger.error('SEND PAY ERROR');
+                    let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
+                    errMessage = 'Payment Failed: ' + errMessage;
+                    const message = (yield models_1.models.Message.create({
+                        chatId: chat.id,
+                        sender: owner.id,
+                        type: constants_1.default.message_types.direct_payment,
+                        status: constants_1.default.statuses.failed,
+                        messageContent: errMessage,
+                        amount: sub.amount,
+                        amountMsat: sub.amount * 1000,
+                        date: date,
+                        createdAt: date,
+                        updatedAt: date,
+                        subscriptionId: sub.id,
+                        tenant,
+                    }));
+                    socket.sendJson({
+                        type: 'direct_payment',
+                        response: jsonUtils.messageToJson(message, chat),
+                    }, tenant);
+                }),
+            });
         }
-        const chat = (yield models_1.models.Chat.findOne({
-            where: { id: subscription.chatId, tenant },
-        }));
-        if (!subscription) {
-            logger_1.sphinxLogger.error('=> no sub for this payment!!!');
-            return;
+        catch (error) {
+            logger_1.sphinxLogger.error(['ERROR sendingSubPayment', error]);
         }
-        const forMe = false;
-        const text = msgForSubPayment(owner, sub, isFirstMessage, forMe);
-        const contact = (yield models_1.models.Contact.findByPk(sub.contactId));
-        const enc = rsa.encrypt(contact.contactKey, text);
-        network.sendMessage({
-            chat: chat,
-            sender: owner,
-            type: constants_1.default.message_types.direct_payment,
-            message: { amount: sub.amount, content: enc },
-            amount: sub.amount,
-            success: (data) => __awaiter(this, void 0, void 0, function* () {
-                const shouldEnd = checkSubscriptionShouldEndAfterThisPayment(subscription);
-                const obj = {
-                    totalPaid: (subscription.totalPaid || 0) + subscription.amount,
-                    count: (subscription.count || 0) + 1,
-                    ended: false,
-                };
-                if (shouldEnd) {
-                    obj.ended = true;
-                    if (jobs[sub.id])
-                        jobs[subscription.id].stop();
-                    delete jobs[subscription.id];
-                }
-                yield subscription.update(obj);
-                const forMe = true;
-                const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe);
-                const encText = rsa.encrypt(owner.contactKey, text2);
-                const message = (yield models_1.models.Message.create({
-                    chatId: chat.id,
-                    sender: owner.id,
-                    type: constants_1.default.message_types.direct_payment,
-                    status: constants_1.default.statuses.confirmed,
-                    messageContent: encText,
-                    amount: subscription.amount,
-                    amountMsat: subscription.amount * 1000,
-                    date: date,
-                    createdAt: date,
-                    updatedAt: date,
-                    subscriptionId: subscription.id,
-                    tenant,
-                }));
-                socket.sendJson({
-                    type: 'direct_payment',
-                    response: jsonUtils.messageToJson(message, chat),
-                }, tenant);
-            }),
-            failure: (err) => __awaiter(this, void 0, void 0, function* () {
-                logger_1.sphinxLogger.error('SEND PAY ERROR');
-                let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
-                errMessage = 'Payment Failed: ' + errMessage;
-                const message = (yield models_1.models.Message.create({
-                    chatId: chat.id,
-                    sender: owner.id,
-                    type: constants_1.default.message_types.direct_payment,
-                    status: constants_1.default.statuses.failed,
-                    messageContent: errMessage,
-                    amount: sub.amount,
-                    amountMsat: sub.amount * 1000,
-                    date: date,
-                    createdAt: date,
-                    updatedAt: date,
-                    subscriptionId: sub.id,
-                    tenant,
-                }));
-                socket.sendJson({
-                    type: 'direct_payment',
-                    response: jsonUtils.messageToJson(message, chat),
-                }, tenant);
-            }),
-        });
     });
 }
 // pause sub
@@ -406,7 +421,7 @@ function editSubscription(req, res) {
         const id = parseInt(req.params.id);
         const s = jsonToSubscription(Object.assign(Object.assign({}, req.body), { count: 0, createdAt: date, ended: false, paused: false, tenant }));
         try {
-            if (!id || !s.chatId || !s.cron) {
+            if (!id || !s.chatId || !s.cron || isNaN(id)) {
                 return (0, res_1.failure)(res, 'Invalid data');
             }
             const subRecord = (yield models_1.models.Subscription.findOne({
