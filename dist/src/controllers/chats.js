@@ -347,7 +347,14 @@ function createGroupChat(req, res) {
             type: constants_1.default.message_types.group_create,
             message: {},
             failure: function (e) {
-                (0, res_1.failure)(res, e);
+                let errMsg = '';
+                if (typeof e === 'string') {
+                    errMsg = e;
+                }
+                else {
+                    errMsg = e === null || e === void 0 ? void 0 : e.message;
+                }
+                (0, res_1.failure)(res, errMsg || e);
             },
             success: function () {
                 return __awaiter(this, void 0, void 0, function* () {

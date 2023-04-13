@@ -63,7 +63,14 @@ export default async function pay(a: Action): Promise<void> {
     },
     type: constants.message_types.boost,
     success: () => ({ success: true }),
-    failure: (e) => {
+    failure: async (e) => {
+      let errorMsg = ''
+      if (typeof e === 'string') {
+        errorMsg = e
+      } else {
+        errorMsg = e?.message
+      }
+      await message.update({ errorMessage: errorMsg })
       return sphinxLogger.error(e)
     },
     isForwarded: true,

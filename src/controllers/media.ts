@@ -153,7 +153,16 @@ export const sendAttachmentMessage = async (req: Req, res) => {
       sphinxLogger.info(['attachment sent', { data }])
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: (error) => resUtils.failure(res, error.message),
+    failure: async (error) => {
+      let errorMessage = ''
+      if (typeof error === 'string') {
+        errorMessage = error
+      } else {
+        errorMessage = error?.message
+      }
+      await message.update({ errorMessage })
+      return resUtils.failure(res, errorMessage || error)
+    },
   })
 }
 
@@ -241,7 +250,16 @@ export const purchase = async (req: Req, res) => {
       sphinxLogger.info('purchase sent!')
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: (error) => resUtils.failure(res, error.message),
+    failure: async (error) => {
+      let errorMessage = ''
+      if (typeof error === 'string') {
+        errorMessage = error
+      } else {
+        errorMessage = error?.message
+      }
+      await message.update({ errorMessage })
+      resUtils.failure(res, errorMessage || error)
+    },
   })
 }
 

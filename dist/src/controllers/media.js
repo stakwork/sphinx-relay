@@ -143,7 +143,17 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
             logger_1.sphinxLogger.info(['attachment sent', { data }]);
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => resUtils.failure(res, error.message),
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            let errorMessage = '';
+            if (typeof error === 'string') {
+                errorMessage = error;
+            }
+            else {
+                errorMessage = error === null || error === void 0 ? void 0 : error.message;
+            }
+            yield message.update({ errorMessage });
+            return resUtils.failure(res, errorMessage || error);
+        }),
     });
 });
 exports.sendAttachmentMessage = sendAttachmentMessage;
@@ -223,7 +233,17 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             logger_1.sphinxLogger.info('purchase sent!');
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => resUtils.failure(res, error.message),
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            let errorMessage = '';
+            if (typeof error === 'string') {
+                errorMessage = error;
+            }
+            else {
+                errorMessage = error === null || error === void 0 ? void 0 : error.message;
+            }
+            yield message.update({ errorMessage });
+            resUtils.failure(res, errorMessage || error);
+        }),
     });
 });
 exports.purchase = purchase;

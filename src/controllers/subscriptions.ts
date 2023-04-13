@@ -196,6 +196,12 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
       sphinxLogger.error('SEND PAY ERROR')
       let errMessage = constants.payment_errors[err] || 'Unknown'
       errMessage = 'Payment Failed: ' + errMessage
+      let errorMsg = ''
+      if (typeof err === 'string') {
+        errorMsg = err
+      } else {
+        errorMsg = err?.message
+      }
       const message: Message = (await models.Message.create({
         chatId: chat.id,
         sender: owner.id,
@@ -209,6 +215,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         updatedAt: date,
         subscriptionId: sub.id,
         tenant,
+        errorMessage: errorMsg,
       })) as Message
       socket.sendJson(
         {

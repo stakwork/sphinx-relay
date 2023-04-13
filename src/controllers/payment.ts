@@ -140,11 +140,21 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       // console.log('payment sent', { data })
       success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: async () => {
-      await message.update({ status: constants.statuses.failed })
-      res.status(200)
+    failure: async (error) => {
+      let errMsg = ''
+      if (typeof error === 'string') {
+        errMsg = error
+      } else {
+        errMsg = error?.message
+      }
+      await message.update({
+        status: constants.statuses.failed,
+        errorMessage: errMsg,
+      })
+      res.status(400)
       res.json({
         success: false,
+        error: errMsg,
         response: jsonUtils.messageToJson(message, chat),
       })
       res.end()

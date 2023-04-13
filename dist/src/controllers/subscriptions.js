@@ -191,6 +191,13 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                 logger_1.sphinxLogger.error('SEND PAY ERROR');
                 let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
                 errMessage = 'Payment Failed: ' + errMessage;
+                let errorMsg = '';
+                if (typeof err === 'string') {
+                    errorMsg = err;
+                }
+                else {
+                    errorMsg = err === null || err === void 0 ? void 0 : err.message;
+                }
                 const message = (yield models_1.models.Message.create({
                     chatId: chat.id,
                     sender: owner.id,
@@ -204,6 +211,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                     updatedAt: date,
                     subscriptionId: sub.id,
                     tenant,
+                    errorMessage: errorMsg,
                 }));
                 socket.sendJson({
                     type: 'direct_payment',

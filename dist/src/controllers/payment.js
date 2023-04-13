@@ -126,11 +126,22 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             // console.log('payment sent', { data })
             (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: () => __awaiter(void 0, void 0, void 0, function* () {
-            yield message.update({ status: constants_1.default.statuses.failed });
-            res.status(200);
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            let errMsg = '';
+            if (typeof error === 'string') {
+                errMsg = error;
+            }
+            else {
+                errMsg = error === null || error === void 0 ? void 0 : error.message;
+            }
+            yield message.update({
+                status: constants_1.default.statuses.failed,
+                errorMessage: errMsg,
+            });
+            res.status(400);
             res.json({
                 success: false,
+                error: errMsg,
                 response: jsonUtils.messageToJson(message, chat),
             });
             res.end();

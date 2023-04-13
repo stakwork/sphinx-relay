@@ -406,7 +406,13 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     type: constants.message_types.group_create,
     message: {} as Message,
     failure: function (e) {
-      failure(res, e)
+      let errMsg = ''
+      if (typeof e === 'string') {
+        errMsg = e
+      } else {
+        errMsg = e?.message
+      }
+      failure(res, errMsg || e)
     },
     success: async function () {
       const chat: Chat = (await models.Chat.create(chatParams)) as Chat
