@@ -34,40 +34,50 @@ export const payInvite = async (req: Req, res) => {
   const tenant: number = req.owner.id
 
   const invite_string = req.params['invite_string']
-  const dbInvite: Invite = (await models.Invite.findOne({
-    where: { inviteString: invite_string, tenant },
-  })) as Invite
+  try {
+    const dbInvite: Invite = (await models.Invite.findOne({
+      where: { inviteString: invite_string, tenant },
+    })) as Invite
 
-  const onSuccess = async (response) => {
-    // const invite = response.object
-    // console.log("response", invite)
-    // if (dbInvite.status != invite.invite_status) {
-    // 	dbInvite.update({ status: invite.invite_status })
-    // }
-    if (response.payment_error) {
-      sphinxLogger.error(`=> payInvite ERROR ${response.payment_error}`)
+    const onSuccess = async (response) => {
+      // const invite = response.object
+      // console.log("response", invite)
+      // if (dbInvite.status != invite.invite_status) {
+      // 	dbInvite.update({ status: invite.invite_status })
+      // }
+      if (response.payment_error) {
+        sphinxLogger.error(`=> payInvite ERROR ${response.payment_error}`)
+        res.status(200)
+        res.json({ success: false, error: response.payment_error })
+        res.end()
+      } else {
+        res.status(200)
+        res.json({
+          success: true,
+          response: { invite: jsonUtils.inviteToJson(dbInvite) },
+        })
+        res.end()
+      }
+    }
+
+    const onFailure = (response) => {
+      sphinxLogger.error(`=> payInvite ERROR ${response}`)
       res.status(200)
-      res.json({ success: false, error: response.payment_error })
-      res.end()
-    } else {
-      res.status(200)
-      res.json({
-        success: true,
-        response: { invite: jsonUtils.inviteToJson(dbInvite) },
-      })
+      res.json({ success: false })
       res.end()
     }
-  }
 
-  const onFailure = (response) => {
-    sphinxLogger.error(`=> payInvite ERROR ${response}`)
-    res.status(200)
-    res.json({ success: false })
-    res.end()
+    // payInviteInHub(invite_string, params, onSuccess, onFailure)
+    payInviteInvoice(
+      dbInvite.invoice,
+      req.owner.publicKey,
+      onSuccess,
+      onFailure
+    )
+  } catch (error) {
+    sphinxLogger.error(`=> payInvite ERROR ${error}`)
+    return failure(res, error)
   }
-
-  // payInviteInHub(invite_string, params, onSuccess, onFailure)
-  payInviteInvoice(dbInvite.invoice, req.owner.publicKey, onSuccess, onFailure)
 }
 
 export const createInvite = async (req: Req, res) => {
