@@ -17,6 +17,7 @@ const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
 const logger_1 = require("../../utils/logger");
 const index_1 = require("./index");
+const errMsgString_1 = require("../../utils/errMsgString");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a;
@@ -67,14 +68,11 @@ function pay(a) {
             type: constants_1.default.message_types.boost,
             success: () => ({ success: true }),
             failure: (e) => __awaiter(this, void 0, void 0, function* () {
-                let errorMsg = '';
-                if (typeof e === 'string') {
-                    errorMsg = e;
-                }
-                else {
-                    errorMsg = e === null || e === void 0 ? void 0 : e.message;
-                }
-                yield message.update({ errorMessage: errorMsg });
+                let errorMsg = (0, errMsgString_1.errMsgString)(e);
+                yield message.update({
+                    errorMessage: errorMsg,
+                    status: constants_1.default.statuses.failed,
+                });
                 return logger_1.sphinxLogger.error(e);
             }),
             isForwarded: true,

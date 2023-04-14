@@ -19,6 +19,7 @@ import { failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { ChatPlusMembers } from '../network/send'
+import { errMsgString } from '../utils/errMsgString'
 
 const config = loadConfig()
 
@@ -154,13 +155,8 @@ export const sendAttachmentMessage = async (req: Req, res) => {
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: async (error) => {
-      let errorMessage = ''
-      if (typeof error === 'string') {
-        errorMessage = error
-      } else {
-        errorMessage = error?.message
-      }
-      await message.update({ errorMessage })
+      let errorMessage = errMsgString(error)
+      await message.update({ errorMessage, status: constants.statuses.failed })
       return resUtils.failure(res, errorMessage || error)
     },
   })
@@ -251,13 +247,8 @@ export const purchase = async (req: Req, res) => {
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: async (error) => {
-      let errorMessage = ''
-      if (typeof error === 'string') {
-        errorMessage = error
-      } else {
-        errorMessage = error?.message
-      }
-      await message.update({ errorMessage })
+      let errorMessage = errMsgString(error)
+      await message.update({ errorMessage, status: constants.statuses.failed })
       resUtils.failure(res, errorMessage || error)
     },
   })

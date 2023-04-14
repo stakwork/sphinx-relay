@@ -25,6 +25,7 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const helpers_1 = require("../helpers");
 const config_1 = require("../utils/config");
+const errMsgString_1 = require("../utils/errMsgString");
 const config = (0, config_1.loadConfig)();
 /**
  * Updates a chat.
@@ -347,13 +348,7 @@ function createGroupChat(req, res) {
             type: constants_1.default.message_types.group_create,
             message: {},
             failure: function (e) {
-                let errMsg = '';
-                if (typeof e === 'string') {
-                    errMsg = e;
-                }
-                else {
-                    errMsg = e === null || e === void 0 ? void 0 : e.message;
-                }
+                let errMsg = (0, errMsgString_1.errMsgString)(e);
                 (0, res_1.failure)(res, errMsg || e);
             },
             success: function () {

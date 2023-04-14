@@ -29,6 +29,7 @@ const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
+const errMsgString_1 = require("../utils/errMsgString");
 const config = (0, config_1.loadConfig)();
 /*
 
@@ -144,14 +145,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            let errorMessage = '';
-            if (typeof error === 'string') {
-                errorMessage = error;
-            }
-            else {
-                errorMessage = error === null || error === void 0 ? void 0 : error.message;
-            }
-            yield message.update({ errorMessage });
+            let errorMessage = (0, errMsgString_1.errMsgString)(error);
+            yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
             return resUtils.failure(res, errorMessage || error);
         }),
     });
@@ -234,14 +229,8 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            let errorMessage = '';
-            if (typeof error === 'string') {
-                errorMessage = error;
-            }
-            else {
-                errorMessage = error === null || error === void 0 ? void 0 : error.message;
-            }
-            yield message.update({ errorMessage });
+            let errorMessage = (0, errMsgString_1.errMsgString)(error);
+            yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
             resUtils.failure(res, errorMessage || error);
         }),
     });

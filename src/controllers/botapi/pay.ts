@@ -6,6 +6,7 @@ import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { sphinxLogger } from '../../utils/logger'
 import { Action, validateAction } from './index'
+import { errMsgString } from '../../utils/errMsgString'
 
 export default async function pay(a: Action): Promise<void> {
   const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a
@@ -64,13 +65,11 @@ export default async function pay(a: Action): Promise<void> {
     type: constants.message_types.boost,
     success: () => ({ success: true }),
     failure: async (e) => {
-      let errorMsg = ''
-      if (typeof e === 'string') {
-        errorMsg = e
-      } else {
-        errorMsg = e?.message
-      }
-      await message.update({ errorMessage: errorMsg })
+      let errorMsg = errMsgString(e)
+      await message.update({
+        errorMessage: errorMsg,
+        status: constants.statuses.failed,
+      })
       return sphinxLogger.error(e)
     },
     isForwarded: true,

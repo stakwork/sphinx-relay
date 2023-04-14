@@ -14,6 +14,7 @@ import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { sendConfirmation } from './confirmations'
+import { errMsgString } from '../utils/errMsgString'
 
 export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -51,13 +52,8 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       },
       function (error) {
         sphinxLogger.info(`[send payment] ERROR ${error}`)
-        let errorMsg = ''
-        if (typeof error === 'string') {
-          errorMsg = error
-        } else {
-          errorMsg = error?.message
-        }
-        res.status(200)
+        let errorMsg = errMsgString(error)
+        res.status(400)
         res.json({ success: false, error: errorMsg || error })
         res.end()
       },
@@ -141,12 +137,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: async (error) => {
-      let errMsg = ''
-      if (typeof error === 'string') {
-        errMsg = error
-      } else {
-        errMsg = error?.message
-      }
+      let errMsg = errMsgString(error)
       await message.update({
         status: constants.statuses.failed,
         errorMessage: errMsg,

@@ -24,6 +24,7 @@ const sequelize_1 = require("sequelize");
 const feed_1 = require("./feed");
 const logger_1 = require("../utils/logger");
 const confirmations_1 = require("./confirmations");
+const errMsgString_1 = require("../utils/errMsgString");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -36,14 +37,8 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             (0, res_1.success)(res, body);
         }, function (error) {
             logger_1.sphinxLogger.info(`[send payment] ERROR ${error}`);
-            let errorMsg = '';
-            if (typeof error === 'string') {
-                errorMsg = error;
-            }
-            else {
-                errorMsg = error === null || error === void 0 ? void 0 : error.message;
-            }
-            res.status(200);
+            let errorMsg = (0, errMsgString_1.errMsgString)(error);
+            res.status(400);
             res.json({ success: false, error: errorMsg || error });
             res.end();
         }, {});
@@ -127,13 +122,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            let errMsg = '';
-            if (typeof error === 'string') {
-                errMsg = error;
-            }
-            else {
-                errMsg = error === null || error === void 0 ? void 0 : error.message;
-            }
+            let errMsg = (0, errMsgString_1.errMsgString)(error);
             yield message.update({
                 status: constants_1.default.statuses.failed,
                 errorMessage: errMsg,

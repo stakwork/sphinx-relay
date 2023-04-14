@@ -4,6 +4,7 @@ import { failure, success } from '../utils/res'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { errMsgString } from '../utils/errMsgString'
 
 export interface ChatMeta {
   itemID: number
@@ -142,14 +143,12 @@ export async function anonymousKeysend(
       sphinxLogger.info(`payment sent!`)
       onSuccess({ destination_key, amount })
     },
-    failure: (error) => {
-      let errMsg = ''
-      if (typeof error === 'string') {
-        errMsg = error
-      } else {
-        errMsg = error?.message
-      }
-      message.update({ error_message: errMsg })
+    failure: async (error) => {
+      let errMsg = errMsgString(error)
+      await message.update({
+        errorMessage: errMsg,
+        status: constants.statuses.failed,
+      })
       onFailure(error)
     },
     extra_tlv,

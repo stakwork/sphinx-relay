@@ -15,6 +15,7 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const errMsgString_1 = require("../utils/errMsgString");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -106,17 +107,14 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
                 logger_1.sphinxLogger.info(`payment sent!`);
                 onSuccess({ destination_key, amount });
             },
-            failure: (error) => {
-                let errMsg = '';
-                if (typeof error === 'string') {
-                    errMsg = error;
-                }
-                else {
-                    errMsg = error === null || error === void 0 ? void 0 : error.message;
-                }
-                message.update({ error_message: errMsg });
+            failure: (error) => __awaiter(this, void 0, void 0, function* () {
+                let errMsg = (0, errMsgString_1.errMsgString)(error);
+                yield message.update({
+                    errorMessage: errMsg,
+                    status: constants_1.default.statuses.failed,
+                });
                 onFailure(error);
-            },
+            }),
             extra_tlv,
         });
     });
