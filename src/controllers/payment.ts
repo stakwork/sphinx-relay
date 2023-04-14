@@ -53,7 +53,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
         sphinxLogger.info(`[send payment] ERROR ${error}`)
         let errorMsg = ''
         if (typeof error === 'string') {
-          errorMsg = errorMsg
+          errorMsg = error
         } else {
           errorMsg = error?.message
         }
