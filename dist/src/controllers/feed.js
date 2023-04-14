@@ -80,6 +80,22 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
         };
         if (text)
             msg.message = { content: text };
+        const date = new Date();
+        date.setMilliseconds(0);
+        const message = yield models_1.models.Message.create({
+            chatId: 0,
+            type: constants_1.default.message_types.keysend,
+            sender: tenant,
+            amount,
+            amountMsat: amount * 1000,
+            paymentHash: '',
+            date,
+            messageContent: text || '',
+            status: constants_1.default.statuses.confirmed,
+            createdAt: date,
+            updatedAt: date,
+            tenant,
+        });
         return helpers.performKeysendMessage({
             sender: owner,
             destination_key,
@@ -88,25 +104,17 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             msg,
             success: () => {
                 logger_1.sphinxLogger.info(`payment sent!`);
-                const date = new Date();
-                date.setMilliseconds(0);
-                models_1.models.Message.create({
-                    chatId: 0,
-                    type: constants_1.default.message_types.keysend,
-                    sender: tenant,
-                    amount,
-                    amountMsat: amount * 1000,
-                    paymentHash: '',
-                    date,
-                    messageContent: text || '',
-                    status: constants_1.default.statuses.confirmed,
-                    createdAt: date,
-                    updatedAt: date,
-                    tenant,
-                });
                 onSuccess({ destination_key, amount });
             },
             failure: (error) => {
+                let errMsg = '';
+                if (typeof error === 'string') {
+                    errMsg = error;
+                }
+                else {
+                    errMsg = error === null || error === void 0 ? void 0 : error.message;
+                }
+                message.update({ error_message: errMsg });
                 onFailure(error);
             },
             extra_tlv,
