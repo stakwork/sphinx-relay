@@ -197,45 +197,78 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.receivePayment = receivePayment;
 const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
+    let query_include_failures = (_a = req.query) === null || _a === void 0 ? void 0 : _a.include_failures;
+    let include_failures = query_include_failures.toLowerCase() === 'true';
     const MIN_VAL = constants_1.default.min_sat_amount;
+    let where = {
+        [sequelize_1.Op.or]: [
+            {
+                type: {
+                    [sequelize_1.Op.or]: [
+                        constants_1.default.message_types.payment,
+                        constants_1.default.message_types.keysend,
+                        constants_1.default.message_types.purchase,
+                    ],
+                },
+                status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
+            },
+            {
+                type: {
+                    [sequelize_1.Op.or]: [
+                        constants_1.default.message_types.message,
+                        constants_1.default.message_types.boost,
+                        constants_1.default.message_types.repayment,
+                        constants_1.default.message_types.direct_payment, // can be a payment in a tribe
+                    ],
+                },
+                amount: {
+                    [sequelize_1.Op.gt]: MIN_VAL, // greater than
+                },
+                network_type: constants_1.default.network_types.lightning,
+                status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
+                forwarded_sats: { [sequelize_1.Op.not]: true },
+            },
+        ],
+        tenant,
+    };
+    let include_failures_where = {
+        [sequelize_1.Op.or]: [
+            {
+                type: {
+                    [sequelize_1.Op.or]: [
+                        constants_1.default.message_types.payment,
+                        constants_1.default.message_types.keysend,
+                        constants_1.default.message_types.purchase,
+                    ],
+                },
+            },
+            {
+                type: {
+                    [sequelize_1.Op.or]: [
+                        constants_1.default.message_types.message,
+                        constants_1.default.message_types.boost,
+                        constants_1.default.message_types.repayment,
+                        constants_1.default.message_types.direct_payment, // can be a payment in a tribe
+                    ],
+                },
+                amount: {
+                    [sequelize_1.Op.gt]: MIN_VAL, // greater than
+                },
+                network_type: constants_1.default.network_types.lightning,
+                forwarded_sats: { [sequelize_1.Op.not]: true },
+            },
+        ],
+        tenant,
+    };
     try {
         const msgs = (yield models_1.models.Message.findAll({
-            where: {
-                [sequelize_1.Op.or]: [
-                    {
-                        type: {
-                            [sequelize_1.Op.or]: [
-                                constants_1.default.message_types.payment,
-                                constants_1.default.message_types.keysend,
-                                constants_1.default.message_types.purchase,
-                            ],
-                        },
-                        status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
-                    },
-                    {
-                        type: {
-                            [sequelize_1.Op.or]: [
-                                constants_1.default.message_types.message,
-                                constants_1.default.message_types.boost,
-                                constants_1.default.message_types.repayment,
-                                constants_1.default.message_types.direct_payment, // can be a payment in a tribe
-                            ],
-                        },
-                        amount: {
-                            [sequelize_1.Op.gt]: MIN_VAL, // greater than
-                        },
-                        network_type: constants_1.default.network_types.lightning,
-                        status: { [sequelize_1.Op.not]: constants_1.default.statuses.failed },
-                        forwarded_sats: { [sequelize_1.Op.not]: true },
-                    },
-                ],
-                tenant,
-            },
+            where: include_failures ? include_failures_where : where,
             order: [['createdAt', 'desc']],
             limit,
             offset,
