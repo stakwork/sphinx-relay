@@ -792,9 +792,28 @@ function deleteMessages(contacts) {
 function handleMessageDelete({ tenant, date, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield models_1.models.Message.destroy({
+            //select all messages that are in the group chat
+            const messages = (yield models_1.models.Message.findAll({
                 where: { tenant, createdAt: { [sequelize_1.Op.lt]: date } },
-            });
+            }));
+            //put the chat_id into an objects of array and id's as keys
+            const chat_messages = {};
+            for (let i = 0; i < messages.length; i++) {
+                const message = messages[i];
+                chat_messages[message.chatId] = [
+                    ...(chat_messages[message.chatId] || []),
+                    message,
+                ];
+            }
+            //loop through the chats and delete chat messages tht are greater than 10
+            for (let key in chat_messages) {
+                if (chat_messages[key].length > 10) {
+                    const toTeDeleted = chat_messages[key].length - 10;
+                    for (let j = 0; j < toTeDeleted; j++) {
+                        yield chat_messages[key][j].destroy();
+                    }
+                }
+            }
             logger_1.sphinxLogger.info(['=> message deleted by cron job']);
         }
         catch (error) {

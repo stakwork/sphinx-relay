@@ -1,4 +1,4 @@
-import { models, Message, Chat, ContactRecord } from '../models'
+import { models, Message, Chat, ContactRecord, MessageRecord } from '../models'
 import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
 import {
@@ -1002,9 +1002,30 @@ async function handleMessageDelete({
   date: string
 }) {
   try {
-    await models.Message.destroy({
+    //select all messages that are in the group chat
+    const messages = (await models.Message.findAll({
       where: { tenant, createdAt: { [Op.lt]: date } },
-    })
+    })) as MessageRecord[]
+
+    //put the chat_id into an objects of array and id's as keys
+    const chat_messages: { [key: string]: MessageRecord[] } = {}
+
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i]
+      chat_messages[message.chatId] = [
+        ...(chat_messages[message.chatId] || []),
+        message,
+      ]
+    }
+    //loop through the chats and delete chat messages tht are greater than 10
+    for (let key in chat_messages) {
+      if (chat_messages[key].length > 10) {
+        const toTeDeleted = chat_messages[key].length - 10
+        for (let j = 0; j < toTeDeleted; j++) {
+          await chat_messages[key][j].destroy()
+        }
+      }
+    }
     sphinxLogger.info(['=> message deleted by cron job'])
   } catch (error) {
     sphinxLogger.error(['=> error deleting message by cron job', error])
