@@ -246,7 +246,8 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
   const offset =
     (req.query.offset && parseInt(req.query.offset.toString())) || 0
   let query_include_failures = req.query?.include_failures as string
-  let include_failures = query_include_failures.toLowerCase() === 'true'
+  let include_failures =
+    query_include_failures && query_include_failures.toLowerCase() === 'true'
 
   const MIN_VAL = constants.min_sat_amount
   let where = {

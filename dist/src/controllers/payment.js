@@ -204,7 +204,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
     let query_include_failures = (_a = req.query) === null || _a === void 0 ? void 0 : _a.include_failures;
-    let include_failures = query_include_failures.toLowerCase() === 'true';
+    let include_failures = query_include_failures && query_include_failures.toLowerCase() === 'true';
     const MIN_VAL = constants_1.default.min_sat_amount;
     let where = {
         [sequelize_1.Op.or]: [
