@@ -27,6 +27,7 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { asyncForEach } from '../helpers'
 import { loadConfig } from '../utils/config'
+import { errMsgString } from '../utils/errMsgString'
 
 const config = loadConfig()
 
@@ -406,7 +407,8 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     type: constants.message_types.group_create,
     message: {} as Message,
     failure: function (e) {
-      failure(res, e)
+      let errMsg = errMsgString(e)
+      failure(res, errMsg || e)
     },
     success: async function () {
       const chat: Chat = (await models.Chat.create(chatParams)) as Chat

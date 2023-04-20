@@ -408,6 +408,8 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_chats', 'preview', 'TEXT')
 
   addTableColumn('sphinx_contacts', 'prune', 'INTEGER')
+
+  addTableColumn('sphinx_messages', 'error_message', 'TEXT')
 }
 
 async function addTenant(tableName) {

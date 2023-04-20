@@ -82,7 +82,10 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     catch (e) {
         logger_1.sphinxLogger.error(`ERR paying invoice ${e}`);
-        return (0, res_1.failure)(res, 'could not pay invoice');
+        if (typeof e === 'string') {
+            return (0, res_1.failure)(res, e);
+        }
+        return (0, res_1.failure)(res, (e === null || e === void 0 ? void 0 : e.message) || 'could not pay invoice');
     }
 });
 exports.payInvoice = payInvoice;

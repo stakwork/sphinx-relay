@@ -23,6 +23,7 @@ const moment = require("moment");
 const network = require("../network");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const errMsgString_1 = require("../utils/errMsgString");
 // store all current running jobs in memory
 const jobs = {};
 // init jobs from DB
@@ -202,6 +203,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                     logger_1.sphinxLogger.error('SEND PAY ERROR');
                     let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
                     errMessage = 'Payment Failed: ' + errMessage;
+                    let errorMsg = (0, errMsgString_1.errMsgString)(err);
                     const message = (yield models_1.models.Message.create({
                         chatId: chat.id,
                         sender: owner.id,
@@ -215,6 +217,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                         updatedAt: date,
                         subscriptionId: sub.id,
                         tenant,
+                        errorMessage: errorMsg,
                     }));
                     socket.sendJson({
                         type: 'direct_payment',

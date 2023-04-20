@@ -15,6 +15,7 @@ const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const errMsgString_1 = require("../utils/errMsgString");
 const streamFeed = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -80,6 +81,22 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
         };
         if (text)
             msg.message = { content: text };
+        const date = new Date();
+        date.setMilliseconds(0);
+        const message = yield models_1.models.Message.create({
+            chatId: 0,
+            type: constants_1.default.message_types.keysend,
+            sender: tenant,
+            amount,
+            amountMsat: amount * 1000,
+            paymentHash: '',
+            date,
+            messageContent: text || '',
+            status: constants_1.default.statuses.confirmed,
+            createdAt: date,
+            updatedAt: date,
+            tenant,
+        });
         return helpers.performKeysendMessage({
             sender: owner,
             destination_key,
@@ -88,27 +105,16 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
             msg,
             success: () => {
                 logger_1.sphinxLogger.info(`payment sent!`);
-                const date = new Date();
-                date.setMilliseconds(0);
-                models_1.models.Message.create({
-                    chatId: 0,
-                    type: constants_1.default.message_types.keysend,
-                    sender: tenant,
-                    amount,
-                    amountMsat: amount * 1000,
-                    paymentHash: '',
-                    date,
-                    messageContent: text || '',
-                    status: constants_1.default.statuses.confirmed,
-                    createdAt: date,
-                    updatedAt: date,
-                    tenant,
-                });
                 onSuccess({ destination_key, amount });
             },
-            failure: (error) => {
+            failure: (error) => __awaiter(this, void 0, void 0, function* () {
+                let errMsg = (0, errMsgString_1.errMsgString)(error);
+                yield message.update({
+                    errorMessage: errMsg,
+                    status: constants_1.default.statuses.failed,
+                });
                 onFailure(error);
-            },
+            }),
             extra_tlv,
         });
     });
