@@ -144,7 +144,7 @@ export async function anonymousKeysend(
       onSuccess({ destination_key, amount })
     },
     failure: async (error) => {
-      let errMsg = errMsgString(error)
+      const errMsg = errMsgString(error)
       await message.update({
         errorMessage: errMsg,
         status: constants.statuses.failed,

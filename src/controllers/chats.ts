@@ -407,7 +407,7 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
     type: constants.message_types.group_create,
     message: {} as Message,
     failure: function (e) {
-      let errMsg = errMsgString(e)
+      const errMsg = errMsgString(e)
       failure(res, errMsg || e)
     },
     success: async function () {

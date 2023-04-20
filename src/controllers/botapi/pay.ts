@@ -65,7 +65,7 @@ export default async function pay(a: Action): Promise<void> {
     type: constants.message_types.boost,
     success: () => ({ success: true }),
     failure: async (e) => {
-      let errorMsg = errMsgString(e)
+      const errorMsg = errMsgString(e)
       await message.update({
         errorMessage: errorMsg,
         status: constants.statuses.failed,

@@ -52,7 +52,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       },
       function (error) {
         sphinxLogger.info(`[send payment] ERROR ${error}`)
-        let errorMsg = errMsgString(error)
+        const errorMsg = errMsgString(error)
         res.status(400)
         res.json({ success: false, error: errorMsg || error })
         res.end()
@@ -137,7 +137,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       success(res, jsonUtils.messageToJson(message, chat))
     },
     failure: async (error) => {
-      let errMsg = errMsgString(error)
+      const errMsg = errMsgString(error)
       await message.update({
         status: constants.statuses.failed,
         errorMessage: errMsg,
@@ -245,12 +245,12 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
   const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100
   const offset =
     (req.query.offset && parseInt(req.query.offset.toString())) || 0
-  let query_include_failures = req.query?.include_failures as string
-  let include_failures =
+  const query_include_failures = req.query?.include_failures as string
+  const include_failures =
     query_include_failures && query_include_failures.toLowerCase() === 'true'
 
   const MIN_VAL = constants.min_sat_amount
-  let where = {
+  const where = {
     [Op.or]: [
       {
         type: {
@@ -282,7 +282,7 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
     tenant,
   }
 
-  let include_failures_where = {
+  const include_failures_where = {
     [Op.or]: [
       {
         type: {
