@@ -145,7 +145,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            let errorMessage = (0, errMsgString_1.errMsgString)(error);
+            const errorMessage = (0, errMsgString_1.errMsgString)(error);
             yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
             return resUtils.failure(res, errorMessage || error);
         }),
@@ -229,7 +229,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            let errorMessage = (0, errMsgString_1.errMsgString)(error);
+            const errorMessage = (0, errMsgString_1.errMsgString)(error);
             yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
             resUtils.failure(res, errorMessage || error);
         }),

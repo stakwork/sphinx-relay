@@ -37,7 +37,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             (0, res_1.success)(res, body);
         }, function (error) {
             logger_1.sphinxLogger.info(`[send payment] ERROR ${error}`);
-            let errorMsg = (0, errMsgString_1.errMsgString)(error);
+            const errorMsg = (0, errMsgString_1.errMsgString)(error);
             res.status(400);
             res.json({ success: false, error: errorMsg || error });
             res.end();
@@ -122,7 +122,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
         }),
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            let errMsg = (0, errMsgString_1.errMsgString)(error);
+            const errMsg = (0, errMsgString_1.errMsgString)(error);
             yield message.update({
                 status: constants_1.default.statuses.failed,
                 errorMessage: errMsg,
@@ -203,10 +203,10 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const tenant = req.owner.id;
     const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100;
     const offset = (req.query.offset && parseInt(req.query.offset.toString())) || 0;
-    let query_include_failures = (_a = req.query) === null || _a === void 0 ? void 0 : _a.include_failures;
-    let include_failures = query_include_failures && query_include_failures.toLowerCase() === 'true';
+    const query_include_failures = (_a = req.query) === null || _a === void 0 ? void 0 : _a.include_failures;
+    const include_failures = query_include_failures && query_include_failures.toLowerCase() === 'true';
     const MIN_VAL = constants_1.default.min_sat_amount;
-    let where = {
+    const where = {
         [sequelize_1.Op.or]: [
             {
                 type: {
@@ -237,7 +237,7 @@ const listPayments = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         ],
         tenant,
     };
-    let include_failures_where = {
+    const include_failures_where = {
         [sequelize_1.Op.or]: [
             {
                 type: {

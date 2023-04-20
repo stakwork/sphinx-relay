@@ -108,7 +108,7 @@ function anonymousKeysend(owner, destination_key, route_hint, amount, text, onSu
                 onSuccess({ destination_key, amount });
             },
             failure: (error) => __awaiter(this, void 0, void 0, function* () {
-                let errMsg = (0, errMsgString_1.errMsgString)(error);
+                const errMsg = (0, errMsgString_1.errMsgString)(error);
                 yield message.update({
                     errorMessage: errMsg,
                     status: constants_1.default.statuses.failed,

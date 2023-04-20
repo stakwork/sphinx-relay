@@ -203,7 +203,7 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                     logger_1.sphinxLogger.error('SEND PAY ERROR');
                     let errMessage = constants_1.default.payment_errors[err] || 'Unknown';
                     errMessage = 'Payment Failed: ' + errMessage;
-                    let errorMsg = (0, errMsgString_1.errMsgString)(err);
+                    const errorMsg = (0, errMsgString_1.errMsgString)(err);
                     const message = (yield models_1.models.Message.create({
                         chatId: chat.id,
                         sender: owner.id,

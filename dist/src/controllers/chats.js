@@ -348,7 +348,7 @@ function createGroupChat(req, res) {
             type: constants_1.default.message_types.group_create,
             message: {},
             failure: function (e) {
-                let errMsg = (0, errMsgString_1.errMsgString)(e);
+                const errMsg = (0, errMsgString_1.errMsgString)(e);
                 (0, res_1.failure)(res, errMsg || e);
             },
             success: function () {

@@ -68,7 +68,7 @@ function pay(a) {
             type: constants_1.default.message_types.boost,
             success: () => ({ success: true }),
             failure: (e) => __awaiter(this, void 0, void 0, function* () {
-                let errorMsg = (0, errMsgString_1.errMsgString)(e);
+                const errorMsg = (0, errMsgString_1.errMsgString)(e);
                 yield message.update({
                     errorMessage: errorMsg,
                     status: constants_1.default.statuses.failed,
