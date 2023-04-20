@@ -27,6 +27,8 @@ const config = loadConfig()
 
 type NetworkType = undefined | 'mqtt' | 'lightning'
 
+let FAILED_TO_SEND_ID = null
+
 export interface ChatPlusMembers extends Chat {
   members?: { [k: string]: ChatMember }
 }
@@ -185,64 +187,91 @@ export async function sendMessage({
     `=> sending to ${contactIds.length} 'contacts'`,
     logging.Network
   )
-  await asyncForEach(contactIds, async (contactId: number) => {
-    if (contactId === tenant) {
-      // dont send to self
-      return
-    }
 
-    const contact: Contact = (await models.Contact.findOne({
-      where: { id: contactId },
-    })) as Contact
-    if (!contact) {
-      return // skip if u simply dont have the contact
-    }
-    if (tenant === -1) {
-      // this is a bot sent from me!
-      if (contact.isOwner) {
-        return // dont MQTT to myself!
+  if (isTribeOwner && amount && realSatsContactId && realSatsContactId) {
+    try {
+      const membersContactIds = contactIds.filter(
+        (memberContact) => memberContact !== realSatsContactId
+      )
+      const messageStatus = await sendMessageHandler({
+        contactId: realSatsContactId,
+        tenant,
+        skipPubKey,
+        networkType,
+        chatUUID,
+        isTribeOwner,
+        amount,
+        msg,
+        realSatsContactId,
+        mentionContactIds,
+        chat,
+        type,
+        sender,
+      })
+      if (messageStatus) {
+        yes = messageStatus
+      }
+      await asyncForEach(membersContactIds, async (contactId: number) => {
+        const messageStatus = await sendMessageHandler({
+          contactId,
+          tenant,
+          skipPubKey,
+          networkType,
+          chatUUID,
+          isTribeOwner,
+          amount,
+          msg,
+          realSatsContactId,
+          mentionContactIds,
+          chat,
+          type,
+          sender,
+        })
+        if (messageStatus) {
+          yes = messageStatus
+        }
+      })
+    } catch (error) {
+      sphinxLogger.error(`KEYSEND ERROR ${error}`)
+      no = error
+      if (FAILED_TO_SEND_ID) {
+        if (
+          chat?.ownerPubkey &&
+          sender?.publicKey &&
+          chat.ownerPubkey !== sender.publicKey
+        ) {
+          //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
+          FAILED_TO_SEND_ID = null
+        }
       }
     }
-
-    const destkey = contact.publicKey
-    if (destkey === skipPubKey) {
-      return // skip (for tribe owner broadcasting, not back to the sender)
-    }
-
-    let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
-
-    // sending a payment to one subscriber, buying a pic from OG poster
-    // or boost to og poster
-    if (isTribeOwner && amount && realSatsContactId === contactId) {
-      mqttTopic = '' // FORCE KEYSEND!!!
-      await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
-    }
-
-    const m = await personalizeMessage(msg, contact, isTribeOwner)
-
-    // send a "push", the user was mentioned
-    if (
-      mentionContactIds.includes(contact.id) ||
-      mentionContactIds.includes(Infinity)
-    ) {
-      m.message.push = true
-    }
-    const opts = {
-      dest: destkey,
-      data: m,
-      amt: Math.max(amount || 0, constants.min_sat_amount),
-      route_hint: contact.routeHint || '',
-    }
-
+  } else {
     try {
-      const r = await signAndSend(opts, sender, mqttTopic)
-      yes = r
-    } catch (e) {
-      sphinxLogger.error(`KEYSEND ERROR ${e}`)
-      no = e
+      await asyncForEach(contactIds, async (contactId: number) => {
+        const messageStatus = await sendMessageHandler({
+          contactId,
+          tenant,
+          skipPubKey,
+          networkType,
+          chatUUID,
+          isTribeOwner,
+          amount,
+          msg,
+          realSatsContactId,
+          mentionContactIds,
+          chat,
+          type,
+          sender,
+        })
+        if (messageStatus) {
+          yes = messageStatus
+        }
+      })
+    } catch (error) {
+      sphinxLogger.error(`KEYSEND ERROR ${error}`)
+      no = error
     }
-    await sleep(10)
-  })
+  }
   if (no) {
     if (failure) failure(no)
   } else {
@@ -529,5 +558,82 @@ async function interceptTribeMsgForHiddenCmds(
       logging.Network
     )
     return false
+  }
+}
+
+async function sendMessageHandler({
+  contactId,
+  tenant,
+  skipPubKey,
+  networkType,
+  chatUUID,
+  isTribeOwner,
+  amount,
+  realSatsContactId,
+  mentionContactIds,
+  chat,
+  type,
+  sender,
+  msg,
+}) {
+  if (contactId === tenant) {
+    // dont send to self
+    return
+  }
+
+  const contact: Contact = (await models.Contact.findOne({
+    where: { id: contactId },
+  })) as Contact
+  if (!contact) {
+    return // skip if u simply dont have the contact
+  }
+  if (tenant === -1) {
+    // this is a bot sent from me!
+    if (contact.isOwner) {
+      return // dont MQTT to myself!
+    }
+  }
+
+  const destkey = contact.publicKey
+  if (destkey === skipPubKey) {
+    return // skip (for tribe owner broadcasting, not back to the sender)
+  }
+
+  let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
+
+  // sending a payment to one subscriber, buying a pic from OG poster
+  // or boost to og poster
+  if (isTribeOwner && amount && realSatsContactId === contactId) {
+    mqttTopic = '' // FORCE KEYSEND!!!
+    await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
+  }
+
+  const m = await personalizeMessage(msg, contact, isTribeOwner)
+
+  // send a "push", the user was mentioned
+  if (
+    mentionContactIds.includes(contact.id) ||
+    mentionContactIds.includes(Infinity)
+  ) {
+    m.message.push = true
+  }
+  const opts = {
+    dest: destkey,
+    data: m,
+    amt: Math.max(amount || 0, constants.min_sat_amount),
+    route_hint: contact.routeHint || '',
+  }
+
+  try {
+    const r = await signAndSend(opts, sender, mqttTopic)
+    await sleep(10)
+    return r
+  } catch (e) {
+    sphinxLogger.error(`KEYSEND ERROR ${e}`)
+    if (realSatsContactId && contactId === realSatsContactId) {
+      FAILED_TO_SEND_ID = realSatsContactId
+    }
+    await sleep(10)
+    throw e
   }
 }
