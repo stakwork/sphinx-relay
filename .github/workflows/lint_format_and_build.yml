@@ -20,11 +20,16 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           shopt -s globstar
           npm run lint || echo -n
-          npx prettier --config .prettierrc --ignore-path .prettierignore -w *.ts src/**/*.ts .github/**/*.yml
+          npx prettier --config .prettierrc --ignore-path .prettierignore -w *.ts src/**/*.ts
           git add *.ts src
           git commit -m 'Lint and format code' || echo -n
           git push
           npm run build
           git add dist
           git commit -m 'Automatic build' || echo -n
+          git push
+          bash grpc_gen_types.sh
+          npm run build
+          git add src/grpc/types dist
+          git commit -m 'Update proto files and types' || echo -n
           git push
