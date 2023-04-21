@@ -30,6 +30,6 @@ jobs:
           git push
           bash grpc_gen_types.sh
           npm run build
-          git add src/grpc/types dist
+          git add src/grpc/types src/grpc/proto.ts dist
           git commit -m 'Update proto files and types' || echo -n
           git push
