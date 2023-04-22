@@ -3,7 +3,8 @@ import * as grpc from '@grpc/grpc-js'
 import { loadProto } from './proto'
 import { LightningClient } from './types/lnrpc/Lightning'
 import { LightningClient as ProxyLightningClient } from './types/lnrpc_proxy/Lightning'
-import { NodeClient } from './types/greenlight/Node'
+import { NodeClient as GreenlightNodeClient } from './types/greenlight/Node'
+import { NodeClient } from './types/cln/cln/Node'
 import { RouterClient } from './types/routerrpc/Router'
 import { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
 import { sleep } from '../helpers'
@@ -25,6 +26,7 @@ const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 const IS_LND = config.lightning_provider === 'LND'
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
+const IS_CLN = config.lightning_provider === 'CLN'
 
 export const LND_KEYSEND_KEY = 5482373484
 export const SPHINX_CUSTOM_RECORD_KEY = 133773310
@@ -35,21 +37,43 @@ let lightningClient:
   | LightningClient
   | ProxyLightningClient
   | NodeClient
+  | GreenlightNodeClient
   | undefined
 let walletUnlocker: WalletUnlockerClient | undefined
 let routerClient: RouterClient | undefined
 
 // typescript helpers for types
 export function isLND(
-  client: LightningClient | ProxyLightningClient | NodeClient | undefined
+  client:
+    | LightningClient
+    | ProxyLightningClient
+    | NodeClient
+    | GreenlightNodeClient
+    | undefined
 ): client is LightningClient | ProxyLightningClient {
   return IS_LND
 }
 
 export function isGL(
-  client: LightningClient | ProxyLightningClient | NodeClient | undefined
-): client is NodeClient {
+  client:
+    | LightningClient
+    | ProxyLightningClient
+    | NodeClient
+    | GreenlightNodeClient
+    | undefined
+): client is GreenlightNodeClient {
   return IS_GREENLIGHT
+}
+
+export function isCLN(
+  client:
+    | LightningClient
+    | ProxyLightningClient
+    | NodeClient
+    | GreenlightNodeClient
+    | undefined
+): client is NodeClient {
+  return IS_CLN
 }
 
 export function loadCredentials(macName?: string): grpc.ChannelCredentials {
@@ -73,26 +97,32 @@ export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   }
 }
 
-const loadGreenlightCredentials = () => {
+const loadMtlsCredentials = () => {
   const glCert = fs.readFileSync(config.tls_location)
   const glPriv = fs.readFileSync(config.tls_key_location)
   const glChain = fs.readFileSync(config.tls_chain_location)
   return grpc.credentials.createSsl(glCert, glPriv, glChain)
 }
 
-export async function loadLightning(): Promise<LightningClient | NodeClient>
+export async function loadLightning(): Promise<
+  LightningClient | NodeClient | GreenlightNodeClient
+>
 export async function loadLightning(
   tryProxy: false,
   ownerPubkey?: string
-): Promise<LightningClient | NodeClient>
+): Promise<LightningClient | NodeClient | GreenlightNodeClient>
 export async function loadLightning(
   tryProxy?: boolean,
   ownerPubkey?: string
-): Promise<LightningClient | ProxyLightningClient | NodeClient>
+): Promise<
+  LightningClient | ProxyLightningClient | NodeClient | GreenlightNodeClient
+>
 export async function loadLightning(
   tryProxy?: boolean,
   ownerPubkey?: string
-): Promise<LightningClient | ProxyLightningClient | NodeClient> {
+): Promise<
+  LightningClient | ProxyLightningClient | NodeClient | GreenlightNodeClient
+> {
   // only if specified AND available
   if (tryProxy && isProxy() && ownerPubkey) {
     // do not cache proxy lightning
@@ -107,7 +137,7 @@ export async function loadLightning(
   }
 
   if (IS_GREENLIGHT) {
-    const credentials = loadGreenlightCredentials()
+    const credentials = loadMtlsCredentials()
     const descriptor = loadProto('greenlight')
     const greenlight = descriptor.greenlight
     const options = {
@@ -118,6 +148,20 @@ export async function loadLightning(
       throw new Error('no lightning client')
     }
     return (lightningClient = new greenlight.Node(uri[1], credentials, options))
+  }
+
+  if (IS_CLN) {
+    const credentials = loadMtlsCredentials()
+    const descriptor = loadProto('cln/node')
+    const cln = descriptor.cln
+    const options = {
+      'grpc.ssl_target_name_override': 'cln',
+    }
+    return (lightningClient = new cln.Node(
+      LND_IP + ':' + config.lnd_port,
+      credentials,
+      options
+    ))
   }
 
   // LND
@@ -292,13 +336,20 @@ export async function sendPayment(
           },
           (err, response) => {
             if (err == null && response) {
-              // TODO greenlight types
               resolve(interfaces.keysendResponse(<any>response))
             } else {
               reject(err)
             }
           }
         )
+      } else if (isCLN(lightning)) {
+        lightning.pay({ bolt11: payment_request }, (err, response) => {
+          if (err == null && response) {
+            resolve(interfaces.keysendResponse(<any>response))
+          } else {
+            reject(err)
+          }
+        })
       } else {
         const call = lightning.sendPayment()
         call.on('data', async (response) => {
@@ -779,14 +830,48 @@ export async function getInfo(
         tryProxy === false ? false : true,
         undefined
       )
-      // TODO remove any
-      ;(<any>lightning).getInfo({}, function (err, response) {
-        if (err == null) {
-          resolve(interfaces.getInfoResponse(response))
-        } else {
-          reject(err)
-        }
-      })
+      // function finish(err, response: interfaces.GetInfoResponseType) {
+      //   if (err == null) {
+      //     resolve(interfaces.getInfoResponse(response))
+      //   } else {
+      //     reject(err)
+      //   }
+      // }
+      if (isCLN(lightning)) {
+        lightning.getinfo({}, function (err, response) {
+          if (err == null) {
+            resolve(interfaces.getInfoResponse(response))
+          } else {
+            reject(err)
+          }
+        })
+      } else if (isGL(lightning)) {
+        lightning.getInfo({}, function (err, response) {
+          if (err == null) {
+            // FIXME?
+            resolve(
+              interfaces.getInfoResponse(
+                response as unknown as interfaces.GreenlightGetInfoResponse
+              )
+            )
+          } else {
+            reject(err)
+          }
+        })
+      } else {
+        lightning.getInfo({}, function (err, response) {
+          if (err == null) {
+            // FIXME?
+            resolve(
+              interfaces.getInfoResponse(
+                response as unknown as interfaces.GetInfoResponse
+              )
+            )
+          } else {
+            reject(err)
+          }
+        })
+      }
     } catch (e) {
       reject(e)
     }
@@ -960,6 +1045,9 @@ export async function openChannel(
   if (isGL(lightning)) {
     return
   }
+  if (isCLN(lightning)) {
+    return // FIXME
+  }
   return new Promise((resolve, reject) => {
     lightning.openChannelSync(opts, function (err, response) {
       if (err == null && response) {
@@ -1040,6 +1128,9 @@ export async function channelBalance(ownerPubkey?: string): Promise<{
   if (isGL(lightning)) {
     return
   }
+  if (isCLN(lightning)) {
+    return // FIXME
+  }
   return new Promise((resolve, reject) => {
     lightning.channelBalance({}, function (err, response) {
       if (err == null && response) {
@@ -1079,6 +1170,9 @@ export async function getChanInfo(
   const lightning = await loadLightning(tryProxy === false ? false : true) // try proxy
   if (isGL(lightning)) {
     return // skip for now
+  }
+  if (isCLN(lightning)) {
+    return // FIXME
   }
   return new Promise((resolve, reject) => {
     if (!chan_id) {
