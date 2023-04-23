@@ -8,10 +8,28 @@ const long = require("long");
 const config = (0, config_1.loadConfig)();
 const IS_LND = config.lightning_provider === 'LND';
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
+const IS_CLN = config.lightning_provider === 'CLN';
 function getInfoResponse(res) {
     if (IS_LND) {
         // LND
         return res;
+    }
+    if (IS_CLN) {
+        const r = res;
+        return {
+            identity_pubkey: Buffer.from(r.id).toString('hex'),
+            color: Buffer.from(r.color).toString('hex'),
+            version: r.version,
+            alias: r.alias,
+            num_peers: r.num_peers,
+            // FAKE VALUES
+            num_active_channels: 0,
+            num_pending_channels: 0,
+            synced_to_chain: true,
+            synced_to_graph: true,
+            best_header_timestamp: 0,
+            testnet: false,
+        };
     }
     if (IS_GREENLIGHT) {
         // greenlight

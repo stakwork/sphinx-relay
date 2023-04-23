@@ -15,7 +15,7 @@ const env = process.env.NODE_ENV || 'development'
 const config = require(configFile)[env]
 const ENV = process.env
 
-type LightningProvider = 'LND' | 'GREENLIGHT'
+type LightningProvider = 'LND' | 'GREENLIGHT' | 'CLN'
 
 const DEFAULT_FINAL_CLTV_DELTA = 141
 const DEFAULT_MIN_SAT = 3
