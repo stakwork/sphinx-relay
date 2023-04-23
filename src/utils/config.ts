@@ -20,9 +20,9 @@ type LightningProvider = 'LND' | 'GREENLIGHT' | 'CLN'
 const DEFAULT_FINAL_CLTV_DELTA = 141
 const DEFAULT_MIN_SAT = 3
 const DEFAULT_HSM_SECRET_PATH = './creds/hsm_secret'
-const DEFAULT_TLS_LOCATION = './creds/ca.pem'
-const DEFAULT_TLS_KEY_LOCATION = './creds/device-key.pem'
-const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt'
+// const DEFAULT_TLS_LOCATION = './creds/ca.pem'
+// const DEFAULT_TLS_KEY_LOCATION = './creds/device-key.pem'
+// const DEFAULT_TLS_CHAIN_LOCAION = './creds/device.crt'
 const DEFAULT_SCHEDULER_TLS_LOCATION = './creds/scheduler_creds/ca.pem'
 const DEFAULT_SCHEDULER_KEY_LOCATION = './creds/scheduler_creds/device-key.pem'
 const DEFAULT_SCHEDULER_CHAIN_LOCATION = './creds/scheduler_creds/device.crt'
@@ -58,16 +58,10 @@ export function loadConfig() {
       ENV.ROUTER_MACAROON_LOCATION || config.router_macaroon_location,
     signer_macaroon_location:
       ENV.SIGNER_MACAROON_LOCATION || config.signer_macaroon_location,
-    tls_location:
-      ENV.TLS_LOCATION || config.tls_location || DEFAULT_TLS_LOCATION,
-    tls_key_location:
-      ENV.TLS_KEY_LOCATION ||
-      config.tls_key_location ||
-      DEFAULT_TLS_KEY_LOCATION,
-    tls_chain_location:
-      ENV.TLS_CHAIN_LOCATION ||
-      config.tls_chain_location ||
-      DEFAULT_TLS_CHAIN_LOCAION,
+    tls_location: ENV.TLS_LOCATION || config.tls_location,
+    cln_ca_cert: ENV.CLN_CA_CERT || config.cln_ca_cert,
+    cln_device_key: ENV.CLN_DEVICE_KEY || config.cln_device_key,
+    cln_device_cert: ENV.CLN_DEVICE_CERT || config.cln_device_cert,
     scheduler_tls_location:
       ENV.SCHEDULER_TLS_LOCATION ||
       config.scheduler_tls_location ||

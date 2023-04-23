@@ -372,10 +372,10 @@ export function newmsg(
   if (!includeStatus && message.status) {
     delete message.status
   }
-  sphinxLogger.info(
-    `PERSONUUID in newmsg ${sender.personUuid}`,
-    logging.Network
-  )
+  // sphinxLogger.info(
+  //   `PERSONUUID in newmsg ${sender.personUuid}`,
+  //   logging.Network
+  // )
   const result: Msg = {
     type: type,
     chat: {
