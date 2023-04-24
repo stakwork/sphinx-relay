@@ -70,9 +70,9 @@ function loadCredentials(macName) {
 }
 exports.loadCredentials = loadCredentials;
 const loadMtlsCredentials = () => {
-    const glCert = fs.readFileSync(config.tls_location);
-    const glPriv = fs.readFileSync(config.tls_key_location);
-    const glChain = fs.readFileSync(config.tls_chain_location);
+    const glCert = fs.readFileSync(config.cln_ca_cert);
+    const glPriv = fs.readFileSync(config.cln_device_key);
+    const glChain = fs.readFileSync(config.cln_device_cert);
     return grpc.credentials.createSsl(glCert, glPriv, glChain);
 };
 function loadLightning(tryProxy, ownerPubkey) {

@@ -91,7 +91,7 @@ export async function startGreenlightInit(): Promise<void> {
     if (needToRegister) {
       await registerGreenlight(GID, rootkey, secretPath)
     }
-    const keyLoc = config.tls_key_location
+    const keyLoc = config.cln_device_key
     const noNeedToRecover = fs.existsSync(keyLoc)
     if (!noNeedToRecover) {
       await recoverGreenlight(GID)
@@ -139,11 +139,11 @@ async function recoverGreenlight(gid: GreenlightIdentity) {
     const challenge = await get_challenge(gid.node_id)
     const signature = await sign_challenge(challenge)
     const res = await recover(gid.node_id, challenge, signature)
-    const keyLoc = config.tls_key_location
-    const chainLoc = config.tls_chain_location
+    const keyLoc = config.cln_device_key
+    const certLoc = config.cln_device_cert
     sphinxLogger.info(`RECOVER KEY ${keyLoc} ${res.device_key}`)
     fs.writeFileSync(keyLoc, res.device_key)
-    fs.writeFileSync(chainLoc, res.device_cert)
+    fs.writeFileSync(certLoc, res.device_cert)
     writeTlsLocation()
   } catch (e) {
     sphinxLogger.info(`Greenlight register error ${e}`)
@@ -153,7 +153,7 @@ async function recoverGreenlight(gid: GreenlightIdentity) {
 function writeTlsLocation() {
   const glCert = fs.readFileSync(config.scheduler_tls_location)
   if (glCert) {
-    fs.writeFileSync(config.tls_location, glCert)
+    fs.writeFileSync(config.cln_ca_cert, glCert)
   }
 }
 
@@ -172,11 +172,11 @@ async function registerGreenlight(
       challenge,
       signature
     )
-    const keyLoc = config.tls_key_location
-    const chainLoc = config.tls_chain_location
+    const keyLoc = config.cln_device_key
+    const certLoc = config.cln_device_cert
     sphinxLogger.info(`WRITE KEY ${keyLoc} ${res.device_key}`)
     fs.writeFileSync(keyLoc, res.device_key)
-    fs.writeFileSync(chainLoc, res.device_cert)
+    fs.writeFileSync(certLoc, res.device_cert)
     writeTlsLocation()
     // after registered successfully
     fs.writeFileSync(secretPath, Buffer.from(rootkey, 'hex'))

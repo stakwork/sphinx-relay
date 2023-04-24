@@ -487,7 +487,8 @@ export async function initGrpcSubscriptions(): Promise<void> {
       await Greenlight.initGreenlight()
       Greenlight.keepalive()
     }
-    await Lightning.getInfo(true)
+    const info = await Lightning.getInfo(true)
+    console.log('===> subscribed invoices with pubkey:', info.identity_pubkey)
     await lndService.subscribeInvoices(parseKeysendInvoice)
   } catch (e) {
     console.log('=> initGrpcSubscriptions error', e)
