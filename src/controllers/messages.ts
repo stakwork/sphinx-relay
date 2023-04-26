@@ -246,10 +246,10 @@ export const getMsgs = async (req: Req, res: Res): Promise<void> => {
   const messages: Message[] = (await models.Message.findAll(
     clause
   )) as Message[]
-  sphinxLogger.info(
-    `=> got msgs, ${messages && messages.length}`,
-    logging.Express
-  )
+  // sphinxLogger.info(
+  //   `=> got msgs, ${messages && messages.length}`,
+  //   logging.Express
+  // )
 
   const chats: Chat[] = (await models.Chat.findAll({
     where: { deleted: false, tenant },

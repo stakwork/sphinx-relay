@@ -201,7 +201,10 @@ const getMsgs = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         clause.offset = offset;
     }
     const messages = (yield models_1.models.Message.findAll(clause));
-    logger_1.sphinxLogger.info(`=> got msgs, ${messages && messages.length}`, logger_1.logging.Express);
+    // sphinxLogger.info(
+    //   `=> got msgs, ${messages && messages.length}`,
+    //   logging.Express
+    // )
     const chats = (yield models_1.models.Chat.findAll({
         where: { deleted: false, tenant },
     }));
