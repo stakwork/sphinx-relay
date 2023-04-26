@@ -805,7 +805,7 @@ function handleMessageDelete({ tenant, date, }) {
                     message,
                 ];
             }
-            //loop through the chats and delete chat messages tht are greater than 10
+            //loop through the chats and delete chat messages that are greater than 10
             for (let key in chat_messages) {
                 if (chat_messages[key].length > 10) {
                     const toTeDeleted = chat_messages[key].length - 10;
