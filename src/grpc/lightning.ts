@@ -97,7 +97,7 @@ export function loadCredentials(macName?: string): grpc.ChannelCredentials {
   }
 }
 
-const loadMtlsCredentials = () => {
+export const loadMtlsCredentials = () => {
   const glCert = fs.readFileSync(config.cln_ca_cert)
   const glPriv = fs.readFileSync(config.cln_device_key)
   const glChain = fs.readFileSync(config.cln_device_cert)
