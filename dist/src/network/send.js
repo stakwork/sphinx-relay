@@ -22,7 +22,6 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const config = (0, config_1.loadConfig)();
-let FAILED_TO_SEND_ID = null;
 /**
  * Sends a message to a chat.
  *
@@ -133,88 +132,63 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         let yes = true;
         let no = null;
         logger_1.sphinxLogger.info(`=> sending to ${contactIds.length} 'contacts'`, logger_1.logging.Network);
-        if (isTribeOwner && amount && realSatsContactId && realSatsContactId) {
-            try {
-                const membersContactIds = contactIds.filter((memberContact) => memberContact !== realSatsContactId);
-                const messageStatus = yield sendMessageHandler({
-                    contactId: realSatsContactId,
-                    tenant,
-                    skipPubKey,
-                    networkType,
-                    chatUUID,
-                    isTribeOwner,
-                    amount,
-                    msg,
-                    realSatsContactId,
-                    mentionContactIds,
-                    chat,
-                    type,
-                    sender,
-                });
-                if (messageStatus) {
-                    yes = messageStatus;
-                }
-                yield (0, helpers_1.asyncForEach)(membersContactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
-                    const messageStatus = yield sendMessageHandler({
-                        contactId,
-                        tenant,
-                        skipPubKey,
-                        networkType,
-                        chatUUID,
-                        isTribeOwner,
-                        amount,
-                        msg,
-                        realSatsContactId,
-                        mentionContactIds,
-                        chat,
-                        type,
-                        sender,
-                    });
-                    if (messageStatus) {
-                        yes = messageStatus;
-                    }
-                }));
-            }
-            catch (error) {
-                logger_1.sphinxLogger.error(`KEYSEND ERROR ${error}`);
-                no = error;
-                if (FAILED_TO_SEND_ID) {
-                    if ((chat === null || chat === void 0 ? void 0 : chat.ownerPubkey) &&
-                        (sender === null || sender === void 0 ? void 0 : sender.publicKey) &&
-                        chat.ownerPubkey !== sender.publicKey) {
-                        //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
-                        FAILED_TO_SEND_ID = null;
-                    }
-                }
-            }
+        const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId);
+        if (realSatsIndex > 0) {
+            contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0]);
         }
-        else {
+        for (let contactId of contactIds) {
             try {
-                yield (0, helpers_1.asyncForEach)(contactIds, (contactId) => __awaiter(this, void 0, void 0, function* () {
-                    const messageStatus = yield sendMessageHandler({
-                        contactId,
-                        tenant,
-                        skipPubKey,
-                        networkType,
-                        chatUUID,
-                        isTribeOwner,
-                        amount,
-                        msg,
-                        realSatsContactId,
-                        mentionContactIds,
-                        chat,
-                        type,
-                        sender,
-                    });
-                    if (messageStatus) {
-                        yes = messageStatus;
-                    }
+                if (contactId === tenant) {
+                    // dont send to self
+                    continue;
+                }
+                const contact = (yield models_1.models.Contact.findOne({
+                    where: { id: contactId },
                 }));
+                if (!contact) {
+                    continue; // skip if u simply dont have the contact
+                }
+                if (tenant === -1) {
+                    // this is a bot sent from me!
+                    if (contact.isOwner) {
+                        continue; // dont MQTT to myself!
+                    }
+                }
+                const destkey = contact.publicKey;
+                if (destkey === skipPubKey) {
+                    continue; // skip (for tribe owner broadcasting, not back to the sender)
+                }
+                let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+                // sending a payment to one subscriber, buying a pic from OG poster
+                // or boost to og poster
+                if (isTribeOwner && amount && realSatsContactId === contactId) {
+                    mqttTopic = ''; // FORCE KEYSEND!!!
+                    yield (0, msg_1.recordLeadershipScore)(tenant, amount, chat.id, contactId, type);
+                }
+                const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
+                // send a "push", the user was mentioned
+                if (mentionContactIds.includes(contact.id) ||
+                    mentionContactIds.includes(Infinity)) {
+                    m.message.push = true;
+                }
+                const opts = {
+                    dest: destkey,
+                    data: m,
+                    amt: Math.max(amount || 0, constants_1.default.min_sat_amount),
+                    route_hint: contact.routeHint || '',
+                };
+                const r = yield signAndSend(opts, sender, mqttTopic);
+                yes = r;
             }
             catch (error) {
                 logger_1.sphinxLogger.error(`KEYSEND ERROR ${error}`);
                 no = error;
+                if (realSatsContactId && contactId === realSatsContactId) {
+                    //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
+                    break;
+                }
             }
+            yield (0, helpers_1.sleep)(10);
         }
         if (no) {
             if (failure)
@@ -447,62 +421,6 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
         catch (error) {
             logger_1.sphinxLogger.error(`Failed to check if hidden command ${error}`, logger_1.logging.Network);
             return false;
-        }
-    });
-}
-function sendMessageHandler({ contactId, tenant, skipPubKey, networkType, chatUUID, isTribeOwner, amount, realSatsContactId, mentionContactIds, chat, type, sender, msg, }) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (contactId === tenant) {
-            // dont send to self
-            return;
-        }
-        const contact = (yield models_1.models.Contact.findOne({
-            where: { id: contactId },
-        }));
-        if (!contact) {
-            return; // skip if u simply dont have the contact
-        }
-        if (tenant === -1) {
-            // this is a bot sent from me!
-            if (contact.isOwner) {
-                return; // dont MQTT to myself!
-            }
-        }
-        const destkey = contact.publicKey;
-        if (destkey === skipPubKey) {
-            return; // skip (for tribe owner broadcasting, not back to the sender)
-        }
-        let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
-        // sending a payment to one subscriber, buying a pic from OG poster
-        // or boost to og poster
-        if (isTribeOwner && amount && realSatsContactId === contactId) {
-            mqttTopic = ''; // FORCE KEYSEND!!!
-            yield (0, msg_1.recordLeadershipScore)(tenant, amount, chat.id, contactId, type);
-        }
-        const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
-        // send a "push", the user was mentioned
-        if (mentionContactIds.includes(contact.id) ||
-            mentionContactIds.includes(Infinity)) {
-            m.message.push = true;
-        }
-        const opts = {
-            dest: destkey,
-            data: m,
-            amt: Math.max(amount || 0, constants_1.default.min_sat_amount),
-            route_hint: contact.routeHint || '',
-        };
-        try {
-            const r = yield signAndSend(opts, sender, mqttTopic);
-            yield (0, helpers_1.sleep)(10);
-            return r;
-        }
-        catch (e) {
-            logger_1.sphinxLogger.error(`KEYSEND ERROR ${e}`);
-            if (realSatsContactId && contactId === realSatsContactId) {
-                FAILED_TO_SEND_ID = realSatsContactId;
-            }
-            yield (0, helpers_1.sleep)(10);
-            throw e;
         }
     });
 }
