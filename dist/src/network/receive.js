@@ -439,7 +439,8 @@ function initGrpcSubscriptions() {
                 yield Greenlight.initGreenlight();
                 Greenlight.keepalive();
             }
-            yield Lightning.getInfo(true);
+            const info = yield Lightning.getInfo(true);
+            console.log('===> subscribed invoices with pubkey:', info.identity_pubkey);
             yield lndService.subscribeInvoices(parseKeysendInvoice);
         }
         catch (e) {

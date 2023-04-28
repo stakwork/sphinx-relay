@@ -29,6 +29,7 @@ const constants_1 = require("../constants");
 const config_1 = require("../utils/config");
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
+const errMsgString_1 = require("../utils/errMsgString");
 const config = (0, config_1.loadConfig)();
 /*
 
@@ -143,7 +144,11 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
             logger_1.sphinxLogger.info(['attachment sent', { data }]);
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => resUtils.failure(res, error.message),
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            const errorMessage = (0, errMsgString_1.errMsgString)(error);
+            yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
+            return resUtils.failure(res, errorMessage || error);
+        }),
     });
 });
 exports.sendAttachmentMessage = sendAttachmentMessage;
@@ -223,7 +228,11 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             logger_1.sphinxLogger.info('purchase sent!');
             resUtils.success(res, jsonUtils.messageToJson(message, chat));
         }),
-        failure: (error) => resUtils.failure(res, error.message),
+        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+            const errorMessage = (0, errMsgString_1.errMsgString)(error);
+            yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
+            resUtils.failure(res, errorMessage || error);
+        }),
     });
 });
 exports.purchase = purchase;

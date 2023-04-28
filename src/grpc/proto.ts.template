@@ -1,15 +1,15 @@
 import * as grpc from '@grpc/grpc-js'
 import { loadSync, Options } from '@grpc/proto-loader'
 
-import type { ProtoGrpcType as {{Name}}ProtoGrpcType } from './types/{{name}}'
+import type { ProtoGrpcType as {{name}}ProtoGrpcType } from './types/{{path}}'
 
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 
 type ProtoName =
-  | '{{name}}'
+  | '{{path}}'
 
 type ProtoGrpcType =
-  | {{Name}}ProtoGrpcType
+  | {{name}}ProtoGrpcType
 
 const opts: Options = {
   keepCase: true,
@@ -19,7 +19,7 @@ const opts: Options = {
   oneofs: true,
 }
 
-export function loadProto(name: '{{name}}'): {{Name}}ProtoGrpcType
+export function loadProto(name: '{{path}}'): {{name}}ProtoGrpcType
 export function loadProto(name: ProtoName): ProtoGrpcType
 export function loadProto(name: ProtoName): ProtoGrpcType {
   return grpc.loadPackageDefinition(

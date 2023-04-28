@@ -375,6 +375,7 @@ function migrate() {
         addTableColumn('sphinx_messages', 'only_owner', 'BOOLEAN');
         addTableColumn('sphinx_chats', 'preview', 'TEXT');
         addTableColumn('sphinx_contacts', 'prune', 'INTEGER');
+        addTableColumn('sphinx_messages', 'error_message', 'TEXT');
     });
 }
 exports.default = migrate;

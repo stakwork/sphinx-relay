@@ -4,6 +4,7 @@ import { failure, success } from '../utils/res'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { errMsgString } from '../utils/errMsgString'
 
 export interface ChatMeta {
   itemID: number
@@ -116,6 +117,22 @@ export async function anonymousKeysend(
   }
   if (text) msg.message = { content: text }
 
+  const date = new Date()
+  date.setMilliseconds(0)
+  const message = await models.Message.create({
+    chatId: 0,
+    type: constants.message_types.keysend,
+    sender: tenant,
+    amount,
+    amountMsat: amount * 1000,
+    paymentHash: '',
+    date,
+    messageContent: text || '',
+    status: constants.statuses.confirmed,
+    createdAt: date,
+    updatedAt: date,
+    tenant,
+  })
   return helpers.performKeysendMessage({
     sender: owner,
     destination_key,
@@ -124,25 +141,14 @@ export async function anonymousKeysend(
     msg,
     success: () => {
       sphinxLogger.info(`payment sent!`)
-      const date = new Date()
-      date.setMilliseconds(0)
-      models.Message.create({
-        chatId: 0,
-        type: constants.message_types.keysend,
-        sender: tenant,
-        amount,
-        amountMsat: amount * 1000,
-        paymentHash: '',
-        date,
-        messageContent: text || '',
-        status: constants.statuses.confirmed,
-        createdAt: date,
-        updatedAt: date,
-        tenant,
-      })
       onSuccess({ destination_key, amount })
     },
-    failure: (error) => {
+    failure: async (error) => {
+      const errMsg = errMsgString(error)
+      await message.update({
+        errorMessage: errMsg,
+        status: constants.statuses.failed,
+      })
       onFailure(error)
     },
     extra_tlv,

@@ -16,7 +16,10 @@ interface ReqBody {
     @param {Response} res
     @returns {Promise<void>}
     */
-export async function saveAction(req: Req, res: Response) {
+export async function saveAction(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { type, meta_data } = req.body
@@ -46,7 +49,10 @@ export async function saveAction(req: Req, res: Response) {
 
 @return {Promise<void>} - A promise that resolves when the function completes, or rejects if an error occurs. If successful, the response will contain a message indicating that the action was saved successfully. If there is an error, the response will contain an error message.
 */
-export async function saveActionBulk(req: Req, res: Response) {
+export async function saveActionBulk(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { data } = req.body

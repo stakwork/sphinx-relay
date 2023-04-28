@@ -1,0 +1,1 @@
+{"version":3,"file":"GetinfoAddress.js","sourceRoot":"","sources":["../../../../../../src/grpc/types/cln/cln/GetinfoAddress.ts"],"names":[],"mappings":";AAAA,sCAAsC;;;AAEtC,sCAAsC;AAEzB,QAAA,sCAAsC,GAAG;IACpD,GAAG,EAAE,KAAK;IACV,IAAI,EAAE,MAAM;IACZ,IAAI,EAAE,MAAM;IACZ,KAAK,EAAE,OAAO;IACd,KAAK,EAAE,OAAO;IACd,SAAS,EAAE,WAAW;CACd,CAAA"}

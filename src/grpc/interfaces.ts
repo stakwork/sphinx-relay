@@ -3,11 +3,13 @@ import * as crypto from 'crypto'
 import { LND_KEYSEND_KEY } from './lightning'
 import * as long from 'long'
 import type { SendRequest } from './types/lnrpc_proxy/SendRequest'
+import type { GetinfoResponse__Output } from './types/cln/cln/GetinfoResponse'
 
 const config = loadConfig()
 
 const IS_LND = config.lightning_provider === 'LND'
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
+const IS_CLN = config.lightning_provider === 'CLN'
 
 /* GET INFO */
 interface Feature {
@@ -44,7 +46,7 @@ interface GreenlightAddress {
   addr: string
   port: number
 }
-interface GreenlightGetInfoResponse {
+export interface GreenlightGetInfoResponse {
   node_id: Buffer
   alias: string
   color: string
@@ -54,12 +56,34 @@ interface GreenlightGetInfoResponse {
   blockheight: number
   network: string
 }
+
 export function getInfoResponse(
-  res: GetInfoResponse | GreenlightGetInfoResponse
+  res:
+    | GetInfoResponse
+    | GreenlightGetInfoResponse
+    | GetinfoResponse__Output
+    | undefined
 ): GetInfoResponse {
   if (IS_LND) {
     // LND
     return res as GetInfoResponse
+  }
+  if (IS_CLN) {
+    const r = res as GetinfoResponse__Output
+    return <GetInfoResponse>{
+      identity_pubkey: Buffer.from(r.id).toString('hex'),
+      color: Buffer.from(r.color).toString('hex'),
+      version: r.version,
+      alias: r.alias,
+      num_peers: r.num_peers,
+      // FAKE VALUES
+      num_active_channels: 0,
+      num_pending_channels: 0,
+      synced_to_chain: true,
+      synced_to_graph: true,
+      best_header_timestamp: 0,
+      testnet: false,
+    }
   }
   if (IS_GREENLIGHT) {
     // greenlight
