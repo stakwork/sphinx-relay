@@ -227,7 +227,7 @@ function newAddress(type = exports.NESTED_PUBKEY_HASH) {
     return __awaiter(this, void 0, void 0, function* () {
         const lightning = yield loadLightning();
         return new Promise((resolve, reject) => {
-            // TODO now lnd only
+            // TODO remove any
             ;
             lightning.newAddress({ type }, (err, response) => {
                 if (err) {
@@ -833,8 +833,8 @@ function listChannels(args, ownerPubkey) {
                     }
                 });
             }
-            else if (isLND(lightning)) {
-                // TODO proxy?
+            else {
+                // TODO remove any
                 ;
                 lightning.listChannels(opts, function (err, response) {
                     if (err == null && response) {
