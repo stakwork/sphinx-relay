@@ -288,8 +288,8 @@ export async function newAddress(
 ): Promise<string> {
   const lightning = await loadLightning()
   return new Promise((resolve, reject) => {
-    // TODO now lnd only
-    ;(<LightningClient>lightning).newAddress({ type }, (err, response) => {
+    // TODO remove any
+    ;(<any>lightning).newAddress({ type }, (err, response) => {
       if (err) {
         reject(err)
         return
@@ -578,8 +578,8 @@ export function listInvoices(): Promise<any> {
   sphinxLogger.info('listInvoices', logging.Lightning)
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning()
-    // TODO gl support? proxy?
-    ;(<LightningClient>lightning).listInvoices(
+    // TODO remove any
+    ;(<any>lightning).listInvoices(
       {
         num_max_invoices: 100000,
         reversed: true,
@@ -931,18 +931,15 @@ export async function listChannels(
           reject(err)
         }
       })
-    } else if (isLND(lightning)) {
-      // TODO proxy?
-      ;(<LightningClient>lightning).listChannels(
-        opts,
-        function (err, response) {
-          if (err == null && response) {
-            resolve(interfaces.listChannelsResponse(response))
-          } else {
-            reject(err)
-          }
+    } else {
+      // TODO remove any
+      ;(<any>lightning).listChannels(opts, function (err, response) {
+        if (err == null && response) {
+          resolve(interfaces.listChannelsResponse(response))
+        } else {
+          reject(err)
         }
-      )
+      })
     }
   })
 }
