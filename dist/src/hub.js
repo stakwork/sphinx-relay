@@ -134,55 +134,60 @@ const pingHub = (params = {}) => __awaiter(void 0, void 0, void 0, function* () 
 });
 function massPingHubFromProxies(rn) {
     return __awaiter(this, void 0, void 0, function* () {
-        // real node
-        const owners = yield models_1.models.Contact.findAll({
-            where: {
-                isOwner: true,
-                id: { [sequelize_1.Op.ne]: 1 },
-            },
-        });
-        const nodes = [];
-        const channelList = yield Lightning.listChannels({});
-        if (!channelList)
-            return logger_1.sphinxLogger.error('failed to listChannels');
-        const { channels } = channelList;
-        const localBalances = channels.map((c) => parseInt(c.local_balance));
-        const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
-        const largestLocalBalance = Math.max(...localBalances);
-        const largestRemoteBalance = Math.max(...remoteBalances);
-        const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
-        yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
-            const clean = o.authToken === null || o.authToken === '';
-            nodes.push({
-                pubkey: o.publicKey,
-                node_type: nodeinfo_1.NodeType.NODE_VIRTUAL,
-                clean,
-                last_active: o.lastActive,
-                route_hint: o.routeHint,
-                relay_commit: rn === null || rn === void 0 ? void 0 : rn.relay_commit,
-                lnd_version: rn === null || rn === void 0 ? void 0 : rn.lnd_version,
-                relay_version: rn === null || rn === void 0 ? void 0 : rn.relay_version,
-                testnet: rn === null || rn === void 0 ? void 0 : rn.testnet,
-                ip: rn === null || rn === void 0 ? void 0 : rn.ip,
-                public_ip: rn === null || rn === void 0 ? void 0 : rn.public_ip,
-                node_alias: rn === null || rn === void 0 ? void 0 : rn.node_alias,
-                number_channels: channels.length,
-                open_channel_data: channels,
-                largest_local_balance: largestLocalBalance,
-                largest_remote_balance: largestRemoteBalance,
-                total_local_balance: totalLocalBalance,
+        try {
+            // real node
+            const owners = yield models_1.models.Contact.findAll({
+                where: {
+                    isOwner: true,
+                    id: { [sequelize_1.Op.ne]: 1 },
+                },
             });
-        }));
-        if (logger_1.logging.Proxy) {
-            const cleanNodes = nodes.filter((n) => n.clean);
-            logger_1.sphinxLogger.info(`pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`, logger_1.logging.Proxy);
+            const nodes = [];
+            const channelList = yield Lightning.listChannels({});
+            if (!channelList)
+                return logger_1.sphinxLogger.error('failed to listChannels');
+            const { channels } = channelList;
+            const localBalances = channels.map((c) => parseInt(c.local_balance));
+            const remoteBalances = channels.map((c) => parseInt(c.remote_balance));
+            const largestLocalBalance = Math.max(...localBalances);
+            const largestRemoteBalance = Math.max(...remoteBalances);
+            const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0);
+            yield asyncForEach(owners, (o) => __awaiter(this, void 0, void 0, function* () {
+                const clean = o.authToken === null || o.authToken === '';
+                nodes.push({
+                    pubkey: o.publicKey,
+                    node_type: nodeinfo_1.NodeType.NODE_VIRTUAL,
+                    clean,
+                    last_active: o.lastActive,
+                    route_hint: o.routeHint,
+                    relay_commit: rn === null || rn === void 0 ? void 0 : rn.relay_commit,
+                    lnd_version: rn === null || rn === void 0 ? void 0 : rn.lnd_version,
+                    relay_version: rn === null || rn === void 0 ? void 0 : rn.relay_version,
+                    testnet: rn === null || rn === void 0 ? void 0 : rn.testnet,
+                    ip: rn === null || rn === void 0 ? void 0 : rn.ip,
+                    public_ip: rn === null || rn === void 0 ? void 0 : rn.public_ip,
+                    node_alias: rn === null || rn === void 0 ? void 0 : rn.node_alias,
+                    number_channels: channels.length,
+                    open_channel_data: channels,
+                    largest_local_balance: largestLocalBalance,
+                    largest_remote_balance: largestRemoteBalance,
+                    total_local_balance: totalLocalBalance,
+                });
+            }));
+            if (logger_1.logging.Proxy) {
+                const cleanNodes = nodes.filter((n) => n.clean);
+                logger_1.sphinxLogger.info(`pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`, logger_1.logging.Proxy);
+            }
+            // split into chunks of 50
+            const size = 50;
+            for (let i = 0; i < nodes.length; i += size) {
+                yield sendHubCall({
+                    nodes: nodes.slice(i, i + size),
+                }, true);
+            }
         }
-        // split into chunks of 50
-        const size = 50;
-        for (let i = 0; i < nodes.length; i += size) {
-            yield sendHubCall({
-                nodes: nodes.slice(i, i + size),
-            }, true);
+        catch (e) {
+            logger_1.sphinxLogger.error(`[mass ping failed]: ${e}`);
         }
     });
 }
