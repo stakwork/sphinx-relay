@@ -719,7 +719,7 @@ export function signBuffer(msg: Buffer, ownerPubkey?: string): Promise<string> {
         finalRecid.writeUInt8(ecRecid, 0)
         const finalSig = Buffer.concat([finalRecid, sigBytes], 65)
         resolve(zbase32.encode(finalSig))
-      } else if (isLND(lightning)) {
+      } else if (isLND(lightning) || isProxy(lightning)) {
         const options = { msg }
         lightning.signMessage(options, function (err, sig) {
           if (err || !sig || !sig.signature) {
@@ -788,7 +788,7 @@ export function verifyMessage(
           valid: true,
           pubkey: recoveredPubkey.toString('hex'),
         })
-      } else if (isLND(lightning)) {
+      } else if (isLND(lightning) || isProxy(lightning)) {
         // sig is zbase32 encoded
         lightning.verifyMessage(
           {
