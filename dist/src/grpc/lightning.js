@@ -645,7 +645,7 @@ function signBuffer(msg, ownerPubkey) {
                 const finalSig = Buffer.concat([finalRecid, sigBytes], 65);
                 resolve(zbase32.encode(finalSig));
             }
-            else if (isLND(lightning)) {
+            else if (isLND(lightning) || (0, proxy_1.isProxy)(lightning)) {
                 const options = { msg };
                 lightning.signMessage(options, function (err, sig) {
                     if (err || !sig || !sig.signature) {
@@ -697,7 +697,7 @@ function verifyMessage(msg, sig, ownerPubkey) {
                     pubkey: recoveredPubkey.toString('hex'),
                 });
             }
-            else if (isLND(lightning)) {
+            else if (isLND(lightning) || (0, proxy_1.isProxy)(lightning)) {
                 // sig is zbase32 encoded
                 lightning.verifyMessage({
                     msg: Buffer.from(msg, 'hex'),
