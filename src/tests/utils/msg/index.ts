@@ -1,7 +1,7 @@
 export { sendMessageAndCheckDecryption } from './sendMessageAndCheckDecryption'
 export { sendTribeMessageAndCheckDecryption } from './sendTribeMessageAndCheckDecryption'
 export { checkMessageDecryption } from './checkMessageDecryption'
-export { sendBoost } from './sendBoost'
+export { sendBoost, boostAsMessage } from './sendBoost'
 export { sendImage } from './sendImage'
 export { sendPayment } from './sendPayment'
 export { sendEscrowMsg } from './sendEscrowMsg'

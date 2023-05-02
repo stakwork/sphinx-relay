@@ -17,31 +17,7 @@ export async function sendBoost(t, node1, node2, replyMessage, amount, tribe) {
   const msgExists = await getCheckNewMsgs(t, node1, replyMessage.uuid)
   t.truthy(msgExists, 'message being replied to should exist')
 
-  //get uuid from node2's message
-  const replyUuid = replyMessage.uuid
-  t.truthy(replyUuid, 'replyUuid should exist')
-
-  //get tribeId from node1 perspective
-  const tribeId = await getTribeIdFromUUID(t, node1, tribe)
-  t.truthy(tribeId, 'tribeId should exist')
-
-  //create boost message object for node2's message which is represented by replyUuid
-  const v = {
-    boost: true,
-    contact_id: null,
-    text: '',
-    chat_id: tribeId,
-    reply_uuid: replyUuid,
-    amount: amount,
-    message_price: 0,
-  }
-
-  //node1 sends a boost on node2's message
-  const msg = await http.post(
-    node1.external_ip + '/messages',
-    makeArgs(node1, v)
-  )
-  t.true(msg.success, 'msg should exist')
+  const msg = await boostAsMessage(t, tribe, node1, replyMessage, amount)
 
   //wait for boost message to process
   const msgUuid = msg.response.uuid
@@ -75,4 +51,29 @@ async function boostBalances(t, booster, boostee) {
   const boosteeBal = await getBalance(t, boostee)
   t.true(typeof boosteeBal === 'number')
   return [boosterBal, boosteeBal]
+}
+
+export async function boostAsMessage(t, tribe, node, replyMessage, amount) {
+  //get uuid from node2's message
+  const replyUuid = replyMessage.uuid
+  t.truthy(replyUuid, 'replyUuid should exist')
+
+  //get tribeId from node1 perspective
+  const tribeId = await getTribeIdFromUUID(t, node, tribe)
+  t.truthy(tribeId, 'tribeId should exist')
+
+  //create boost message object for node2's message which is represented by replyUuid
+  const v = {
+    boost: true,
+    contact_id: null,
+    text: '',
+    chat_id: tribeId,
+    reply_uuid: replyUuid,
+    amount: amount,
+    message_price: 0,
+  }
+  //node1 sends a boost on node2's message
+  const msg = await http.post(node.external_ip + '/messages', makeArgs(node, v))
+  t.true(msg.success, 'msg should exist')
+  return msg
 }
