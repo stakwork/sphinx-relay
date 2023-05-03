@@ -1194,6 +1194,42 @@ function ascii_to_hexa(str) {
   return arr1.join('')
 }
 
+export async function getInvoiceHandler(
+  payment_hash: string,
+  ownerPubkey?: string
+) {
+  sphinxLogger.info('getInvoice', logging.Lightning)
+  const payment_hash_bytes = Buffer.from(payment_hash, 'hex')
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning(true, ownerPubkey)
+    if (isGL(lightning)) {
+      return //Fixing this later
+    } else if (isCLN(lightning)) {
+    } else if (isLND(lightning)) {
+      ;(<any>lightning).lookupInvoice(
+        { r_hash: payment_hash_bytes },
+        function (err, response) {
+          if (err) {
+            console.log(err)
+            reject(err)
+          }
+          if (response) {
+            const invoice = {
+              settled: response?.settled,
+              payment_request: response?.payment_request,
+              payment_hash: response?.r_hash.toString('hex'),
+              preimage: response?.settled
+                ? response?.r_preimage.toString('hex')
+                : '',
+              amount: response.amt_paid,
+            }
+            resolve(invoice)
+          }
+        }
+      )
+    }
+  })
+}
 // async function loadLightningNew() {
 //   if (lightningClient) {
 //     return lightningClient

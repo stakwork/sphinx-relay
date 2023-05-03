@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.getInvoiceHandler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const fs = require("fs");
 const grpc = require("@grpc/grpc-js");
 const proto_1 = require("./proto");
@@ -1027,6 +1027,42 @@ function ascii_to_hexa(str) {
     }
     return arr1.join('');
 }
+function getInvoiceHandler(payment_hash, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info('getInvoice', logger_1.logging.Lightning);
+        const payment_hash_bytes = Buffer.from(payment_hash, 'hex');
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning(true, ownerPubkey);
+            if (isGL(lightning)) {
+                return; //Fixing this later
+            }
+            else if (isCLN(lightning)) {
+            }
+            else if (isLND(lightning)) {
+                ;
+                lightning.lookupInvoice({ r_hash: payment_hash_bytes }, function (err, response) {
+                    if (err) {
+                        console.log(err);
+                        reject(err);
+                    }
+                    if (response) {
+                        const invoice = {
+                            settled: response === null || response === void 0 ? void 0 : response.settled,
+                            payment_request: response === null || response === void 0 ? void 0 : response.payment_request,
+                            payment_hash: response === null || response === void 0 ? void 0 : response.r_hash.toString('hex'),
+                            preimage: (response === null || response === void 0 ? void 0 : response.settled)
+                                ? response === null || response === void 0 ? void 0 : response.r_preimage.toString('hex')
+                                : '',
+                            amount: response.amt_paid,
+                        };
+                        resolve(invoice);
+                    }
+                });
+            }
+        }));
+    });
+}
+exports.getInvoiceHandler = getInvoiceHandler;
 // async function loadLightningNew() {
 //   if (lightningClient) {
 //     return lightningClient

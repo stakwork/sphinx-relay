@@ -132,6 +132,7 @@ function set(app) {
         app.get('/invoices', invoices.listInvoices);
         app.put('/invoices', invoices.payInvoice);
         app.post('/invoices/cancel', invoices.cancelInvoice);
+        app.get('/invoice', invoices.getInvoice);
         app.post('/payment', payments.sendPayment);
         app.get('/payments', payments.listPayments);
         app.get('/channels', details.getChannels);
