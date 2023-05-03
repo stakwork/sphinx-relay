@@ -42,6 +42,7 @@ jobs:
             'actionHistory',
             'silentTribeBotMsg',
             'kickBot',
+            'invoices',
           ]
         node: [16]
     steps:
