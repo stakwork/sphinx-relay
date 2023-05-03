@@ -885,40 +885,36 @@ export async function addInvoice(
 ): Promise<interfaces.AddInvoiceResponse | { payment_request: string }> {
   // log('addInvoice')
   return new Promise(async (resolve, reject) => {
-    try {
-      const lightning = await loadLightning(true, ownerPubkey) // try proxy
-      if (isLND(lightning)) {
-        const cmd = interfaces.addInvoiceCommand()
-        const req = interfaces.addInvoiceRequest(request)
-        lightning[cmd](req, function (err, response) {
+    const lightning = await loadLightning(true, ownerPubkey) // try proxy
+    if (isLND(lightning)) {
+      const cmd = interfaces.addInvoiceCommand()
+      const req = interfaces.addInvoiceRequest(request)
+      lightning[cmd](req, function (err, response) {
+        if (err == null) {
+          resolve(interfaces.addInvoiceResponse(response))
+        } else {
+          reject(err)
+        }
+      })
+    } else if (isCLN(lightning)) {
+      const label = short.generate()
+      lightning.invoice(
+        {
+          amount_msat: {
+            amount: { msat: convertToMsat(request.value as number) },
+          },
+          label,
+          description: request.memo,
+        },
+        function (err, response) {
           if (err == null) {
-            resolve(interfaces.addInvoiceResponse(response))
+            resolve({ payment_request: response?.bolt11 || '' })
           } else {
+            sphinxLogger.error([err], logging.Lightning)
             reject(err)
           }
-        })
-      } else if (isCLN(lightning)) {
-        const label = short.generate()
-        lightning.invoice(
-          {
-            amount_msat: {
-              amount: { msat: convertToMsat(request.value as number) },
-            },
-            label,
-            description: request.memo,
-          },
-          function (err, response) {
-            if (err == null) {
-              resolve({ payment_request: response?.bolt11! })
-            } else {
-              sphinxLogger.error([err], logging.Lightning)
-              reject(err)
-            }
-          }
-        )
-      }
-    } catch (error) {
-      throw error
+        }
+      )
     }
   })
 }

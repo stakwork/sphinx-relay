@@ -785,41 +785,36 @@ function addInvoice(request, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // log('addInvoice')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-                if (isLND(lightning)) {
-                    const cmd = interfaces.addInvoiceCommand();
-                    const req = interfaces.addInvoiceRequest(request);
-                    lightning[cmd](req, function (err, response) {
-                        if (err == null) {
-                            resolve(interfaces.addInvoiceResponse(response));
-                        }
-                        else {
-                            reject(err);
-                        }
-                    });
-                }
-                else if (isCLN(lightning)) {
-                    const label = short.generate();
-                    lightning.invoice({
-                        amount_msat: {
-                            amount: { msat: convertToMsat(request.value) },
-                        },
-                        label,
-                        description: request.memo,
-                    }, function (err, response) {
-                        if (err == null) {
-                            resolve({ payment_request: response === null || response === void 0 ? void 0 : response.bolt11 });
-                        }
-                        else {
-                            logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
-                            reject(err);
-                        }
-                    });
-                }
+            const lightning = yield loadLightning(true, ownerPubkey); // try proxy
+            if (isLND(lightning)) {
+                const cmd = interfaces.addInvoiceCommand();
+                const req = interfaces.addInvoiceRequest(request);
+                lightning[cmd](req, function (err, response) {
+                    if (err == null) {
+                        resolve(interfaces.addInvoiceResponse(response));
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
             }
-            catch (error) {
-                throw error;
+            else if (isCLN(lightning)) {
+                const label = short.generate();
+                lightning.invoice({
+                    amount_msat: {
+                        amount: { msat: convertToMsat(request.value) },
+                    },
+                    label,
+                    description: request.memo,
+                }, function (err, response) {
+                    if (err == null) {
+                        resolve({ payment_request: (response === null || response === void 0 ? void 0 : response.bolt11) || '' });
+                    }
+                    else {
+                        logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
+                        reject(err);
+                    }
+                });
             }
         }));
     });
