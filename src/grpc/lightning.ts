@@ -21,6 +21,7 @@ import * as secp256k1 from 'secp256k1'
 import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
 import { Req } from '../types'
+import * as short from 'short-uuid'
 
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
@@ -881,19 +882,44 @@ export async function getInfo(
 export async function addInvoice(
   request: interfaces.AddInvoiceRequest,
   ownerPubkey?: string
-): Promise<interfaces.AddInvoiceResponse> {
+): Promise<interfaces.AddInvoiceResponse | { payment_request: string }> {
   // log('addInvoice')
   return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true, ownerPubkey) // try proxy
-    const cmd = interfaces.addInvoiceCommand()
-    const req = interfaces.addInvoiceRequest(request)
-    lightning[cmd](req, function (err, response) {
-      if (err == null) {
-        resolve(interfaces.addInvoiceResponse(response))
-      } else {
-        reject(err)
+    try {
+      const lightning = await loadLightning(true, ownerPubkey) // try proxy
+      if (isLND(lightning)) {
+        const cmd = interfaces.addInvoiceCommand()
+        const req = interfaces.addInvoiceRequest(request)
+        lightning[cmd](req, function (err, response) {
+          if (err == null) {
+            resolve(interfaces.addInvoiceResponse(response))
+          } else {
+            reject(err)
+          }
+        })
+      } else if (isCLN(lightning)) {
+        const label = short.generate()
+        lightning.invoice(
+          {
+            amount_msat: {
+              amount: { msat: convertToMsat(request.value as number) },
+            },
+            label,
+            description: request.memo,
+          },
+          function (err, response) {
+            if (err == null) {
+              resolve({ payment_request: response?.bolt11! })
+            } else {
+              sphinxLogger.error([err], logging.Lightning)
+              reject(err)
+            }
+          }
+        )
       }
-    })
+    } catch (error) {
+      throw error
+    }
   })
 }
 
@@ -1201,34 +1227,77 @@ export async function getInvoiceHandler(
   sphinxLogger.info('getInvoice', logging.Lightning)
   const payment_hash_bytes = Buffer.from(payment_hash, 'hex')
   return new Promise(async (resolve, reject) => {
-    const lightning = await loadLightning(true, ownerPubkey)
-    if (isGL(lightning)) {
-      return //Fixing this later
-    } else if (isCLN(lightning)) {
-    } else if (isLND(lightning)) {
-      ;(<any>lightning).lookupInvoice(
-        { r_hash: payment_hash_bytes },
-        function (err, response) {
-          if (err) {
-            console.log(err)
-            reject(err)
-          }
-          if (response) {
-            const invoice = {
-              settled: response?.settled,
-              payment_request: response?.payment_request,
-              payment_hash: response?.r_hash.toString('hex'),
-              preimage: response?.settled
-                ? response?.r_preimage.toString('hex')
-                : '',
-              amount: response.amt_paid,
+    try {
+      const lightning = await loadLightning(true, ownerPubkey)
+      if (isGL(lightning)) {
+        return //Fixing this later
+      } else if (isCLN(lightning)) {
+        await lightning.listInvoices(
+          {
+            payment_hash: payment_hash_bytes,
+          },
+          (err: any, response: any) => {
+            if (err) {
+              sphinxLogger.error([err], logging.Lightning)
+              reject(err)
             }
-            resolve(invoice)
+            if (response) {
+              if (response.invoices.length > 0) {
+                const res = response.invoices[0]
+                const invoice = {
+                  amount: convertMsatToSat(
+                    res?.amount_received_msat?.msat || 0
+                  ),
+                  settled: res.status.toLowerCase() === 'paid' ? true : false,
+                  payment_request: res.bolt11,
+                  preimage:
+                    res.status.toLowerCase() === 'paid'
+                      ? res.payment_preimage.toString('hex')
+                      : '',
+                  payment_hash: res.payment_hash.toString('hex'),
+                }
+                resolve(invoice)
+              }
+              resolve({})
+            }
           }
-        }
-      )
+        )
+      } else if (isLND(lightning)) {
+        ;(<any>lightning).lookupInvoice(
+          { r_hash: payment_hash_bytes },
+          function (err, response) {
+            if (err) {
+              sphinxLogger.error([err], logging.Lightning)
+              reject(err)
+            }
+            if (response) {
+              const invoice = {
+                settled: response?.settled,
+                payment_request: response?.payment_request,
+                payment_hash: response?.r_hash.toString('hex'),
+                preimage: response?.settled
+                  ? response?.r_preimage.toString('hex')
+                  : '',
+                amount: response.amt_paid,
+              }
+              resolve(invoice)
+            }
+          }
+        )
+      }
+    } catch (error) {
+      sphinxLogger.error([error], logging.Lightning)
+      throw error
     }
   })
+}
+
+function convertMsatToSat(amount: string) {
+  return Number(amount) / 1000
+}
+
+function convertToMsat(amount: number) {
+  return Number(amount) * 1000
 }
 // async function loadLightningNew() {
 //   if (lightningClient) {
