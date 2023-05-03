@@ -1105,7 +1105,7 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
                                 preimage: (response === null || response === void 0 ? void 0 : response.settled)
                                     ? response === null || response === void 0 ? void 0 : response.r_preimage.toString('hex')
                                     : '',
-                                amount: response.amt_paid,
+                                amount: convertMsatToSat(response.amt_paid),
                             };
                             resolve(invoice);
                         }
