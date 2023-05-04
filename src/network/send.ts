@@ -189,7 +189,7 @@ export async function sendMessage({
   if (realSatsIndex > 0) {
     contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0])
   }
-  for (let contactId of contactIds) {
+  for (const contactId of contactIds) {
     try {
       if (contactId === tenant) {
         // dont send to self
