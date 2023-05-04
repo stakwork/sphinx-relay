@@ -660,11 +660,11 @@ function disappearingMessages(req, res) {
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
         try {
-            const contacts = (yield models_1.models.Message.findAll({
+            const contacts = (yield models_1.models.Contact.findAll({
                 where: { tenant, isOwner: true },
             }));
-            // await deleteMessages(contacts)
-            return (0, res_1.success)(res, contacts);
+            yield deleteMessages(contacts);
+            return (0, res_1.success)(res, 'Messages deleted successfully');
         }
         catch (error) {
             return (0, res_1.failure)(res, error);

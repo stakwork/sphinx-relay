@@ -814,11 +814,11 @@ export async function disappearingMessages(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   try {
-    const contacts = (await models.Message.findAll({
+    const contacts = (await models.Contact.findAll({
       where: { tenant, isOwner: true },
     })) as ContactRecord[]
-    // await deleteMessages(contacts)
-    return success(res, contacts)
+    await deleteMessages(contacts)
+    return success(res, 'Messages deleted successfully')
   } catch (error) {
     return failure(res, error)
   }
