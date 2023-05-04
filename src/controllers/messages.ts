@@ -810,6 +810,20 @@ export const clearMessages = async (req: Req, res: Res): Promise<void> => {
   success(res, {})
 }
 
+export async function disappearingMessages(req: Req, res: Res): Promise<void> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  try {
+    const contacts = (await models.Message.findAll({
+      where: { tenant, isOwner: true },
+    })) as ContactRecord[]
+    // await deleteMessages(contacts)
+    return success(res, contacts)
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
 export const receiveVoip = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received Voip ${payload}`)
   const {
