@@ -993,7 +993,7 @@ async function deleteMessages(contacts: ContactRecord[]) {
       const contact: ContactRecord = contacts[i]
       const date = new Date()
       date.setDate(
-        date.getDate() - (contact.prune || parseInt(config.default_prune))
+        date.getDate() - (contact.prune || parseInt(config.default_prune || 0))
       )
       await handleMessageDelete({
         tenant: contact.tenant,
@@ -1016,27 +1016,50 @@ async function handleMessageDelete({
   date: string
 }) {
   try {
+    // createdAt: { [Op.lt]: date }
     //select all messages that are in the group chat
     const messages = (await models.Message.findAll({
-      where: { tenant, createdAt: { [Op.lt]: date } },
+      where: { tenant },
     })) as MessageRecord[]
 
-    //put the chat_id into an objects of array and id's as keys
-    const chat_messages: { [key: string]: MessageRecord[] } = {}
+    interface DeleteMessages {
+      less_than: MessageRecord[]
+      greater_than: MessageRecord[]
+    }
 
+    //put the chat_id into an objects of array and id's as keys
+    const chat_messages: { [key: string]: DeleteMessages } = {}
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i]
-      chat_messages[message.chatId] = [
-        ...(chat_messages[message.chatId] || []),
-        message,
-      ]
+      if (!chat_messages[message.chatId]) {
+        chat_messages[message.chatId] = { less_than: [], greater_than: [] }
+      }
+      if (new Date(date).getTime() < new Date(message.createdAt).getTime()) {
+        chat_messages[message.chatId].greater_than = [
+          ...(chat_messages[message.chatId]?.greater_than || []),
+          message,
+        ]
+      } else {
+        chat_messages[message.chatId].less_than = [
+          ...(chat_messages[message.chatId]?.less_than || []),
+          message,
+        ]
+      }
     }
     //loop through the chats and delete chat messages that are greater than 10
     for (let key in chat_messages) {
-      if (chat_messages[key].length > 10) {
-        const toTeDeleted = chat_messages[key].length - 10
-        for (let j = 0; j < toTeDeleted; j++) {
-          await chat_messages[key][j].destroy()
+      if (chat_messages[key].greater_than.length >= 10) {
+        for (let j = 0; j < chat_messages[key].less_than.length; j++) {
+          await chat_messages[key].less_than[j].destroy()
+        }
+      } else {
+        let toBeDeleted =
+          chat_messages[key].less_than.length -
+          (10 - chat_messages[key].greater_than.length)
+        if (toBeDeleted > 0) {
+          for (let j = 0; j < toBeDeleted; j++) {
+            await chat_messages[key].less_than[j].destroy()
+          }
         }
       }
     }

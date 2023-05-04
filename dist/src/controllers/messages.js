@@ -792,7 +792,7 @@ function deleteMessages(contacts) {
             for (let i = 0; i < contacts.length; i++) {
                 const contact = contacts[i];
                 const date = new Date();
-                date.setDate(date.getDate() - (contact.prune || parseInt(config.default_prune)));
+                date.setDate(date.getDate() - (contact.prune || parseInt(config.default_prune || 0)));
                 yield handleMessageDelete({
                     tenant: contact.tenant,
                     date: date.toISOString(),
@@ -808,27 +808,48 @@ function deleteMessages(contacts) {
     });
 }
 function handleMessageDelete({ tenant, date, }) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            // createdAt: { [Op.lt]: date }
             //select all messages that are in the group chat
             const messages = (yield models_1.models.Message.findAll({
-                where: { tenant, createdAt: { [sequelize_1.Op.lt]: date } },
+                where: { tenant },
             }));
             //put the chat_id into an objects of array and id's as keys
             const chat_messages = {};
             for (let i = 0; i < messages.length; i++) {
                 const message = messages[i];
-                chat_messages[message.chatId] = [
-                    ...(chat_messages[message.chatId] || []),
-                    message,
-                ];
+                if (!chat_messages[message.chatId]) {
+                    chat_messages[message.chatId] = { less_than: [], greater_than: [] };
+                }
+                if (new Date(date).getTime() < new Date(message.createdAt).getTime()) {
+                    chat_messages[message.chatId].greater_than = [
+                        ...(((_a = chat_messages[message.chatId]) === null || _a === void 0 ? void 0 : _a.greater_than) || []),
+                        message,
+                    ];
+                }
+                else {
+                    chat_messages[message.chatId].less_than = [
+                        ...(((_b = chat_messages[message.chatId]) === null || _b === void 0 ? void 0 : _b.less_than) || []),
+                        message,
+                    ];
+                }
             }
             //loop through the chats and delete chat messages that are greater than 10
             for (let key in chat_messages) {
-                if (chat_messages[key].length > 10) {
-                    const toTeDeleted = chat_messages[key].length - 10;
-                    for (let j = 0; j < toTeDeleted; j++) {
-                        yield chat_messages[key][j].destroy();
+                if (chat_messages[key].greater_than.length >= 10) {
+                    for (let j = 0; j < chat_messages[key].less_than.length; j++) {
+                        yield chat_messages[key].less_than[j].destroy();
+                    }
+                }
+                else {
+                    let toBeDeleted = chat_messages[key].less_than.length -
+                        (10 - chat_messages[key].greater_than.length);
+                    if (toBeDeleted > 0) {
+                        for (let j = 0; j < toBeDeleted; j++) {
+                            yield chat_messages[key].less_than[j].destroy();
+                        }
                     }
                 }
             }
