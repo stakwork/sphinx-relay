@@ -43,6 +43,7 @@ jobs:
             'silentTribeBotMsg',
             'kickBot',
             'boostFail',
+            'deleteMessages',
           ]
         node: [16]
     steps:
