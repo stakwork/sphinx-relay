@@ -1,0 +1,1 @@
+{"version":3,"file":"DatastoreRequest.js","sourceRoot":"","sources":["../../../../../../src/grpc/types/cln/cln/DatastoreRequest.ts"],"names":[],"mappings":";AAAA,sCAAsC;;;AAItC,sCAAsC;AAEzB,QAAA,mCAAmC,GAAG;IACjD,WAAW,EAAE,aAAa;IAC1B,YAAY,EAAE,cAAc;IAC5B,iBAAiB,EAAE,mBAAmB;IACtC,WAAW,EAAE,aAAa;IAC1B,gBAAgB,EAAE,kBAAkB;CAC5B,CAAA"}

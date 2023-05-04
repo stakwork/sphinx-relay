@@ -122,6 +122,9 @@ export default class Message extends Model<Message> {
     allowNull: false,
   })
   onlyOwner: boolean
+
+  @Column(DataType.TEXT)
+  errorMessage: string // for error message when sending messages by keysend
 }
 
 /*

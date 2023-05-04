@@ -1,0 +1,27 @@
+{
+  "development": {
+    "lightning_provider": "CLN",
+    "node_ip": "127.0.0.1",
+    "lnd_ip": "127.0.0.1",
+    "lnd_port": "10009",
+    "cln_ca_cert": "/Users/evanfeenstra/code/sphinx/sphinx-proxy/cln/creds/ca.pem",
+    "cln_device_key": "/Users/evanfeenstra/code/sphinx/sphinx-proxy/cln/creds/client-key.pem",
+    "cln_device_cert": "/Users/evanfeenstra/code/sphinx/sphinx-proxy/cln/creds/client.pem",
+    "node_http_protocol": "http",
+    "node_http_port": "3001",
+    "media_host": "localhost:5555",
+    "tribes_host": "localhost:13000",
+    "tribes_mqtt_port": "1883",
+    "tribes_insecure": true,
+    "public_url": "127.0.0.1:3001",
+    "proxy_initial_sats": 1000,
+    "proxy_new_nodes": 0,
+    "proxy_lnd_ip": "127.0.0.1",
+    "proxy_admin_token": "d86hnf8irgbcv093jdns",
+    "proxy_admin_url": "http://localhost:5555",
+    "dont_ping_hub": true,
+    "proxy_lnd_port": "11111",
+    "proxy_tls_location": "/Users/evanfeenstra/code/sphinx/sphinx-proxy/cert/tls.cert",
+    "proxy_macaroons_dir": "/Users/evanfeenstra/code/sphinx/sphinx-proxy/macaroons"
+  }
+}

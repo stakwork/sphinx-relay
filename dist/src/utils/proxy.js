@@ -24,6 +24,7 @@ const sequelize_1 = require("sequelize");
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 const PROXY_LND_IP = config.proxy_lnd_ip || 'localhost';
+const IS_CLN = config.lightning_provider === 'CLN';
 const check_proxy_balance = false;
 function isProxy(client) {
     return config.proxy_lnd_port &&
@@ -216,20 +217,41 @@ function getProxyRootPubkey() {
             resolve(proxyRootPubkey);
             return;
         }
-        // normal client, to get pubkey of LND
-        const credentials = Lightning.loadCredentials();
-        const lnrpcDescriptor = (0, proto_1.loadProto)('lightning');
-        const lnrpc = lnrpcDescriptor.lnrpc;
-        const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
-        lc.getInfo({}, function (err, response) {
-            if (err == null && response) {
-                proxyRootPubkey = response.identity_pubkey;
-                resolve(proxyRootPubkey);
-            }
-            else {
-                reject('CANT GET ROOT KEY');
-            }
-        });
+        if (IS_CLN) {
+            const credentials = Lightning.loadMtlsCredentials();
+            const descriptor = (0, proto_1.loadProto)('cln/node');
+            const cln = descriptor.cln;
+            const options = {
+                'grpc.ssl_target_name_override': 'cln',
+            };
+            const clnClient = new cln.Node(LND_IP + ':' + config.lnd_port, credentials, options);
+            clnClient.getinfo({}, function (err, response) {
+                if (response && err == null) {
+                    const pubkey = Buffer.from(response.id).toString('hex');
+                    proxyRootPubkey = pubkey;
+                    resolve(proxyRootPubkey);
+                }
+                else {
+                    reject(err);
+                }
+            });
+        }
+        else {
+            // normal client, to get pubkey of LND or CLN
+            const credentials = Lightning.loadCredentials();
+            const lnrpcDescriptor = (0, proto_1.loadProto)('lightning');
+            const lnrpc = lnrpcDescriptor.lnrpc;
+            const lc = new lnrpc.Lightning(LND_IP + ':' + config.lnd_port, credentials);
+            lc.getInfo({}, function (err, response) {
+                if (err == null && response) {
+                    proxyRootPubkey = response.identity_pubkey;
+                    resolve(proxyRootPubkey);
+                }
+                else {
+                    reject('CANT GET ROOT KEY');
+                }
+            });
+        }
     });
 }
 exports.getProxyRootPubkey = getProxyRootPubkey;

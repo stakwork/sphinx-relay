@@ -1,0 +1,1 @@
+{"version":3,"file":"ListpeersPeersLog.js","sourceRoot":"","sources":["../../../../../../src/grpc/types/cln/cln/ListpeersPeersLog.ts"],"names":[],"mappings":";AAAA,sCAAsC;;;AAEtC,sCAAsC;AAEzB,QAAA,4CAA4C,GAAG;IAC1D,OAAO,EAAE,SAAS;IAClB,MAAM,EAAE,QAAQ;IAChB,OAAO,EAAE,SAAS;IAClB,IAAI,EAAE,MAAM;IACZ,KAAK,EAAE,OAAO;IACd,KAAK,EAAE,OAAO;IACd,MAAM,EAAE,QAAQ;CACR,CAAA"}

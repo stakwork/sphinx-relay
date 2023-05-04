@@ -88,7 +88,7 @@ function startGreenlightInit() {
             if (needToRegister) {
                 yield registerGreenlight(GID, rootkey, secretPath);
             }
-            const keyLoc = config.tls_key_location;
+            const keyLoc = config.cln_device_key;
             const noNeedToRecover = fs.existsSync(keyLoc);
             if (!noNeedToRecover) {
                 yield recoverGreenlight(GID);
@@ -134,11 +134,11 @@ function recoverGreenlight(gid) {
             const challenge = yield get_challenge(gid.node_id);
             const signature = yield sign_challenge(challenge);
             const res = yield recover(gid.node_id, challenge, signature);
-            const keyLoc = config.tls_key_location;
-            const chainLoc = config.tls_chain_location;
+            const keyLoc = config.cln_device_key;
+            const certLoc = config.cln_device_cert;
             logger_1.sphinxLogger.info(`RECOVER KEY ${keyLoc} ${res.device_key}`);
             fs.writeFileSync(keyLoc, res.device_key);
-            fs.writeFileSync(chainLoc, res.device_cert);
+            fs.writeFileSync(certLoc, res.device_cert);
             writeTlsLocation();
         }
         catch (e) {
@@ -149,7 +149,7 @@ function recoverGreenlight(gid) {
 function writeTlsLocation() {
     const glCert = fs.readFileSync(config.scheduler_tls_location);
     if (glCert) {
-        fs.writeFileSync(config.tls_location, glCert);
+        fs.writeFileSync(config.cln_ca_cert, glCert);
     }
 }
 function registerGreenlight(gid, rootkey, secretPath) {
@@ -159,11 +159,11 @@ function registerGreenlight(gid, rootkey, secretPath) {
             const challenge = yield get_challenge(gid.node_id);
             const signature = yield sign_challenge(challenge);
             const res = yield register(gid.node_id, gid.bip32_key + gid.bolt12_key, challenge, signature);
-            const keyLoc = config.tls_key_location;
-            const chainLoc = config.tls_chain_location;
+            const keyLoc = config.cln_device_key;
+            const certLoc = config.cln_device_cert;
             logger_1.sphinxLogger.info(`WRITE KEY ${keyLoc} ${res.device_key}`);
             fs.writeFileSync(keyLoc, res.device_key);
-            fs.writeFileSync(chainLoc, res.device_cert);
+            fs.writeFileSync(certLoc, res.device_cert);
             writeTlsLocation();
             // after registered successfully
             fs.writeFileSync(secretPath, Buffer.from(rootkey, 'hex'));

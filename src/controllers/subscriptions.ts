@@ -12,6 +12,7 @@ import * as network from '../network'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
+import { errMsgString } from '../utils/errMsgString'
 
 // store all current running jobs in memory
 const jobs = {}
@@ -206,6 +207,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
         sphinxLogger.error('SEND PAY ERROR')
         let errMessage = constants.payment_errors[err] || 'Unknown'
         errMessage = 'Payment Failed: ' + errMessage
+        const errorMsg = errMsgString(err)
         const message: Message = (await models.Message.create({
           chatId: chat.id,
           sender: owner.id,
@@ -219,6 +221,7 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
           updatedAt: date,
           subscriptionId: sub.id,
           tenant,
+          errorMessage: errorMsg,
         })) as Message
         socket.sendJson(
           {

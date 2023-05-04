@@ -148,60 +148,64 @@ const pingHub = async (params = {}) => {
 }
 
 async function massPingHubFromProxies(rn) {
-  // real node
-  const owners = await models.Contact.findAll({
-    where: {
-      isOwner: true,
-      id: { [Op.ne]: 1 },
-    },
-  })
-  const nodes: { [k: string]: any }[] = []
-  const channelList = await Lightning.listChannels({})
-  if (!channelList) return sphinxLogger.error('failed to listChannels')
-  const { channels } = channelList
-  const localBalances = channels.map((c) => parseInt(c.local_balance))
-  const remoteBalances = channels.map((c) => parseInt(c.remote_balance))
-  const largestLocalBalance = Math.max(...localBalances)
-  const largestRemoteBalance = Math.max(...remoteBalances)
-  const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0)
-  await asyncForEach(owners, async (o: Contact) => {
-    const clean = o.authToken === null || o.authToken === ''
-    nodes.push({
-      pubkey: o.publicKey,
-      node_type: NodeType.NODE_VIRTUAL,
-      clean,
-      last_active: o.lastActive,
-      route_hint: o.routeHint,
-      relay_commit: rn?.relay_commit,
-      lnd_version: rn?.lnd_version,
-      relay_version: rn?.relay_version,
-      testnet: rn?.testnet,
-      ip: rn?.ip,
-      public_ip: rn?.public_ip,
-      node_alias: rn?.node_alias,
-      number_channels: channels.length,
-      open_channel_data: channels,
-      largest_local_balance: largestLocalBalance,
-      largest_remote_balance: largestRemoteBalance,
-      total_local_balance: totalLocalBalance,
-    })
-  })
-  if (logging.Proxy) {
-    const cleanNodes = nodes.filter((n) => n.clean)
-    sphinxLogger.info(
-      `pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
-      logging.Proxy
-    )
-  }
-  // split into chunks of 50
-  const size = 50
-  for (let i = 0; i < nodes.length; i += size) {
-    await sendHubCall(
-      {
-        nodes: nodes.slice(i, i + size),
+  try {
+    // real node
+    const owners = await models.Contact.findAll({
+      where: {
+        isOwner: true,
+        id: { [Op.ne]: 1 },
       },
-      true
-    )
+    })
+    const nodes: { [k: string]: any }[] = []
+    const channelList = await Lightning.listChannels({})
+    if (!channelList) return sphinxLogger.error('failed to listChannels')
+    const { channels } = channelList
+    const localBalances = channels.map((c) => parseInt(c.local_balance))
+    const remoteBalances = channels.map((c) => parseInt(c.remote_balance))
+    const largestLocalBalance = Math.max(...localBalances)
+    const largestRemoteBalance = Math.max(...remoteBalances)
+    const totalLocalBalance = localBalances.reduce((a, b) => a + b, 0)
+    await asyncForEach(owners, async (o: Contact) => {
+      const clean = o.authToken === null || o.authToken === ''
+      nodes.push({
+        pubkey: o.publicKey,
+        node_type: NodeType.NODE_VIRTUAL,
+        clean,
+        last_active: o.lastActive,
+        route_hint: o.routeHint,
+        relay_commit: rn?.relay_commit,
+        lnd_version: rn?.lnd_version,
+        relay_version: rn?.relay_version,
+        testnet: rn?.testnet,
+        ip: rn?.ip,
+        public_ip: rn?.public_ip,
+        node_alias: rn?.node_alias,
+        number_channels: channels.length,
+        open_channel_data: channels,
+        largest_local_balance: largestLocalBalance,
+        largest_remote_balance: largestRemoteBalance,
+        total_local_balance: totalLocalBalance,
+      })
+    })
+    if (logging.Proxy) {
+      const cleanNodes = nodes.filter((n) => n.clean)
+      sphinxLogger.info(
+        `pinging hub with ${nodes.length} total nodes, ${cleanNodes.length} clean nodes`,
+        logging.Proxy
+      )
+    }
+    // split into chunks of 50
+    const size = 50
+    for (let i = 0; i < nodes.length; i += size) {
+      await sendHubCall(
+        {
+          nodes: nodes.slice(i, i + size),
+        },
+        true
+      )
+    }
+  } catch (e) {
+    sphinxLogger.error(`[mass ping failed]: ${e}`)
   }
 }
 

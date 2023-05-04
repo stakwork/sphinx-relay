@@ -3,6 +3,8 @@
 import * as grpc from '@grpc/grpc-js'
 import { loadSync, Options } from '@grpc/proto-loader'
 
+import type { ProtoGrpcType as NodeProtoGrpcType } from './types/cln/node'
+import type { ProtoGrpcType as PrimitivesProtoGrpcType } from './types/cln/primitives'
 import type { ProtoGrpcType as GreenlightProtoGrpcType } from './types/greenlight'
 import type { ProtoGrpcType as LightningProtoGrpcType } from './types/lightning'
 import type { ProtoGrpcType as RouterProtoGrpcType } from './types/router'
@@ -15,6 +17,8 @@ import type { ProtoGrpcType as WalletunlockerProtoGrpcType } from './types/walle
 process.env.GRPC_SSL_CIPHER_SUITES = 'HIGH+ECDSA'
 
 type ProtoName =
+  | 'cln/node'
+  | 'cln/primitives'
   | 'greenlight'
   | 'lightning'
   | 'router'
@@ -25,6 +29,8 @@ type ProtoName =
   | 'walletunlocker'
 
 type ProtoGrpcType =
+  | NodeProtoGrpcType
+  | PrimitivesProtoGrpcType
   | GreenlightProtoGrpcType
   | LightningProtoGrpcType
   | RouterProtoGrpcType
@@ -42,6 +48,8 @@ const opts: Options = {
   oneofs: true,
 }
 
+export function loadProto(name: 'cln/node'): NodeProtoGrpcType
+export function loadProto(name: 'cln/primitives'): PrimitivesProtoGrpcType
 export function loadProto(name: 'greenlight'): GreenlightProtoGrpcType
 export function loadProto(name: 'lightning'): LightningProtoGrpcType
 export function loadProto(name: 'router'): RouterProtoGrpcType

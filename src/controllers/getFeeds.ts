@@ -6,7 +6,10 @@ import * as feedsHelper from '../utils/feeds'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
 
-export async function getFeeds(req: Req, res: Response) {
+export async function getFeeds(
+  req: Req,
+  res: Response
+): Promise<void | Response> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const config = loadConfig()

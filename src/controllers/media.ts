@@ -19,6 +19,7 @@ import { failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { ChatPlusMembers } from '../network/send'
+import { errMsgString } from '../utils/errMsgString'
 
 const config = loadConfig()
 
@@ -153,7 +154,11 @@ export const sendAttachmentMessage = async (req: Req, res) => {
       sphinxLogger.info(['attachment sent', { data }])
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: (error) => resUtils.failure(res, error.message),
+    failure: async (error) => {
+      const errorMessage = errMsgString(error)
+      await message.update({ errorMessage, status: constants.statuses.failed })
+      return resUtils.failure(res, errorMessage || error)
+    },
   })
 }
 
@@ -241,7 +246,11 @@ export const purchase = async (req: Req, res) => {
       sphinxLogger.info('purchase sent!')
       resUtils.success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: (error) => resUtils.failure(res, error.message),
+    failure: async (error) => {
+      const errorMessage = errMsgString(error)
+      await message.update({ errorMessage, status: constants.statuses.failed })
+      resUtils.failure(res, errorMessage || error)
+    },
   })
 }
 

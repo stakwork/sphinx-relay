@@ -14,6 +14,7 @@ import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { sendConfirmation } from './confirmations'
+import { errMsgString } from '../utils/errMsgString'
 
 export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -51,8 +52,9 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       },
       function (error) {
         sphinxLogger.info(`[send payment] ERROR ${error}`)
-        res.status(200)
-        res.json({ success: false, error })
+        const errorMsg = errMsgString(error)
+        res.status(400)
+        res.json({ success: false, error: errorMsg || error })
         res.end()
       },
       {}
@@ -134,11 +136,16 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
       // console.log('payment sent', { data })
       success(res, jsonUtils.messageToJson(message, chat))
     },
-    failure: async () => {
-      await message.update({ status: constants.statuses.failed })
-      res.status(200)
+    failure: async (error) => {
+      const errMsg = errMsgString(error)
+      await message.update({
+        status: constants.statuses.failed,
+        errorMessage: errMsg,
+      })
+      res.status(400)
       res.json({
         success: false,
+        error: errMsg,
         response: jsonUtils.messageToJson(message, chat),
       })
       res.end()
@@ -238,41 +245,76 @@ export const listPayments = async (req: Req, res: Res): Promise<void> => {
   const limit = (req.query.limit && parseInt(req.query.limit.toString())) || 100
   const offset =
     (req.query.offset && parseInt(req.query.offset.toString())) || 0
+  const query_include_failures = req.query?.include_failures as string
+  const include_failures =
+    query_include_failures && query_include_failures.toLowerCase() === 'true'
 
   const MIN_VAL = constants.min_sat_amount
+  const where = {
+    [Op.or]: [
+      {
+        type: {
+          [Op.or]: [
+            constants.message_types.payment,
+            constants.message_types.keysend,
+            constants.message_types.purchase,
+          ],
+        },
+        status: { [Op.not]: constants.statuses.failed },
+      },
+      {
+        type: {
+          [Op.or]: [
+            constants.message_types.message, // paid bot msgs, or price_per_message msgs
+            constants.message_types.boost,
+            constants.message_types.repayment,
+            constants.message_types.direct_payment, // can be a payment in a tribe
+          ],
+        },
+        amount: {
+          [Op.gt]: MIN_VAL, // greater than
+        },
+        network_type: constants.network_types.lightning,
+        status: { [Op.not]: constants.statuses.failed },
+        forwarded_sats: { [Op.not]: true },
+      },
+    ],
+    tenant,
+  }
+
+  const include_failures_where = {
+    [Op.or]: [
+      {
+        type: {
+          [Op.or]: [
+            constants.message_types.payment,
+            constants.message_types.keysend,
+            constants.message_types.purchase,
+          ],
+        },
+      },
+      {
+        type: {
+          [Op.or]: [
+            constants.message_types.message, // paid bot msgs, or price_per_message msgs
+            constants.message_types.boost,
+            constants.message_types.repayment,
+            constants.message_types.direct_payment, // can be a payment in a tribe
+          ],
+        },
+        amount: {
+          [Op.gt]: MIN_VAL, // greater than
+        },
+        network_type: constants.network_types.lightning,
+        forwarded_sats: { [Op.not]: true },
+      },
+    ],
+    tenant,
+  }
+
   try {
     const msgs: Message[] = (await models.Message.findAll({
-      where: {
-        [Op.or]: [
-          {
-            type: {
-              [Op.or]: [
-                constants.message_types.payment,
-                constants.message_types.keysend,
-                constants.message_types.purchase,
-              ],
-            },
-            status: { [Op.not]: constants.statuses.failed },
-          },
-          {
-            type: {
-              [Op.or]: [
-                constants.message_types.message, // paid bot msgs, or price_per_message msgs
-                constants.message_types.boost,
-                constants.message_types.repayment,
-                constants.message_types.direct_payment, // can be a payment in a tribe
-              ],
-            },
-            amount: {
-              [Op.gt]: MIN_VAL, // greater than
-            },
-            network_type: constants.network_types.lightning,
-            status: { [Op.not]: constants.statuses.failed },
-            forwarded_sats: { [Op.not]: true },
-          },
-        ],
-        tenant,
-      },
+      where: include_failures ? include_failures_where : where,
       order: [['createdAt', 'desc']],
       limit,
       offset,
