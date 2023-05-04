@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTribeDirectPayment = exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
+exports.sendTribeDirectPayment = exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.boostAsMessage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
 var sendMessageAndCheckDecryption_1 = require("./sendMessageAndCheckDecryption");
 Object.defineProperty(exports, "sendMessageAndCheckDecryption", { enumerable: true, get: function () { return sendMessageAndCheckDecryption_1.sendMessageAndCheckDecryption; } });
 var sendTribeMessageAndCheckDecryption_1 = require("./sendTribeMessageAndCheckDecryption");
@@ -9,6 +9,7 @@ var checkMessageDecryption_1 = require("./checkMessageDecryption");
 Object.defineProperty(exports, "checkMessageDecryption", { enumerable: true, get: function () { return checkMessageDecryption_1.checkMessageDecryption; } });
 var sendBoost_1 = require("./sendBoost");
 Object.defineProperty(exports, "sendBoost", { enumerable: true, get: function () { return sendBoost_1.sendBoost; } });
+Object.defineProperty(exports, "boostAsMessage", { enumerable: true, get: function () { return sendBoost_1.boostAsMessage; } });
 var sendImage_1 = require("./sendImage");
 Object.defineProperty(exports, "sendImage", { enumerable: true, get: function () { return sendImage_1.sendImage; } });
 var sendPayment_1 = require("./sendPayment");

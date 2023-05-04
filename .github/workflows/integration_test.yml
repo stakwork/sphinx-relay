@@ -43,6 +43,7 @@ jobs:
             'silentTribeBotMsg',
             'kickBot',
             'invoices',
+            'boostFail',
           ]
         node: [16]
     steps:

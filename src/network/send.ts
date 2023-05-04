@@ -185,64 +185,72 @@ export async function sendMessage({
     `=> sending to ${contactIds.length} 'contacts'`,
     logging.Network
   )
-  await asyncForEach(contactIds, async (contactId: number) => {
-    if (contactId === tenant) {
-      // dont send to self
-      return
-    }
-
-    const contact: Contact = (await models.Contact.findOne({
-      where: { id: contactId },
-    })) as Contact
-    if (!contact) {
-      return // skip if u simply dont have the contact
-    }
-    if (tenant === -1) {
-      // this is a bot sent from me!
-      if (contact.isOwner) {
-        return // dont MQTT to myself!
-      }
-    }
-
-    const destkey = contact.publicKey
-    if (destkey === skipPubKey) {
-      return // skip (for tribe owner broadcasting, not back to the sender)
-    }
-
-    let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
-
-    // sending a payment to one subscriber, buying a pic from OG poster
-    // or boost to og poster
-    if (isTribeOwner && amount && realSatsContactId === contactId) {
-      mqttTopic = '' // FORCE KEYSEND!!!
-      await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
-    }
-
-    const m = await personalizeMessage(msg, contact, isTribeOwner)
-
-    // send a "push", the user was mentioned
-    if (
-      mentionContactIds.includes(contact.id) ||
-      mentionContactIds.includes(Infinity)
-    ) {
-      m.message.push = true
-    }
-    const opts = {
-      dest: destkey,
-      data: m,
-      amt: Math.max(amount || 0, constants.min_sat_amount),
-      route_hint: contact.routeHint || '',
-    }
-
+  const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId)
+  if (realSatsIndex > 0) {
+    contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0])
+  }
+  for (const contactId of contactIds) {
     try {
+      if (contactId === tenant) {
+        // dont send to self
+        continue
+      }
+
+      const contact: Contact = (await models.Contact.findOne({
+        where: { id: contactId },
+      })) as Contact
+      if (!contact) {
+        continue // skip if u simply dont have the contact
+      }
+      if (tenant === -1) {
+        // this is a bot sent from me!
+        if (contact.isOwner) {
+          continue // dont MQTT to myself!
+        }
+      }
+
+      const destkey = contact.publicKey
+      if (destkey === skipPubKey) {
+        continue // skip (for tribe owner broadcasting, not back to the sender)
+      }
+
+      let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
+
+      // sending a payment to one subscriber, buying a pic from OG poster
+      // or boost to og poster
+      if (isTribeOwner && amount && realSatsContactId === contactId) {
+        mqttTopic = '' // FORCE KEYSEND!!!
+        await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
+      }
+
+      const m = await personalizeMessage(msg, contact, isTribeOwner)
+
+      // send a "push", the user was mentioned
+      if (
+        mentionContactIds.includes(contact.id) ||
+        mentionContactIds.includes(Infinity)
+      ) {
+        m.message.push = true
+      }
+      const opts = {
+        dest: destkey,
+        data: m,
+        amt: Math.max(amount || 0, constants.min_sat_amount),
+        route_hint: contact.routeHint || '',
+      }
       const r = await signAndSend(opts, sender, mqttTopic)
       yes = r
-    } catch (e) {
-      sphinxLogger.error(`KEYSEND ERROR ${e}`)
-      no = e
+    } catch (error) {
+      sphinxLogger.error(`KEYSEND ERROR ${error}`)
+      no = error
+      if (realSatsContactId && contactId === realSatsContactId) {
+        //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
+        break
+      }
     }
     await sleep(10)
-  })
+  }
+
   if (no) {
     if (failure) failure(no)
   } else {
