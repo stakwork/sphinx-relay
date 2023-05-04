@@ -17,9 +17,9 @@ const helpers = require("../utils/helpers");
   npx ava src/tests/controllers/invoices.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test invoices: create invoice, get invoice details, pay invoice, check invoice payment status', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield invoices(t, 0, 1, 2);
+    yield invoices(t, 0, 1);
 }));
-function invoices(t, index1, index2, index3) {
+function invoices(t, index1, index2) {
     return __awaiter(this, void 0, void 0, function* () {
         let node1 = nodes_1.default[index1];
         let node2 = nodes_1.default[index2];

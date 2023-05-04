@@ -1054,7 +1054,7 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
         const payment_hash_bytes = Buffer.from(payment_hash, 'hex');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const lightning = yield loadLightning(true, ownerPubkey);
+                const lightning = yield loadLightning();
                 if (isGL(lightning)) {
                     return; //Fixing this later
                 }
@@ -1085,7 +1085,7 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
                         }
                     });
                 }
-                else if (isLND(lightning)) {
+                else if (isLND(lightning) || (0, proxy_1.isProxy)(lightning)) {
                     ;
                     lightning.lookupInvoice({ r_hash: payment_hash_bytes }, function (err, response) {
                         if (err) {

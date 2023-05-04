@@ -1224,7 +1224,7 @@ export async function getInvoiceHandler(
   const payment_hash_bytes = Buffer.from(payment_hash, 'hex')
   return new Promise(async (resolve, reject) => {
     try {
-      const lightning = await loadLightning(true, ownerPubkey)
+      const lightning = await loadLightning()
       if (isGL(lightning)) {
         return //Fixing this later
       } else if (isCLN(lightning)) {
@@ -1258,7 +1258,7 @@ export async function getInvoiceHandler(
             }
           }
         )
-      } else if (isLND(lightning)) {
+      } else if (isLND(lightning) || isProxy(lightning)) {
         ;(<any>lightning).lookupInvoice(
           { r_hash: payment_hash_bytes },
           function (err, response) {

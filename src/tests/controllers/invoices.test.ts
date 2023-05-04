@@ -8,10 +8,10 @@ import * as helpers from '../utils/helpers'
 */
 
 test('test invoices: create invoice, get invoice details, pay invoice, check invoice payment status', async (t) => {
-  await invoices(t, 0, 1, 2)
+  await invoices(t, 0, 1)
 })
 
-async function invoices(t, index1, index2, index3) {
+async function invoices(t, index1, index2) {
   let node1 = nodes[index1]
   let node2 = nodes[index2]
 
