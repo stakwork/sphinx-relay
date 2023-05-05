@@ -1,4 +1,11 @@
-import { models, Message, Chat, ContactRecord, MessageRecord } from '../models'
+import {
+  models,
+  Message,
+  Chat,
+  ContactRecord,
+  MessageRecord,
+  ChatRecord,
+} from '../models'
 import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
 import {
@@ -1016,51 +1023,25 @@ async function handleMessageDelete({
   date: string
 }) {
   try {
-    // createdAt: { [Op.lt]: date }
-    //select all messages that are in the group chat
-    const messages = (await models.Message.findAll({
-      where: { tenant },
-    })) as MessageRecord[]
+    const chats = (await models.Chat.findAll({
+      where: { tenant, deleted: false },
+    })) as ChatRecord[]
 
-    interface DeleteMessages {
-      less_than: MessageRecord[]
-      greater_than: MessageRecord[]
-    }
-
-    //put the chat_id into an objects of array and id's as keys
-    const chat_messages: { [key: string]: DeleteMessages } = {}
-    for (let i = 0; i < messages.length; i++) {
-      const message = messages[i]
-      if (!chat_messages[message.chatId]) {
-        chat_messages[message.chatId] = { less_than: [], greater_than: [] }
-      }
-      if (new Date(date).getTime() < new Date(message.createdAt).getTime()) {
-        chat_messages[message.chatId].greater_than = [
-          ...(chat_messages[message.chatId]?.greater_than || []),
-          message,
-        ]
-      } else {
-        chat_messages[message.chatId].less_than = [
-          ...(chat_messages[message.chatId]?.less_than || []),
-          message,
-        ]
-      }
-    }
-    //loop through the chats and delete chat messages that are greater than 10
-    for (let key in chat_messages) {
-      if (chat_messages[key].greater_than.length >= 10) {
-        for (let j = 0; j < chat_messages[key].less_than.length; j++) {
-          await chat_messages[key].less_than[j].destroy()
-        }
-      } else {
-        let toBeDeleted =
-          chat_messages[key].less_than.length -
-          (10 - chat_messages[key].greater_than.length)
-        if (toBeDeleted > 0) {
-          for (let j = 0; j < toBeDeleted; j++) {
-            await chat_messages[key].less_than[j].destroy()
-          }
-        }
+    for (let i = 0; i < chats.length; i++) {
+      const chat = chats[i]
+      const chatMessages = (await models.Message.findAll({
+        where: { chatId: chat.id, tenant },
+      })) as MessageRecord[]
+      if (chatMessages.length > 10) {
+        const tenthToLastID = chatMessages[chatMessages.length - 10]
+        await models.Message.destroy({
+          where: {
+            id: { [Op.lt]: tenthToLastID.id },
+            createdAt: { [Op.lt]: date },
+            chatId: chat.id,
+            tenant,
+          },
+        })
       }
     }
     sphinxLogger.info(['=> message deleted by cron job'])
