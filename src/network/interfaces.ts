@@ -60,6 +60,7 @@ export interface Msg {
   message: MessageContent
   chat: ChatContent
   sender: SenderContent
+  error_message?: string
 }
 
 export interface BotMsg extends Msg {
