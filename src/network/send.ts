@@ -197,6 +197,19 @@ export async function sendMessage({
     logging.Network
   )
   const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId)
+  if (realSatsContactId && realSatsIndex < 0) {
+    const originalMessage = (await models.Message.findOne({
+      where: { tenant, uuid: msg.message.uuid },
+    })) as MessageRecord
+    return await reversePayment({
+      tenant,
+      originalMessage,
+      msgToBeSent: msg,
+      error: 'user is no longer in tribe',
+      amount,
+      sender,
+    })
+  }
   if (realSatsIndex > 0) {
     contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0])
   }

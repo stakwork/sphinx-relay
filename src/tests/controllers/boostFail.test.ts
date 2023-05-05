@@ -1,5 +1,5 @@
 import test from 'ava'
-import { randomText } from '../utils/helpers'
+import { randomText, sleep } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import {
@@ -86,6 +86,15 @@ export async function boostFail(t, index1, index2, index3) {
   )
   t.true(boost.success)
 
+  //NODE3 LEAVES TRIBE
+  let left3 = await leaveTribe(t, node3, tribe)
+  t.true(left3, 'node3 should leave tribe')
+
+  await sleep(1000)
+
+  const boost2 = await boostAsMessage(t, tribe, node2, tribeMessage3, 11)
+  console.log(boost2)
+
   //Node 2 should not get the boost message, because the boost should fail
   const checkNode2 = await shouldNotGetNewMsgs(t, node2, boost.response.uuid)
   t.true(checkNode2, 'Node2 should not receive the boost message')
@@ -97,10 +106,6 @@ export async function boostFail(t, index1, index2, index3) {
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)
   t.true(left2, 'node2 should leave tribe')
-
-  //NODE3 LEAVES TRIBE
-  let left3 = await leaveTribe(t, node3, tribe)
-  t.true(left3, 'node3 should leave tribe')
 
   //NODE1 DELETES TRIBE
   let delTribe2 = await deleteTribe(t, node1, tribe)

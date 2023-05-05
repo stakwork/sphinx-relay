@@ -134,6 +134,19 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         let no = null;
         logger_1.sphinxLogger.info(`=> sending to ${contactIds.length} 'contacts'`, logger_1.logging.Network);
         const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId);
+        if (realSatsContactId && realSatsIndex < 0) {
+            const originalMessage = (yield models_1.models.Message.findOne({
+                where: { tenant, uuid: msg.message.uuid },
+            }));
+            return yield reversePayment({
+                tenant,
+                originalMessage,
+                msgToBeSent: msg,
+                error: 'user is no longer in tribe',
+                amount,
+                sender,
+            });
+        }
         if (realSatsIndex > 0) {
             contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0]);
         }

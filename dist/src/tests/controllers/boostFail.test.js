@@ -60,6 +60,12 @@ function boostFail(t, index1, index2, index3) {
         //   const boost = await sendBoost(t, node1, node2, tribeMessage2, 11, tribe)
         const boost = yield (0, msg_1.boostAsMessage)(t, tribe, node1, tribeMessage2, 1100000000000);
         t.true(boost.success);
+        //NODE3 LEAVES TRIBE
+        let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
+        t.true(left3, 'node3 should leave tribe');
+        yield (0, helpers_1.sleep)(1000);
+        const boost2 = yield (0, msg_1.boostAsMessage)(t, tribe, node2, tribeMessage3, 11);
+        console.log(boost2);
         //Node 2 should not get the boost message, because the boost should fail
         const checkNode2 = yield (0, get_1.shouldNotGetNewMsgs)(t, node2, boost.response.uuid);
         t.true(checkNode2, 'Node2 should not receive the boost message');
@@ -69,9 +75,6 @@ function boostFail(t, index1, index2, index3) {
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
-        //NODE3 LEAVES TRIBE
-        let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
-        t.true(left3, 'node3 should leave tribe');
         //NODE1 DELETES TRIBE
         let delTribe2 = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe2, 'node1 should delete tribe');
