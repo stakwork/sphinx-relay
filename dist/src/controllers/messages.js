@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
+exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.disappearingMessages = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
 const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
@@ -654,6 +654,24 @@ const clearMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     (0, res_1.success)(res, {});
 });
 exports.clearMessages = clearMessages;
+function disappearingMessages(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.owner)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.owner.id;
+        try {
+            const contacts = (yield models_1.models.Contact.findAll({
+                where: { tenant, isOwner: true },
+            }));
+            yield deleteMessages(contacts);
+            return (0, res_1.success)(res, 'Messages deleted successfully');
+        }
+        catch (error) {
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
+exports.disappearingMessages = disappearingMessages;
 const receiveVoip = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received Voip ${payload}`);
     const { owner, sender, chat, content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, hasForwardedSats, person, remote_content, } = yield helpers.parseReceiveParams(payload);
@@ -774,7 +792,7 @@ function deleteMessages(contacts) {
             for (let i = 0; i < contacts.length; i++) {
                 const contact = contacts[i];
                 const date = new Date();
-                date.setDate(date.getDate() - (contact.prune || parseInt(config.default_prune)));
+                date.setDate(date.getDate() - (contact.prune || parseInt(config.default_prune || 0)));
                 yield handleMessageDelete({
                     tenant: contact.tenant,
                     date: date.toISOString(),
@@ -792,9 +810,26 @@ function deleteMessages(contacts) {
 function handleMessageDelete({ tenant, date, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield models_1.models.Message.destroy({
-                where: { tenant, createdAt: { [sequelize_1.Op.lt]: date } },
-            });
+            const chats = (yield models_1.models.Chat.findAll({
+                where: { tenant, deleted: false },
+            }));
+            for (let i = 0; i < chats.length; i++) {
+                const chat = chats[i];
+                const chatMessages = (yield models_1.models.Message.findAll({
+                    where: { chatId: chat.id, tenant },
+                }));
+                if (chatMessages.length > 10) {
+                    const tenthToLastID = chatMessages[chatMessages.length - 10];
+                    yield models_1.models.Message.destroy({
+                        where: {
+                            id: { [sequelize_1.Op.lt]: tenthToLastID.id },
+                            createdAt: { [sequelize_1.Op.lt]: date },
+                            chatId: chat.id,
+                            tenant,
+                        },
+                    });
+                }
+            }
             logger_1.sphinxLogger.info(['=> message deleted by cron job']);
         }
         catch (error) {
