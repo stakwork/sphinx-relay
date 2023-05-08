@@ -17,3 +17,4 @@ export {
   sendTribeDirectPayment,
   sendDirectPayment,
 } from './sendTribeDirectpayment'
+export { getTribeMessages } from './getTribeMessages'

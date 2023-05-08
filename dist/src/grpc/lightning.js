@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.getInvoiceHandler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const fs = require("fs");
 const grpc = require("@grpc/grpc-js");
 const proto_1 = require("./proto");
@@ -26,6 +26,7 @@ const zbase32 = require("../utils/zbase32");
 const secp256k1 = require("secp256k1");
 const libhsmd_1 = require("./libhsmd");
 const greenlight_1 = require("./greenlight");
+const short = require("short-uuid");
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 const IS_LND = config.lightning_provider === 'LND';
@@ -785,16 +786,36 @@ function addInvoice(request, ownerPubkey) {
         // log('addInvoice')
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            const cmd = interfaces.addInvoiceCommand();
-            const req = interfaces.addInvoiceRequest(request);
-            lightning[cmd](req, function (err, response) {
-                if (err == null) {
-                    resolve(interfaces.addInvoiceResponse(response));
-                }
-                else {
-                    reject(err);
-                }
-            });
+            if (isLND(lightning)) {
+                const cmd = interfaces.addInvoiceCommand();
+                const req = interfaces.addInvoiceRequest(request);
+                lightning[cmd](req, function (err, response) {
+                    if (err == null) {
+                        resolve(interfaces.addInvoiceResponse(response));
+                    }
+                    else {
+                        reject(err);
+                    }
+                });
+            }
+            else if (isCLN(lightning)) {
+                const label = short.generate();
+                lightning.invoice({
+                    amount_msat: {
+                        amount: { msat: convertToMsat(request.value) },
+                    },
+                    label,
+                    description: request.memo,
+                }, function (err, response) {
+                    if (err == null) {
+                        resolve({ payment_request: (response === null || response === void 0 ? void 0 : response.bolt11) || '' });
+                    }
+                    else {
+                        logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
+                        reject(err);
+                    }
+                });
+            }
         }));
     });
 }
@@ -1026,6 +1047,79 @@ function ascii_to_hexa(str) {
         arr1.push(hex);
     }
     return arr1.join('');
+}
+function getInvoiceHandler(payment_hash, ownerPubkey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info('getInvoice', logger_1.logging.Lightning);
+        const payment_hash_bytes = Buffer.from(payment_hash, 'hex');
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const lightning = yield loadLightning();
+                if (isGL(lightning)) {
+                    return; //Fixing this later
+                }
+                else if (isCLN(lightning)) {
+                    yield lightning.listInvoices({
+                        payment_hash: payment_hash_bytes,
+                    }, (err, response) => {
+                        var _a;
+                        if (err) {
+                            logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
+                            reject(err);
+                        }
+                        if (response) {
+                            if (response.invoices.length > 0) {
+                                const res = response.invoices[0];
+                                const invoice = {
+                                    amount: convertMsatToSat(((_a = res === null || res === void 0 ? void 0 : res.amount_received_msat) === null || _a === void 0 ? void 0 : _a.msat) || 0),
+                                    settled: res.status.toLowerCase() === 'paid' ? true : false,
+                                    payment_request: res.bolt11,
+                                    preimage: res.status.toLowerCase() === 'paid'
+                                        ? res.payment_preimage.toString('hex')
+                                        : '',
+                                    payment_hash: res.payment_hash.toString('hex'),
+                                };
+                                resolve(invoice);
+                            }
+                            resolve({});
+                        }
+                    });
+                }
+                else if (isLND(lightning) || (0, proxy_1.isProxy)(lightning)) {
+                    ;
+                    lightning.lookupInvoice({ r_hash: payment_hash_bytes }, function (err, response) {
+                        if (err) {
+                            logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
+                            reject(err);
+                        }
+                        if (response) {
+                            const invoice = {
+                                settled: response === null || response === void 0 ? void 0 : response.settled,
+                                payment_request: response === null || response === void 0 ? void 0 : response.payment_request,
+                                payment_hash: response === null || response === void 0 ? void 0 : response.r_hash.toString('hex'),
+                                preimage: (response === null || response === void 0 ? void 0 : response.settled)
+                                    ? response === null || response === void 0 ? void 0 : response.r_preimage.toString('hex')
+                                    : '',
+                                amount: convertMsatToSat(response.amt_paid),
+                            };
+                            resolve(invoice);
+                        }
+                    });
+                }
+            }
+            catch (error) {
+                logger_1.sphinxLogger.error([error], logger_1.logging.Lightning);
+                throw error;
+            }
+        }));
+    });
+}
+exports.getInvoiceHandler = getInvoiceHandler;
+function convertMsatToSat(amount) {
+    return Number(amount) / 1000;
+}
+function convertToMsat(amount) {
+    return Number(amount) * 1000;
 }
 // async function loadLightningNew() {
 //   if (lightningClient) {

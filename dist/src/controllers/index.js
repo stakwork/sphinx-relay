@@ -112,6 +112,7 @@ function set(app) {
         app.post('/messages', messages.sendMessage);
         app.post('/messages/:chat_id/read', messages.readMessages);
         app.post('/messages/clear', messages.clearMessages);
+        app.delete('/messages', messages.disappearingMessages);
         app.get('/subscriptions', subcriptions.getAllSubscriptions);
         app.get('/subscription/:id', subcriptions.getSubscription);
         app.delete('/subscription/:id', subcriptions.deleteSubscription);
@@ -132,6 +133,7 @@ function set(app) {
         app.get('/invoices', invoices.listInvoices);
         app.put('/invoices', invoices.payInvoice);
         app.post('/invoices/cancel', invoices.cancelInvoice);
+        app.get('/invoice', invoices.getInvoice);
         app.post('/payment', payments.sendPayment);
         app.get('/payments', payments.listPayments);
         app.get('/channels', details.getChannels);
