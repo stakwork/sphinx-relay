@@ -13,4 +13,7 @@ export { payStream } from './payStream'
 export { sendMessage } from './sendMessage'
 export { getAllMessages } from './getAllMessages'
 export { getSpecificMsg } from './getSpecifiMessage'
-export { sendTribeDirectPayment } from './sendTribeDirectpayment'
+export {
+  sendTribeDirectPayment,
+  sendDirectPayment,
+} from './sendTribeDirectpayment'

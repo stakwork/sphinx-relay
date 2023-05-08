@@ -5,15 +5,16 @@ import { createTribe, joinTribe } from '../utils/save'
 import {
   sendTribeMessageAndCheckDecryption,
   boostAsMessage,
+  sendDirectPayment,
 } from '../utils/msg'
 import nodes from '../nodes'
-import { shouldNotGetNewMsgs } from '../utils/get'
+import { shouldNotGetNewMsgs, getMsgByUuid } from '../utils/get'
 
 /*
 npx ava src/tests/controllers/boostFail.test.ts --verbose --serial --timeout=2m
 */
 
-test('test boostFail: create tribe, join tribe, send messages, boost messages,ensure if admin cant boost other tribe members should not get the message, leave tribe, delete tribe', async (t) => {
+test('test boostFail: create tribe, join tribe, send messages, boost messages,send direct payment, ensure if admin cant boost other tribe members should not get the message, leave tribe, delete tribe', async (t) => {
   await boostFail(t, 0, 1, 2)
 })
 
@@ -86,15 +87,6 @@ export async function boostFail(t, index1, index2, index3) {
   )
   t.true(boost.success)
 
-  //NODE3 LEAVES TRIBE
-  let left3 = await leaveTribe(t, node3, tribe)
-  t.true(left3, 'node3 should leave tribe')
-
-  await sleep(1000)
-
-  const boost2 = await boostAsMessage(t, tribe, node2, tribeMessage3, 11)
-  console.log(boost2)
-
   //Node 2 should not get the boost message, because the boost should fail
   const checkNode2 = await shouldNotGetNewMsgs(t, node2, boost.response.uuid)
   t.true(checkNode2, 'Node2 should not receive the boost message')
@@ -102,6 +94,50 @@ export async function boostFail(t, index1, index2, index3) {
   //Node 3 should not get the boost message, because the bosst should fail
   const checkNode3 = await shouldNotGetNewMsgs(t, node3, boost.response.uuid)
   t.true(checkNode3, 'Node3 should not receive the boost message')
+
+  //NODE3 LEAVES TRIBE
+  let left3 = await leaveTribe(t, node3, tribe)
+  t.true(left3, 'node3 should leave tribe')
+
+  await sleep(1000)
+
+  //send boost to a user who has left the tribe
+  const boost2 = await boostAsMessage(t, tribe, node2, tribeMessage3, 11)
+
+  await sleep(1000)
+
+  const boostedMsg = await getMsgByUuid(t, node2, boost2.response)
+  t.truthy(boostedMsg, 'Message should exist')
+  if (boostedMsg)
+    t.truthy(boostedMsg.error_message, 'there should be an error message')
+
+  //Node 3 should not get the boost message sent by node2, because the boost should fail
+  const checkNode4 = await shouldNotGetNewMsgs(t, node3, boost2.response.uuid)
+  t.true(checkNode4, 'Node3 should not receive the boost message sent by node2')
+
+  //Send direct payment to a user who has left the tribe
+  const sendDirectPayment1 = await sendDirectPayment({
+    t,
+    node: node2,
+    tribe,
+    amount: 100,
+    replyMessage: tribeMessage3,
+  })
+
+  await sleep(1000)
+
+  const paymentSent = await getMsgByUuid(t, node2, sendDirectPayment1.response)
+  t.truthy(paymentSent, 'Message should exist')
+  if (paymentSent)
+    t.truthy(paymentSent.error_message, 'there should be an error message')
+
+  //Node 3 should not get the boost message sent by node2, because the boost should fail
+  const checkNode5 = await shouldNotGetNewMsgs(
+    t,
+    node3,
+    sendDirectPayment1.response.uuid
+  )
+  t.true(checkNode5, 'Node3 should not receive the boost message sent by node2')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

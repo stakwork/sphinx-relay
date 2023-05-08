@@ -6,7 +6,7 @@ export async function getMsgByUuid(
   t: Assertions,
   node1: NodeConfig,
   message: Message
-) {
+): Promise<Message | false> {
   const msg = await getCheckAllMessages(t, node1, 1000, 0)
   if (msg && msg.new_messages && msg.new_messages.length) {
     for (let i = 0; i < msg.new_messages.length; i++) {
