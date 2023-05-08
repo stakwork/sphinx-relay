@@ -2,7 +2,7 @@
   {
     "alias": "alice",
     "pubkey": "03a394d0ebf0d003124ab130c6b12b8b990a50a30a464354800a51981ba745bb07",
-    "ip": "http://alice.sphinx:3001",
+    "ip": "http://host.docker.internal:3001",
     "external_ip": "http://localhost:3001",
     "authToken": "k+neDrMgYXTAzxp6EeIM",
     "transportToken": "MIIBCgKCAQEAvEiUrxMlV6aa/C2KlC+aLijOURKDe+h4XjftWdDGnFlFo0fAdvLa\n4KEMZ+NH0Fibx1CKLko8+lalfyWp3nqUbvu1k7x5CalLrRUAnHw1/KrXOYtcMUX2\nDMuGSXO/ZWd5X9PW78WGAmFqQVpMCul1qicmZTO/uJjw3KfdMbh53jw6h2ZHXhvh\nG89Q/vDE2XA5qiLrIpIexw3vUhNfoQ75A1XjStuiGjuaKIq7YNUbZS5JqB/qjSq9\n2fMR8Yvn3DETaKZv50wI9fX1o6YB8HIa33+78n3VUkL9y1K4ie++oDkCvC0Klvaa\nDHxrwzBQKNWuiwBNhYcwAGSkrWwHpwTTWwIDAQAB",

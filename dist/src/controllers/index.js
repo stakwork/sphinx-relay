@@ -112,6 +112,7 @@ function set(app) {
         app.post('/messages', messages.sendMessage);
         app.post('/messages/:chat_id/read', messages.readMessages);
         app.post('/messages/clear', messages.clearMessages);
+        app.delete('/messages', messages.disappearingMessages);
         app.get('/subscriptions', subcriptions.getAllSubscriptions);
         app.get('/subscription/:id', subcriptions.getSubscription);
         app.delete('/subscription/:id', subcriptions.deleteSubscription);

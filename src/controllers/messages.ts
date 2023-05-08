@@ -1,4 +1,11 @@
-import { models, Message, Chat, ContactRecord } from '../models'
+import {
+  models,
+  Message,
+  Chat,
+  ContactRecord,
+  MessageRecord,
+  ChatRecord,
+} from '../models'
 import { Op, FindOptions } from 'sequelize'
 import { indexBy } from 'underscore'
 import {
@@ -810,6 +817,20 @@ export const clearMessages = async (req: Req, res: Res): Promise<void> => {
   success(res, {})
 }
 
+export async function disappearingMessages(req: Req, res: Res): Promise<void> {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  try {
+    const contacts = (await models.Contact.findAll({
+      where: { tenant, isOwner: true },
+    })) as ContactRecord[]
+    await deleteMessages(contacts)
+    return success(res, 'Messages deleted successfully')
+  } catch (error) {
+    return failure(res, error)
+  }
+}
+
 export const receiveVoip = async (payload: Payload): Promise<void> => {
   sphinxLogger.info(`received Voip ${payload}`)
   const {
@@ -979,7 +1000,7 @@ async function deleteMessages(contacts: ContactRecord[]) {
       const contact: ContactRecord = contacts[i]
       const date = new Date()
       date.setDate(
-        date.getDate() - (contact.prune || parseInt(config.default_prune))
+        date.getDate() - (contact.prune || parseInt(config.default_prune || 0))
       )
       await handleMessageDelete({
         tenant: contact.tenant,
@@ -1002,9 +1023,27 @@ async function handleMessageDelete({
   date: string
 }) {
   try {
-    await models.Message.destroy({
-      where: { tenant, createdAt: { [Op.lt]: date } },
-    })
+    const chats = (await models.Chat.findAll({
+      where: { tenant, deleted: false },
+    })) as ChatRecord[]
+
+    for (let i = 0; i < chats.length; i++) {
+      const chat = chats[i]
+      const chatMessages = (await models.Message.findAll({
+        where: { chatId: chat.id, tenant },
+      })) as MessageRecord[]
+      if (chatMessages.length > 10) {
+        const tenthToLastID = chatMessages[chatMessages.length - 10]
+        await models.Message.destroy({
+          where: {
+            id: { [Op.lt]: tenthToLastID.id },
+            createdAt: { [Op.lt]: date },
+            chatId: chat.id,
+            tenant,
+          },
+        })
+      }
+    }
     sphinxLogger.info(['=> message deleted by cron job'])
   } catch (error) {
     sphinxLogger.error(['=> error deleting message by cron job', error])
