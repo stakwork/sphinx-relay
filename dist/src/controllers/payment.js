@@ -25,6 +25,7 @@ const feed_1 = require("./feed");
 const logger_1 = require("../utils/logger");
 const confirmations_1 = require("./confirmations");
 const errMsgString_1 = require("../utils/errMsgString");
+const reversal_1 = require("../utils/reversal");
 const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
@@ -149,6 +150,16 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
+    if (payload.error_message) {
+        return yield (0, reversal_1.reversal)({
+            tenant,
+            type: 'direct_payment',
+            errorMsg: payload.error_message,
+            msgUuid: payload.message.uuid,
+            chat,
+            sender,
+        });
+    }
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,
