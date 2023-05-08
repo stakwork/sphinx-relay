@@ -135,6 +135,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         logger_1.sphinxLogger.info(`=> sending to ${contactIds.length} 'contacts'`, logger_1.logging.Network);
         const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId);
         if (realSatsContactId && realSatsIndex < 0) {
+            yield (0, helpers_1.sleep)(1000);
             const originalMessage = (yield models_1.models.Message.findOne({
                 where: { tenant, uuid: msg.message.uuid },
             }));

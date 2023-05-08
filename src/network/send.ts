@@ -198,6 +198,7 @@ export async function sendMessage({
   )
   const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId)
   if (realSatsContactId && realSatsIndex < 0) {
+    await sleep(1000)
     const originalMessage = (await models.Message.findOne({
       where: { tenant, uuid: msg.message.uuid },
     })) as MessageRecord
