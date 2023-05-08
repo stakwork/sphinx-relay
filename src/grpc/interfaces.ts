@@ -4,11 +4,17 @@ import { LND_KEYSEND_KEY } from './lightning'
 import * as long from 'long'
 import type { SendRequest } from './types/lnrpc_proxy/SendRequest'
 import type { GetinfoResponse__Output } from './types/cln/cln/GetinfoResponse'
-import { isProxy } from '../utils/proxy'
 
 const config = loadConfig()
 
-const IS_LND_OR_PROXY = config.lightning_provider === 'LND' || isProxy()
+function isProxyRelay() {
+  return config.proxy_lnd_port &&
+    config.proxy_macaroons_dir &&
+    config.proxy_tls_location
+    ? true
+    : false
+}
+const IS_LND_OR_PROXY = config.lightning_provider === 'LND' || isProxyRelay()
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
 const IS_CLN = config.lightning_provider === 'CLN'
 

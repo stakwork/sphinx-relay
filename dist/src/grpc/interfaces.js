@@ -5,9 +5,15 @@ const config_1 = require("../utils/config");
 const crypto = require("crypto");
 const lightning_1 = require("./lightning");
 const long = require("long");
-const proxy_1 = require("../utils/proxy");
 const config = (0, config_1.loadConfig)();
-const IS_LND_OR_PROXY = config.lightning_provider === 'LND' || (0, proxy_1.isProxy)();
+function isProxyRelay() {
+    return config.proxy_lnd_port &&
+        config.proxy_macaroons_dir &&
+        config.proxy_tls_location
+        ? true
+        : false;
+}
+const IS_LND_OR_PROXY = config.lightning_provider === 'LND' || isProxyRelay();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 const IS_CLN = config.lightning_provider === 'CLN';
 function getInfoResponse(res) {
