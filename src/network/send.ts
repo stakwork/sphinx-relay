@@ -199,13 +199,9 @@ export async function sendMessage({
   const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId)
   if (realSatsContactId && realSatsIndex < 0) {
     await sleep(1000)
-    const originalMessage = (await models.Message.findOne({
-      where: { tenant, uuid: msg.message.uuid },
-    })) as MessageRecord
-    return await reversePayment({
+    return await initiateReversal({
       tenant,
-      originalMessage,
-      msgToBeSent: msg,
+      msg,
       error: 'user is no longer in tribe',
       amount,
       sender,
@@ -270,19 +266,7 @@ export async function sendMessage({
       no = error
       if (realSatsContactId && contactId === realSatsContactId) {
         //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
-        const originalMessage = (await models.Message.findOne({
-          where: { tenant, uuid: msg.message.uuid },
-        })) as MessageRecord
-        if (originalMessage.sender !== tenant) {
-          await reversePayment({
-            tenant,
-            originalMessage,
-            msgToBeSent: msg,
-            error,
-            amount,
-            sender: sender,
-          })
-        }
+        await initiateReversal({ tenant, msg, error, amount, sender })
         break
       }
     }
@@ -608,5 +592,21 @@ async function reversePayment({
     sphinxLogger.info('Sats reversal was successful')
   } catch (error) {
     sphinxLogger.error(`Failed to reverse sats ${error}`, logging.Network)
+  }
+}
+
+async function initiateReversal({ tenant, msg, error, amount, sender }) {
+  const originalMessage = (await models.Message.findOne({
+    where: { tenant, uuid: msg.message.uuid },
+  })) as MessageRecord
+  if (originalMessage.sender !== tenant) {
+    await reversePayment({
+      tenant,
+      originalMessage,
+      msgToBeSent: msg,
+      error,
+      amount,
+      sender,
+    })
   }
 }

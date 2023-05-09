@@ -136,13 +136,9 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId);
         if (realSatsContactId && realSatsIndex < 0) {
             yield (0, helpers_1.sleep)(1000);
-            const originalMessage = (yield models_1.models.Message.findOne({
-                where: { tenant, uuid: msg.message.uuid },
-            }));
-            return yield reversePayment({
+            return yield initiateReversal({
                 tenant,
-                originalMessage,
-                msgToBeSent: msg,
+                msg,
                 error: 'user is no longer in tribe',
                 amount,
                 sender,
@@ -200,19 +196,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 no = error;
                 if (realSatsContactId && contactId === realSatsContactId) {
                     //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
-                    const originalMessage = (yield models_1.models.Message.findOne({
-                        where: { tenant, uuid: msg.message.uuid },
-                    }));
-                    if (originalMessage.sender !== tenant) {
-                        yield reversePayment({
-                            tenant,
-                            originalMessage,
-                            msgToBeSent: msg,
-                            error,
-                            amount,
-                            sender: sender,
-                        });
-                    }
+                    yield initiateReversal({ tenant, msg, error, amount, sender });
                     break;
                 }
             }
@@ -480,6 +464,23 @@ function reversePayment({ tenant, originalMessage, msgToBeSent, error, amount, s
         }
         catch (error) {
             logger_1.sphinxLogger.error(`Failed to reverse sats ${error}`, logger_1.logging.Network);
+        }
+    });
+}
+function initiateReversal({ tenant, msg, error, amount, sender }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const originalMessage = (yield models_1.models.Message.findOne({
+            where: { tenant, uuid: msg.message.uuid },
+        }));
+        if (originalMessage.sender !== tenant) {
+            yield reversePayment({
+                tenant,
+                originalMessage,
+                msgToBeSent: msg,
+                error,
+                amount,
+                sender,
+            });
         }
     });
 }
