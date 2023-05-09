@@ -95,6 +95,28 @@ export async function boostFail(t, index1, index2, index3) {
   const checkNode3 = await shouldNotGetNewMsgs(t, node3, boost.response.uuid)
   t.true(checkNode3, 'Node3 should not receive the boost message')
 
+  //Node3 tries to boost Node2
+  const node3Boost = await boostAsMessage(
+    t,
+    tribe,
+    node3,
+    tribeMessage2,
+    520000
+  )
+  await sleep(1000)
+  const node3boostedMsg = await getMsgByUuid(t, node3, node3Boost.response)
+  t.truthy(node3boostedMsg, 'Message should exist')
+  if (node3boostedMsg)
+    t.truthy(node3boostedMsg.error_message, 'there should be an error message')
+
+  //Node 2 should not get the boost message sent by node3, because the boost should fail
+  const checkNode6 = await shouldNotGetNewMsgs(
+    t,
+    node2,
+    node3Boost.response.uuid
+  )
+  t.true(checkNode6, 'Node3 should not receive the boost message sent by node2')
+
   //NODE3 LEAVES TRIBE
   let left3 = await leaveTribe(t, node3, tribe)
   t.true(left3, 'node3 should leave tribe')

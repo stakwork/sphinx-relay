@@ -66,6 +66,16 @@ function boostFail(t, index1, index2, index3) {
         //Node 3 should not get the boost message, because the bosst should fail
         const checkNode3 = yield (0, get_1.shouldNotGetNewMsgs)(t, node3, boost.response.uuid);
         t.true(checkNode3, 'Node3 should not receive the boost message');
+        //Node3 tries to boost Node2
+        const node3Boost = yield (0, msg_1.boostAsMessage)(t, tribe, node3, tribeMessage2, 520000);
+        yield (0, helpers_1.sleep)(1000);
+        const node3boostedMsg = yield (0, get_1.getMsgByUuid)(t, node3, node3Boost.response);
+        t.truthy(node3boostedMsg, 'Message should exist');
+        if (node3boostedMsg)
+            t.truthy(node3boostedMsg.error_message, 'there should be an error message');
+        //Node 2 should not get the boost message sent by node3, because the boost should fail
+        const checkNode6 = yield (0, get_1.shouldNotGetNewMsgs)(t, node2, node3Boost.response.uuid);
+        t.true(checkNode6, 'Node3 should not receive the boost message sent by node2');
         //NODE3 LEAVES TRIBE
         let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
         t.true(left3, 'node3 should leave tribe');
