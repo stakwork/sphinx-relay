@@ -9,12 +9,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reversal = void 0;
+exports.onReceiveReversal = void 0;
 const models_1 = require("../models");
 const socket = require("./socket");
 const constants_1 = require("../constants");
 const jsonUtils = require("./json");
-function reversal({ tenant, type, errorMsg, msgUuid, chat, sender, }) {
+function onReceiveReversal({ tenant, type, errorMsg, msgUuid, chat, sender, }) {
     return __awaiter(this, void 0, void 0, function* () {
         yield models_1.models.Message.update({
             errorMessage: errorMsg,
@@ -32,5 +32,5 @@ function reversal({ tenant, type, errorMsg, msgUuid, chat, sender, }) {
         return;
     });
 }
-exports.reversal = reversal;
+exports.onReceiveReversal = onReceiveReversal;
 //# sourceMappingURL=reversal.js.map

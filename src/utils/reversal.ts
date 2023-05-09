@@ -12,7 +12,7 @@ interface ReversalInput {
   sender: ContactRecord
 }
 
-export async function reversal({
+export async function onReceiveReversal({
   tenant,
   type,
   errorMsg,

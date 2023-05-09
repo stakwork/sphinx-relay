@@ -151,7 +151,7 @@ const receivePayment = (payload) => __awaiter(void 0, void 0, void 0, function* 
     if (date_string)
         date = new Date(date_string);
     if (payload.error_message) {
-        return yield (0, reversal_1.reversal)({
+        return yield (0, reversal_1.onReceiveReversal)({
             tenant,
             type: 'direct_payment',
             errorMsg: payload.error_message,

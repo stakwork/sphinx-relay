@@ -15,7 +15,7 @@ import { sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { sendConfirmation } from './confirmations'
 import { errMsgString } from '../utils/errMsgString'
-import { reversal } from '../utils/reversal'
+import { onReceiveReversal } from '../utils/reversal'
 
 export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
@@ -189,7 +189,7 @@ export const receivePayment = async (payload: Payload): Promise<void> => {
   if (date_string) date = new Date(date_string)
 
   if (payload.error_message) {
-    return await reversal({
+    return await onReceiveReversal({
       tenant,
       type: 'direct_payment',
       errorMsg: payload.error_message,

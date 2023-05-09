@@ -30,7 +30,7 @@ import { ChatPlusMembers } from '../network/send'
 import { getCacheMsg } from '../utils/tribes'
 import { CronJob } from 'cron'
 import { loadConfig } from '../utils/config'
-import { reversal } from '../utils/reversal'
+import { onReceiveReversal } from '../utils/reversal'
 
 interface ExtentedMessage extends Message {
   chat_id?: number
@@ -621,7 +621,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
   if (date_string) date = new Date(date_string)
 
   if (payload.error_message) {
-    return await reversal({
+    return await onReceiveReversal({
       tenant,
       type: 'boost',
       errorMsg: payload.error_message,
