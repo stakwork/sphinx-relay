@@ -72,7 +72,7 @@ jobs:
           chmod 777 -R ./relay;
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
-          chmod 777 -R ./cln
+          chmod 777 -R ./cln;
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
