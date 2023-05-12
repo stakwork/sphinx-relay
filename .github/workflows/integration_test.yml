@@ -64,7 +64,7 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone https://github.com/stakwork/sphinx-stack.git stack
+          git clone -b feat/cln-support https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
@@ -72,6 +72,7 @@ jobs:
           chmod 777 -R ./relay;
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
+          chmod 777 -R ./cln
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
@@ -85,6 +86,8 @@ jobs:
             docker logs dave.sphinx
             docker wait stack_relaysetup_1
             cat stack/relay/NODES.json;
+            docker logs dave-cln.sphinx
+            docker logs stack_lndsetup_1
       - name: copy file
         uses: canastro/copy-file-action@master
         with:
