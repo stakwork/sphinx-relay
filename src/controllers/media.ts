@@ -49,117 +49,124 @@ export const sendAttachmentMessage = async (req: Req, res) => {
   // } catch(e) {
   //   return resUtils.failure(res, e.message)
   // }
+  try {
+    const {
+      chat_id,
+      contact_id,
+      muid,
+      text,
+      remote_text,
+      remote_text_map,
+      media_key_map,
+      media_type,
+      amount,
+      file_name,
+      ttl,
+      price, // IF AMOUNT>0 THEN do NOT sign or send receipt
+      reply_uuid,
+      parent_id,
+    } = req.body
 
-  const {
-    chat_id,
-    contact_id,
-    muid,
-    text,
-    remote_text,
-    remote_text_map,
-    media_key_map,
-    media_type,
-    amount,
-    file_name,
-    ttl,
-    price, // IF AMOUNT>0 THEN do NOT sign or send receipt
-    reply_uuid,
-    parent_id,
-  } = req.body
+    sphinxLogger.info(['[send attachment]', req.body])
 
-  sphinxLogger.info(['[send attachment]', req.body])
+    const owner = req.owner
+    const chat = await helpers.findOrCreateChat({
+      chat_id,
+      owner_id: owner.id,
+      recipient_id: contact_id,
+    })
+    if (!chat) return failure(res, 'counldnt findOrCreateChat')
 
-  const owner = req.owner
-  const chat = await helpers.findOrCreateChat({
-    chat_id,
-    owner_id: owner.id,
-    recipient_id: contact_id,
-  })
-  if (!chat) return failure(res, 'counldnt findOrCreateChat')
+    let TTL = ttl
+    if (ttl) {
+      TTL = parseInt(ttl)
+    }
+    if (!TTL) TTL = 31536000 // default year
 
-  let TTL = ttl
-  if (ttl) {
-    TTL = parseInt(ttl)
+    const amt = price || 0
+    // generate media token for self!
+    const myMediaToken = await tokenFromTerms({
+      muid,
+      ttl: TTL,
+      host: '',
+      pubkey: owner.publicKey,
+      meta: { ...(amt && { amt }), ttl },
+      ownerPubkey: owner.publicKey,
+    })
+
+    const date = new Date()
+    date.setMilliseconds(0)
+    const myMediaKey = (media_key_map && media_key_map[owner.id]) || ''
+    const mediaType = media_type || ''
+    const remoteMessageContent = remote_text_map
+      ? JSON.stringify(remote_text_map)
+      : remote_text
+
+    const uuid = short.generate()
+    const mm: { [k: string]: any } = {
+      chatId: chat.id,
+      uuid: uuid,
+      sender: owner.id,
+      type: constants.message_types.attachment,
+      status: constants.statuses.pending,
+      amount: amount || 0,
+      messageContent: text || file_name || '',
+      remoteMessageContent,
+      mediaToken: myMediaToken,
+      mediaKey: myMediaKey,
+      mediaType: mediaType,
+      date,
+      createdAt: date,
+      updatedAt: date,
+      tenant,
+    }
+    if (reply_uuid) mm.replyUuid = reply_uuid
+    if (parent_id) mm.parentId = parent_id
+    const message: Message = (await models.Message.create(mm)) as Message
+
+    sphinxLogger.info(['saved attachment msg from me', message.id])
+
+    saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant)
+
+    const mediaTerms: { [k: string]: any } = {
+      muid,
+      ttl: TTL,
+      meta: { ...(amt && { amt }) },
+      skipSigning: amt ? true : false, // only sign if its free
+    }
+    const msg: { [k: string]: any } = {
+      mediaTerms, // this gets converted to mediaToken
+      id: message.id,
+      uuid: uuid,
+      content: remote_text_map || remote_text || text || file_name || '',
+      mediaKey: media_key_map,
+      mediaType: mediaType,
+    }
+    if (reply_uuid) msg.replyUuid = reply_uuid
+    if (parent_id) msg.parentId = parent_id
+    network.sendMessage({
+      chat: chat as Partial<ChatPlusMembers>,
+      sender: owner,
+      type: constants.message_types.attachment,
+      amount: amount || 0,
+      message: msg,
+      success: async (data) => {
+        sphinxLogger.info(['attachment sent', { data }])
+        resUtils.success(res, jsonUtils.messageToJson(message, chat))
+      },
+      failure: async (error) => {
+        const errorMessage = errMsgString(error)
+        await message.update({
+          errorMessage,
+          status: constants.statuses.failed,
+        })
+        return resUtils.failure(res, errorMessage || error)
+      },
+    })
+  } catch (error) {
+    sphinxLogger.error(['error sending media:', error], logging.Meme)
+    return failure(res, error)
   }
-  if (!TTL) TTL = 31536000 // default year
-
-  const amt = price || 0
-  // generate media token for self!
-  const myMediaToken = await tokenFromTerms({
-    muid,
-    ttl: TTL,
-    host: '',
-    pubkey: owner.publicKey,
-    meta: { ...(amt && { amt }), ttl },
-    ownerPubkey: owner.publicKey,
-  })
-
-  const date = new Date()
-  date.setMilliseconds(0)
-  const myMediaKey = (media_key_map && media_key_map[owner.id]) || ''
-  const mediaType = media_type || ''
-  const remoteMessageContent = remote_text_map
-    ? JSON.stringify(remote_text_map)
-    : remote_text
-
-  const uuid = short.generate()
-  const mm: { [k: string]: any } = {
-    chatId: chat.id,
-    uuid: uuid,
-    sender: owner.id,
-    type: constants.message_types.attachment,
-    status: constants.statuses.pending,
-    amount: amount || 0,
-    messageContent: text || file_name || '',
-    remoteMessageContent,
-    mediaToken: myMediaToken,
-    mediaKey: myMediaKey,
-    mediaType: mediaType,
-    date,
-    createdAt: date,
-    updatedAt: date,
-    tenant,
-  }
-  if (reply_uuid) mm.replyUuid = reply_uuid
-  if (parent_id) mm.parentId = parent_id
-  const message: Message = (await models.Message.create(mm)) as Message
-
-  sphinxLogger.info(['saved attachment msg from me', message.id])
-
-  saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant)
-
-  const mediaTerms: { [k: string]: any } = {
-    muid,
-    ttl: TTL,
-    meta: { ...(amt && { amt }) },
-    skipSigning: amt ? true : false, // only sign if its free
-  }
-  const msg: { [k: string]: any } = {
-    mediaTerms, // this gets converted to mediaToken
-    id: message.id,
-    uuid: uuid,
-    content: remote_text_map || remote_text || text || file_name || '',
-    mediaKey: media_key_map,
-    mediaType: mediaType,
-  }
-  if (reply_uuid) msg.replyUuid = reply_uuid
-  if (parent_id) msg.parentId = parent_id
-  network.sendMessage({
-    chat: chat as Partial<ChatPlusMembers>,
-    sender: owner,
-    type: constants.message_types.attachment,
-    amount: amount || 0,
-    message: msg,
-    success: async (data) => {
-      sphinxLogger.info(['attachment sent', { data }])
-      resUtils.success(res, jsonUtils.messageToJson(message, chat))
-    },
-    failure: async (error) => {
-      const errorMessage = errMsgString(error)
-      await message.update({ errorMessage, status: constants.statuses.failed })
-      return resUtils.failure(res, errorMessage || error)
-    },
-  })
 }
 
 export function saveMediaKeys(
