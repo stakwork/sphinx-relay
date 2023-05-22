@@ -447,7 +447,7 @@ function reversePayment({ tenant, originalMessage, msgToBeSent, error, amount, s
                 where: { id: originalMessage.sender, tenant },
             }));
             const errorMsg = (0, errMsgString_1.errMsgString)(error);
-            let m = yield (0, msg_1.personalizeMessage)(msgToBeSent, originalContact, true);
+            const m = yield (0, msg_1.personalizeMessage)(msgToBeSent, originalContact, true);
             m.error_message = errorMsg;
             const opts = {
                 dest: originalContact.publicKey,
