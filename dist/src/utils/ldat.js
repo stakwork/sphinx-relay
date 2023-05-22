@@ -14,6 +14,7 @@ const zbase32 = require("./zbase32");
 const Lightning = require("../grpc/lightning");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
+const models_1 = require("../models");
 const config = (0, config_1.loadConfig)();
 /*
 Lightning Data Access Token
@@ -39,7 +40,10 @@ function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey, }) {
             if (pubkey != '') {
                 let sig;
                 const lightning = yield Lightning.loadLightning();
-                if (Lightning.isCLN(lightning)) {
+                const contact = (yield models_1.models.Contact.findOne({
+                    where: { isOwner: true, publicKey: ownerPubkey },
+                }));
+                if (Lightning.isCLN(lightning) && contact.id === 1) {
                     const bytesBase64 = ldat.bytes.toString('base64');
                     const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
                     sig = yield Lightning.signBuffer(bytesUtf8, ownerPubkey);
