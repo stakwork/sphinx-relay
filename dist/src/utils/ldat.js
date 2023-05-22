@@ -37,7 +37,16 @@ function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey, }) {
             const exp = ttl ? now + 60 * 60 * 24 * 365 : 0;
             const ldat = startLDAT(theHost, muid, pubkey64, exp, meta);
             if (pubkey != '') {
-                const sig = yield Lightning.signBuffer(ldat.bytes, ownerPubkey);
+                let sig;
+                const lightning = yield Lightning.loadLightning();
+                if (Lightning.isCLN(lightning)) {
+                    const bytesBase64 = ldat.bytes.toString('base64');
+                    const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
+                    sig = yield Lightning.signBuffer(bytesUtf8, ownerPubkey);
+                }
+                else {
+                    sig = yield Lightning.signBuffer(ldat.bytes, ownerPubkey);
+                }
                 const sigBytes = zbase32.decode(sig);
                 return ldat.terms + '.' + urlBase64FromBytes(sigBytes);
             }
