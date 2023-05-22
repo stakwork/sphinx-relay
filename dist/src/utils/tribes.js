@@ -572,7 +572,10 @@ function genSignedTimestamp(ownerPubkey) {
         const now = moment().unix();
         const lightining = yield LND.loadLightning();
         if (LND.isCLN(lightining)) {
-            const bytesUtf8 = Buffer.from(now.toString(64), 'utf8');
+            const dateHex = now.toString(16);
+            const buff = new Buffer(dateHex);
+            const bytesBase64 = buff.toString('base64');
+            const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
             const sig = yield LND.signBuffer(bytesUtf8, ownerPubkey);
             const sigBytes = zbase32.decode(sig);
             const totalLength = bytesUtf8.length + sigBytes.length;
