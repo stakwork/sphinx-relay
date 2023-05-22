@@ -571,6 +571,9 @@ function genSignedTimestamp(ownerPubkey) {
         // console.log('genSignedTimestamp')
         const now = moment().unix();
         const lightining = yield LND.loadLightning();
+        const contacts = yield models_1.models.Contact.findAll();
+        console.log('All contacts', contacts);
+        console.log('Owner Pubkey', ownerPubkey);
         const contact = (yield models_1.models.Contact.findOne({
             where: { isOwner: true, publicKey: ownerPubkey },
         }));

@@ -665,6 +665,9 @@ export async function genSignedTimestamp(ownerPubkey: string): Promise<string> {
   // console.log('genSignedTimestamp')
   const now = moment().unix()
   const lightining = await LND.loadLightning()
+  const contacts = await models.Contact.findAll()
+  console.log('All contacts', contacts)
+  console.log('Owner Pubkey', ownerPubkey)
   const contact = (await models.Contact.findOne({
     where: { isOwner: true, publicKey: ownerPubkey },
   })) as ContactRecord
