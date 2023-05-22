@@ -663,31 +663,25 @@ export async function deleteChannel({
 
 export async function genSignedTimestamp(ownerPubkey: string): Promise<string> {
   // console.log('genSignedTimestamp')
-  try {
-    const now = moment().unix()
-    const lightining = await LND.loadLightning()
-    const contact = (await models.Contact.findOne({
-      where: { isOwner: true, publicKey: ownerPubkey },
-    })) as ContactRecord
-    if (LND.isCLN(lightining) && contact.id === 1) {
-      const tsBytes = Buffer.from(now.toString(16), 'hex')
-      const bytesBase64 = tsBytes.toString('base64')
-      const bytesUtf8 = Buffer.from(bytesBase64, 'utf8')
-      const sig = await LND.signBuffer(bytesUtf8, ownerPubkey)
-      const sigBytes = zbase32.decode(sig)
-      const totalLength = bytesUtf8.length + sigBytes.length
-      const buf = Buffer.concat([bytesUtf8, sigBytes], totalLength)
-      return '.' + urlBase64(buf)
-    }
-    const tsBytes = Buffer.from(now.toString(16), 'hex')
-    const sig = await LND.signBuffer(tsBytes, ownerPubkey)
-    const sigBytes = zbase32.decode(sig)
-    const totalLength = tsBytes.length + sigBytes.length
-    const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
-    return urlBase64(buf)
-  } catch (error) {
-    throw error
+  const now = moment().unix()
+  const lightining = await LND.loadLightning()
+  const contact = (await models.Contact.findOne({
+    where: { isOwner: true, publicKey: ownerPubkey },
+  })) as ContactRecord
+  const tsBytes = Buffer.from(now.toString(16), 'hex')
+  const utf8Sign = LND.isCLN(lightining) && contact.id === 1
+  let sig = ''
+  if (utf8Sign) {
+    const bytesBase64 = tsBytes.toString('base64')
+    const bytesUtf8 = Buffer.from(bytesBase64, 'utf8')
+    sig = await LND.signBuffer(bytesUtf8, ownerPubkey)
+  } else {
+    sig = await LND.signBuffer(tsBytes, ownerPubkey)
   }
+  const sigBytes = zbase32.decode(sig)
+  const totalLength = tsBytes.length + sigBytes.length
+  const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
+  return utf8Sign ? '.' + urlBase64(buf) : urlBase64(buf)
 }
 
 export async function verifySignedTimestamp(
