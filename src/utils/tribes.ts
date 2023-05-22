@@ -663,6 +663,15 @@ export async function deleteChannel({
 export async function genSignedTimestamp(ownerPubkey: string): Promise<string> {
   // console.log('genSignedTimestamp')
   const now = moment().unix()
+  const lightining = await LND.loadLightning()
+  if (LND.isCLN(lightining)) {
+    const bytesUtf8 = Buffer.from(now.toString(64), 'utf8')
+    const sig = await LND.signBuffer(bytesUtf8, ownerPubkey)
+    const sigBytes = zbase32.decode(sig)
+    const totalLength = bytesUtf8.length + sigBytes.length
+    const buf = Buffer.concat([bytesUtf8, sigBytes], totalLength)
+    return '.' + urlBase64(buf)
+  }
   const tsBytes = Buffer.from(now.toString(16), 'hex')
   const sig = await LND.signBuffer(tsBytes, ownerPubkey)
   const sigBytes = zbase32.decode(sig)
