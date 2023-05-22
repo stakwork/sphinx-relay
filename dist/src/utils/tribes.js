@@ -569,25 +569,32 @@ exports.deleteChannel = deleteChannel;
 function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
-        const now = moment().unix();
-        const lightining = yield LND.loadLightning();
-        if (LND.isCLN(lightining)) {
-            const dateHex = now.toString(16);
-            const buff = new Buffer(dateHex);
-            const bytesBase64 = buff.toString('base64');
-            const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
-            const sig = yield LND.signBuffer(bytesUtf8, ownerPubkey);
+        try {
+            const now = moment().unix();
+            const lightining = yield LND.loadLightning();
+            const contact = (yield models_1.models.Contact.findOne({
+                where: { isOwner: true, publicKey: ownerPubkey },
+            }));
+            if (LND.isCLN(lightining) && contact.id === 1) {
+                const tsBytes = Buffer.from(now.toString(16), 'hex');
+                const bytesBase64 = tsBytes.toString('base64');
+                const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
+                const sig = yield LND.signBuffer(bytesUtf8, ownerPubkey);
+                const sigBytes = zbase32.decode(sig);
+                const totalLength = bytesUtf8.length + sigBytes.length;
+                const buf = Buffer.concat([bytesUtf8, sigBytes], totalLength);
+                return '.' + urlBase64(buf);
+            }
+            const tsBytes = Buffer.from(now.toString(16), 'hex');
+            const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
             const sigBytes = zbase32.decode(sig);
-            const totalLength = bytesUtf8.length + sigBytes.length;
-            const buf = Buffer.concat([bytesUtf8, sigBytes], totalLength);
-            return '.' + urlBase64(buf);
+            const totalLength = tsBytes.length + sigBytes.length;
+            const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
+            return urlBase64(buf);
         }
-        const tsBytes = Buffer.from(now.toString(16), 'hex');
-        const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
-        const sigBytes = zbase32.decode(sig);
-        const totalLength = tsBytes.length + sigBytes.length;
-        const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
-        return urlBase64(buf);
+        catch (error) {
+            throw error;
+        }
     });
 }
 exports.genSignedTimestamp = genSignedTimestamp;

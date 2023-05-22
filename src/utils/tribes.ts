@@ -11,6 +11,7 @@ import {
   ChatRecord,
   Message,
   isPostgres,
+  ContactRecord,
 } from '../models'
 import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 import { loadConfig } from './config'
@@ -662,25 +663,31 @@ export async function deleteChannel({
 
 export async function genSignedTimestamp(ownerPubkey: string): Promise<string> {
   // console.log('genSignedTimestamp')
-  const now = moment().unix()
-  const lightining = await LND.loadLightning()
-  if (LND.isCLN(lightining)) {
-    const dateHex = now.toString(16)
-    const buff = new Buffer(dateHex)
-    const bytesBase64 = buff.toString('base64')
-    const bytesUtf8 = Buffer.from(bytesBase64, 'utf8')
-    const sig = await LND.signBuffer(bytesUtf8, ownerPubkey)
+  try {
+    const now = moment().unix()
+    const lightining = await LND.loadLightning()
+    const contact = (await models.Contact.findOne({
+      where: { isOwner: true, publicKey: ownerPubkey },
+    })) as ContactRecord
+    if (LND.isCLN(lightining) && contact.id === 1) {
+      const tsBytes = Buffer.from(now.toString(16), 'hex')
+      const bytesBase64 = tsBytes.toString('base64')
+      const bytesUtf8 = Buffer.from(bytesBase64, 'utf8')
+      const sig = await LND.signBuffer(bytesUtf8, ownerPubkey)
+      const sigBytes = zbase32.decode(sig)
+      const totalLength = bytesUtf8.length + sigBytes.length
+      const buf = Buffer.concat([bytesUtf8, sigBytes], totalLength)
+      return '.' + urlBase64(buf)
+    }
+    const tsBytes = Buffer.from(now.toString(16), 'hex')
+    const sig = await LND.signBuffer(tsBytes, ownerPubkey)
     const sigBytes = zbase32.decode(sig)
-    const totalLength = bytesUtf8.length + sigBytes.length
-    const buf = Buffer.concat([bytesUtf8, sigBytes], totalLength)
-    return '.' + urlBase64(buf)
+    const totalLength = tsBytes.length + sigBytes.length
+    const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
+    return urlBase64(buf)
+  } catch (error) {
+    throw error
   }
-  const tsBytes = Buffer.from(now.toString(16), 'hex')
-  const sig = await LND.signBuffer(tsBytes, ownerPubkey)
-  const sigBytes = zbase32.decode(sig)
-  const totalLength = tsBytes.length + sigBytes.length
-  const buf = Buffer.concat([tsBytes, sigBytes], totalLength)
-  return urlBase64(buf)
 }
 
 export async function verifySignedTimestamp(
