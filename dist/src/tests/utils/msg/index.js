@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTribeMessages = exports.sendTribeDirectPayment = exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.boostAsMessage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
+exports.getTribeMessages = exports.sendDirectPayment = exports.sendTribeDirectPayment = exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.boostAsMessage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
 var sendMessageAndCheckDecryption_1 = require("./sendMessageAndCheckDecryption");
 Object.defineProperty(exports, "sendMessageAndCheckDecryption", { enumerable: true, get: function () { return sendMessageAndCheckDecryption_1.sendMessageAndCheckDecryption; } });
 var sendTribeMessageAndCheckDecryption_1 = require("./sendTribeMessageAndCheckDecryption");
@@ -34,6 +34,7 @@ var getSpecifiMessage_1 = require("./getSpecifiMessage");
 Object.defineProperty(exports, "getSpecificMsg", { enumerable: true, get: function () { return getSpecifiMessage_1.getSpecificMsg; } });
 var sendTribeDirectpayment_1 = require("./sendTribeDirectpayment");
 Object.defineProperty(exports, "sendTribeDirectPayment", { enumerable: true, get: function () { return sendTribeDirectpayment_1.sendTribeDirectPayment; } });
+Object.defineProperty(exports, "sendDirectPayment", { enumerable: true, get: function () { return sendTribeDirectpayment_1.sendDirectPayment; } });
 var getTribeMessages_1 = require("./getTribeMessages");
 Object.defineProperty(exports, "getTribeMessages", { enumerable: true, get: function () { return getTribeMessages_1.getTribeMessages; } });
 //# sourceMappingURL=index.js.map

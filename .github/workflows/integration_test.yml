@@ -45,6 +45,7 @@ jobs:
             'invoices',
             'boostFail',
             'deleteMessages',
+            'boostFail',
           ]
         node: [16]
     steps:

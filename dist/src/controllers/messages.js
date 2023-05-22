@@ -27,6 +27,7 @@ const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
 const cron_1 = require("cron");
 const config_1 = require("../utils/config");
+const reversal_1 = require("../utils/reversal");
 // store all current running jobs in memory
 const jobs = {};
 const config = (0, config_1.loadConfig)();
@@ -485,6 +486,16 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     date.setMilliseconds(0);
     if (date_string)
         date = new Date(date_string);
+    if (payload.error_message) {
+        return yield (0, reversal_1.onReceiveReversal)({
+            tenant,
+            type: 'boost',
+            errorMsg: payload.error_message,
+            msgUuid: payload.message.uuid,
+            chat,
+            sender,
+        });
+    }
     const msg = {
         chatId: chat.id,
         uuid: msg_uuid,

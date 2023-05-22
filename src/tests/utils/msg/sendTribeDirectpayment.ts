@@ -20,30 +20,13 @@ export async function sendTribeDirectPayment(
   const msgExists = await getCheckNewMsgs(t, node1, replyMessage.uuid)
   t.truthy(msgExists, 'message being replied to should exist')
 
-  //get uuid from node2's message
-  const replyUuid = replyMessage.uuid
-  t.truthy(replyUuid, 'replyUuid should exist')
-
-  //get tribeId from node1 perspective
-  const tribeId = await getTribeIdFromUUID(t, node1, tribe)
-  t.truthy(tribeId, 'tribeId should exist')
-
-  //create boost message object for node2's message which is represented by replyUuid
-  const v = {
-    pay: true,
-    contact_id: null,
-    text: '',
-    chat_id: tribeId,
-    reply_uuid: replyUuid,
-    amount: amount,
-    message_price: 0,
-  }
-
-  //node1 sends a boost on node2's message
-  const msg = await http.post(
-    node1.external_ip + '/messages',
-    makeArgs(node1, v)
-  )
+  const msg = await sendDirectPayment({
+    t,
+    tribe,
+    node: node1,
+    amount,
+    replyMessage,
+  })
   t.true(msg.success, 'msg should exist')
 
   //wait for boost message to process
@@ -74,4 +57,35 @@ async function boostBalances(t, payer, payee) {
   const payeeBal = await getBalance(t, payee)
   t.true(typeof payeeBal === 'number')
   return [payerBal, payeeBal]
+}
+
+export async function sendDirectPayment({
+  t,
+  node,
+  tribe,
+  amount,
+  replyMessage,
+}) {
+  //get uuid from node2's message
+  const replyUuid = replyMessage.uuid
+  t.truthy(replyUuid, 'replyUuid should exist')
+
+  //get tribeId from node1 perspective
+  const tribeId = await getTribeIdFromUUID(t, node, tribe)
+  t.truthy(tribeId, 'tribeId should exist')
+
+  //create boost message object for node2's message which is represented by replyUuid
+  const v = {
+    pay: true,
+    contact_id: null,
+    text: '',
+    chat_id: tribeId,
+    reply_uuid: replyUuid,
+    amount: amount,
+    message_price: 0,
+  }
+
+  //node1 sends a boost on node2's message
+  const msg = await http.post(node.external_ip + '/messages', makeArgs(node, v))
+  return msg
 }

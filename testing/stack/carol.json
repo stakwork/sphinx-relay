@@ -1,0 +1,17 @@
+{
+  "development": {
+    "node_ip": "127.0.0.1",
+    "lnd_ip": "127.0.0.1",
+    "lnd_port": "10011",
+    "tls_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/carol/.lnd/tls.cert",
+    "macaroon_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/carol/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
+    "node_http_protocol": "http",
+    "node_http_port": "3003",
+    "media_host": "localhost:5555",
+    "tribes_host": "localhost:13000",
+    "tribes_mqtt_port": "1883",
+    "tribes_insecure": true,
+    "public_url": "127.0.0.1:3003",
+    "connect_ui": true
+  }
+}
