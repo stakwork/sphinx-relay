@@ -576,7 +576,7 @@ async function reversePayment({
       where: { id: originalMessage.sender, tenant },
     })) as ContactRecord
     const errorMsg = errMsgString(error)
-    let m = await personalizeMessage(msgToBeSent, originalContact, true)
+    const m = await personalizeMessage(msgToBeSent, originalContact, true)
     m.error_message = errorMsg
     const opts = {
       dest: originalContact.publicKey,
