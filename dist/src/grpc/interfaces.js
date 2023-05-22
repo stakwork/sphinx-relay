@@ -6,11 +6,18 @@ const crypto = require("crypto");
 const lightning_1 = require("./lightning");
 const long = require("long");
 const config = (0, config_1.loadConfig)();
-const IS_LND = config.lightning_provider === 'LND';
+function isProxyRelay() {
+    return config.proxy_lnd_port &&
+        config.proxy_macaroons_dir &&
+        config.proxy_tls_location
+        ? true
+        : false;
+}
+const IS_LND_OR_PROXY = config.lightning_provider === 'LND' || isProxyRelay();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 const IS_CLN = config.lightning_provider === 'CLN';
 function getInfoResponse(res) {
-    if (IS_LND) {
+    if (IS_LND_OR_PROXY) {
         // LND
         return res;
     }
@@ -56,7 +63,7 @@ function makeLabel() {
     return crypto.randomBytes(16).toString('hex').toUpperCase();
 }
 function addInvoiceRequest(req) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return req;
     if (IS_GREENLIGHT) {
         return {
@@ -75,7 +82,7 @@ var GreenlightInvoiceStatus;
     GreenlightInvoiceStatus[GreenlightInvoiceStatus["EXPIRED"] = 2] = "EXPIRED";
 })(GreenlightInvoiceStatus || (GreenlightInvoiceStatus = {}));
 function addInvoiceCommand() {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return 'addInvoice';
     if (IS_GREENLIGHT)
         return 'createInvoice';
@@ -83,7 +90,7 @@ function addInvoiceCommand() {
 }
 exports.addInvoiceCommand = addInvoiceCommand;
 function addInvoiceResponse(res) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return res;
     if (IS_GREENLIGHT) {
         const r = res;
@@ -97,7 +104,7 @@ function addInvoiceResponse(res) {
 }
 exports.addInvoiceResponse = addInvoiceResponse;
 function listChannelsResponse(res) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return res;
     if (IS_GREENLIGHT) {
         const chans = [];
@@ -122,7 +129,7 @@ function listChannelsResponse(res) {
 }
 exports.listChannelsResponse = listChannelsResponse;
 function listChannelsCommand() {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return 'listChannels';
     if (IS_GREENLIGHT)
         return 'listPeers';
@@ -132,7 +139,7 @@ exports.listChannelsCommand = listChannelsCommand;
 function listChannelsRequest(args) {
     const opts = args || {};
     if (args && args.peer) {
-        if (IS_LND)
+        if (IS_LND_OR_PROXY)
             opts.peer = Buffer.from(args.peer, 'hex');
         if (IS_GREENLIGHT)
             opts.node_id = args.peer;
@@ -149,7 +156,7 @@ function listPeersRequest(args) {
 }
 exports.listPeersRequest = listPeersRequest;
 function listPeersResponse(res) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return res;
     if (IS_GREENLIGHT) {
         return {
@@ -171,7 +178,7 @@ function listPeersResponse(res) {
 }
 exports.listPeersResponse = listPeersResponse;
 function keysendRequest(req) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return req;
     if (IS_GREENLIGHT) {
         const r = {
@@ -214,7 +221,7 @@ var GreenlightPaymentStatus;
     GreenlightPaymentStatus[GreenlightPaymentStatus["FAILED"] = 2] = "FAILED";
 })(GreenlightPaymentStatus || (GreenlightPaymentStatus = {}));
 function keysendResponse(res) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return res;
     if (IS_GREENLIGHT) {
         const r = res;
@@ -233,7 +240,7 @@ function keysendResponse(res) {
 }
 exports.keysendResponse = keysendResponse;
 function subscribeCommand() {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return 'subscribeInvoices';
     if (IS_GREENLIGHT)
         return 'streamIncoming';
@@ -254,7 +261,7 @@ var InvoiceHTLCState;
     InvoiceHTLCState[InvoiceHTLCState["CANCELED"] = 2] = "CANCELED";
 })(InvoiceHTLCState || (InvoiceHTLCState = {}));
 function subscribeResponse(res) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return res;
     if (IS_GREENLIGHT) {
         const r1 = res;
@@ -292,7 +299,7 @@ function subscribeResponse(res) {
 }
 exports.subscribeResponse = subscribeResponse;
 function connectPeerRequest(req) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return req;
     if (IS_GREENLIGHT) {
         return {
@@ -304,7 +311,7 @@ function connectPeerRequest(req) {
 }
 exports.connectPeerRequest = connectPeerRequest;
 function connectPeerResponse(res) {
-    if (IS_LND)
+    if (IS_LND_OR_PROXY)
         return res;
     if (IS_GREENLIGHT) {
         return {};

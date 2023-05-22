@@ -886,7 +886,7 @@ export async function addInvoice(
   // log('addInvoice')
   return new Promise(async (resolve, reject) => {
     const lightning = await loadLightning(true, ownerPubkey) // try proxy
-    if (isLND(lightning)) {
+    if (isLND(lightning) || isProxy(lightning)) {
       const cmd = interfaces.addInvoiceCommand()
       const req = interfaces.addInvoiceRequest(request)
       lightning[cmd](req, function (err, response) {

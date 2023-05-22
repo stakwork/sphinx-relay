@@ -57,99 +57,108 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     // } catch(e) {
     //   return resUtils.failure(res, e.message)
     // }
-    const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, // IF AMOUNT>0 THEN do NOT sign or send receipt
-    reply_uuid, parent_id, } = req.body;
-    logger_1.sphinxLogger.info(['[send attachment]', req.body]);
-    const owner = req.owner;
-    const chat = yield helpers.findOrCreateChat({
-        chat_id,
-        owner_id: owner.id,
-        recipient_id: contact_id,
-    });
-    if (!chat)
-        return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
-    let TTL = ttl;
-    if (ttl) {
-        TTL = parseInt(ttl);
+    try {
+        const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, // IF AMOUNT>0 THEN do NOT sign or send receipt
+        reply_uuid, parent_id, } = req.body;
+        logger_1.sphinxLogger.info(['[send attachment]', req.body]);
+        const owner = req.owner;
+        const chat = yield helpers.findOrCreateChat({
+            chat_id,
+            owner_id: owner.id,
+            recipient_id: contact_id,
+        });
+        if (!chat)
+            return (0, res_1.failure)(res, 'counldnt findOrCreateChat');
+        let TTL = ttl;
+        if (ttl) {
+            TTL = parseInt(ttl);
+        }
+        if (!TTL)
+            TTL = 31536000; // default year
+        const amt = price || 0;
+        // generate media token for self!
+        const myMediaToken = yield (0, ldat_1.tokenFromTerms)({
+            muid,
+            ttl: TTL,
+            host: '',
+            pubkey: owner.publicKey,
+            meta: Object.assign(Object.assign({}, (amt && { amt })), { ttl }),
+            ownerPubkey: owner.publicKey,
+        });
+        const date = new Date();
+        date.setMilliseconds(0);
+        const myMediaKey = (media_key_map && media_key_map[owner.id]) || '';
+        const mediaType = media_type || '';
+        const remoteMessageContent = remote_text_map
+            ? JSON.stringify(remote_text_map)
+            : remote_text;
+        const uuid = short.generate();
+        const mm = {
+            chatId: chat.id,
+            uuid: uuid,
+            sender: owner.id,
+            type: constants_1.default.message_types.attachment,
+            status: constants_1.default.statuses.pending,
+            amount: amount || 0,
+            messageContent: text || file_name || '',
+            remoteMessageContent,
+            mediaToken: myMediaToken,
+            mediaKey: myMediaKey,
+            mediaType: mediaType,
+            date,
+            createdAt: date,
+            updatedAt: date,
+            tenant,
+        };
+        if (reply_uuid)
+            mm.replyUuid = reply_uuid;
+        if (parent_id)
+            mm.parentId = parent_id;
+        const message = (yield models_1.models.Message.create(mm));
+        logger_1.sphinxLogger.info(['saved attachment msg from me', message.id]);
+        saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
+        const mediaTerms = {
+            muid,
+            ttl: TTL,
+            meta: Object.assign({}, (amt && { amt })),
+            skipSigning: amt ? true : false, // only sign if its free
+        };
+        const msg = {
+            mediaTerms,
+            id: message.id,
+            uuid: uuid,
+            content: remote_text_map || remote_text || text || file_name || '',
+            mediaKey: media_key_map,
+            mediaType: mediaType,
+        };
+        if (reply_uuid)
+            msg.replyUuid = reply_uuid;
+        if (parent_id)
+            msg.parentId = parent_id;
+        network.sendMessage({
+            chat: chat,
+            sender: owner,
+            type: constants_1.default.message_types.attachment,
+            amount: amount || 0,
+            message: msg,
+            success: (data) => __awaiter(void 0, void 0, void 0, function* () {
+                logger_1.sphinxLogger.info(['attachment sent', { data }]);
+                resUtils.success(res, jsonUtils.messageToJson(message, chat));
+            }),
+            failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+                const errorMessage = (0, errMsgString_1.errMsgString)(error);
+                yield message.update({
+                    errorMessage,
+                    status: constants_1.default.statuses.failed,
+                });
+                return resUtils.failure(res, errorMessage || error);
+            }),
+        });
     }
-    if (!TTL)
-        TTL = 31536000; // default year
-    const amt = price || 0;
-    // generate media token for self!
-    const myMediaToken = yield (0, ldat_1.tokenFromTerms)({
-        muid,
-        ttl: TTL,
-        host: '',
-        pubkey: owner.publicKey,
-        meta: Object.assign(Object.assign({}, (amt && { amt })), { ttl }),
-        ownerPubkey: owner.publicKey,
-    });
-    const date = new Date();
-    date.setMilliseconds(0);
-    const myMediaKey = (media_key_map && media_key_map[owner.id]) || '';
-    const mediaType = media_type || '';
-    const remoteMessageContent = remote_text_map
-        ? JSON.stringify(remote_text_map)
-        : remote_text;
-    const uuid = short.generate();
-    const mm = {
-        chatId: chat.id,
-        uuid: uuid,
-        sender: owner.id,
-        type: constants_1.default.message_types.attachment,
-        status: constants_1.default.statuses.pending,
-        amount: amount || 0,
-        messageContent: text || file_name || '',
-        remoteMessageContent,
-        mediaToken: myMediaToken,
-        mediaKey: myMediaKey,
-        mediaType: mediaType,
-        date,
-        createdAt: date,
-        updatedAt: date,
-        tenant,
-    };
-    if (reply_uuid)
-        mm.replyUuid = reply_uuid;
-    if (parent_id)
-        mm.parentId = parent_id;
-    const message = (yield models_1.models.Message.create(mm));
-    logger_1.sphinxLogger.info(['saved attachment msg from me', message.id]);
-    saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
-    const mediaTerms = {
-        muid,
-        ttl: TTL,
-        meta: Object.assign({}, (amt && { amt })),
-        skipSigning: amt ? true : false, // only sign if its free
-    };
-    const msg = {
-        mediaTerms,
-        id: message.id,
-        uuid: uuid,
-        content: remote_text_map || remote_text || text || file_name || '',
-        mediaKey: media_key_map,
-        mediaType: mediaType,
-    };
-    if (reply_uuid)
-        msg.replyUuid = reply_uuid;
-    if (parent_id)
-        msg.parentId = parent_id;
-    network.sendMessage({
-        chat: chat,
-        sender: owner,
-        type: constants_1.default.message_types.attachment,
-        amount: amount || 0,
-        message: msg,
-        success: (data) => __awaiter(void 0, void 0, void 0, function* () {
-            logger_1.sphinxLogger.info(['attachment sent', { data }]);
-            resUtils.success(res, jsonUtils.messageToJson(message, chat));
-        }),
-        failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
-            const errorMessage = (0, errMsgString_1.errMsgString)(error);
-            yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
-            return resUtils.failure(res, errorMessage || error);
-        }),
-    });
+    catch (error) {
+        logger_1.sphinxLogger.error(['error sending media:', error], logger_1.logging.Meme);
+        return (0, res_1.failure)(res, error);
+    }
 });
 exports.sendAttachmentMessage = sendAttachmentMessage;
 function saveMediaKeys(muid, mediaKeyMap, chatId, messageId, mediaType, tenant) {

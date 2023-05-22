@@ -29,19 +29,25 @@ Base64 strings separated by dots:
 */
 function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey, }) {
     return __awaiter(this, void 0, void 0, function* () {
-        const theHost = host || config.media_host || '';
-        const pubkeyBytes = Buffer.from(pubkey, 'hex');
-        const pubkey64 = urlBase64FromBytes(pubkeyBytes);
-        const now = Math.floor(Date.now() / 1000);
-        const exp = ttl ? now + 60 * 60 * 24 * 365 : 0;
-        const ldat = startLDAT(theHost, muid, pubkey64, exp, meta);
-        if (pubkey != '') {
-            const sig = yield Lightning.signBuffer(ldat.bytes, ownerPubkey);
-            const sigBytes = zbase32.decode(sig);
-            return ldat.terms + '.' + urlBase64FromBytes(sigBytes);
+        try {
+            const theHost = host || config.media_host || '';
+            const pubkeyBytes = Buffer.from(pubkey, 'hex');
+            const pubkey64 = urlBase64FromBytes(pubkeyBytes);
+            const now = Math.floor(Date.now() / 1000);
+            const exp = ttl ? now + 60 * 60 * 24 * 365 : 0;
+            const ldat = startLDAT(theHost, muid, pubkey64, exp, meta);
+            if (pubkey != '') {
+                const sig = yield Lightning.signBuffer(ldat.bytes, ownerPubkey);
+                const sigBytes = zbase32.decode(sig);
+                return ldat.terms + '.' + urlBase64FromBytes(sigBytes);
+            }
+            else {
+                return ldat.terms;
+            }
         }
-        else {
-            return ldat.terms;
+        catch (error) {
+            logger_1.sphinxLogger.error(`error getting token from terms:${error}`, logger_1.logging.Meme);
+            throw error;
         }
     });
 }

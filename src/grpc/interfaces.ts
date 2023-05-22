@@ -7,7 +7,14 @@ import type { GetinfoResponse__Output } from './types/cln/cln/GetinfoResponse'
 
 const config = loadConfig()
 
-const IS_LND = config.lightning_provider === 'LND'
+function isProxyRelay() {
+  return config.proxy_lnd_port &&
+    config.proxy_macaroons_dir &&
+    config.proxy_tls_location
+    ? true
+    : false
+}
+const IS_LND_OR_PROXY = config.lightning_provider === 'LND' || isProxyRelay()
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
 const IS_CLN = config.lightning_provider === 'CLN'
 
@@ -64,7 +71,7 @@ export function getInfoResponse(
     | GetinfoResponse__Output
     | undefined
 ): GetInfoResponse {
-  if (IS_LND) {
+  if (IS_LND_OR_PROXY) {
     // LND
     return res as GetInfoResponse
   }
@@ -141,7 +148,7 @@ function makeLabel() {
 export function addInvoiceRequest(
   req: AddInvoiceRequest
 ): AddInvoiceRequest | GreenlightAddInvoiceRequest {
-  if (IS_LND) return req
+  if (IS_LND_OR_PROXY) return req
   if (IS_GREENLIGHT) {
     return <GreenlightAddInvoiceRequest>{
       amount: { unit: 'satoshi', satoshi: req.value + '' },
@@ -175,14 +182,14 @@ interface GreenlightInvoice {
   payment_preimage: Buffer
 }
 export function addInvoiceCommand(): string {
-  if (IS_LND) return 'addInvoice'
+  if (IS_LND_OR_PROXY) return 'addInvoice'
   if (IS_GREENLIGHT) return 'createInvoice'
   return 'addInvoice'
 }
 export function addInvoiceResponse(
   res: AddInvoiceResponse | GreenlightInvoice
 ): AddInvoiceResponse {
-  if (IS_LND) return res as AddInvoiceResponse
+  if (IS_LND_OR_PROXY) return res as AddInvoiceResponse
   if (IS_GREENLIGHT) {
     const r = res as GreenlightInvoice
     return <AddInvoiceResponse>{
@@ -286,7 +293,7 @@ interface GreenlightListPeersResponse {
 export function listChannelsResponse(
   res: ListChannelsResponse | GreenlightListPeersResponse
 ): ListChannelsResponse {
-  if (IS_LND) return res as ListChannelsResponse
+  if (IS_LND_OR_PROXY) return res as ListChannelsResponse
   if (IS_GREENLIGHT) {
     const chans: Channel[] = []
     ;(res as GreenlightListPeersResponse).peers.forEach((p: GreenlightPeer) => {
@@ -309,7 +316,7 @@ export function listChannelsResponse(
   return <ListChannelsResponse>{}
 }
 export function listChannelsCommand(): string {
-  if (IS_LND) return 'listChannels'
+  if (IS_LND_OR_PROXY) return 'listChannels'
   if (IS_GREENLIGHT) return 'listPeers'
   return 'listChannels'
 }
@@ -323,7 +330,7 @@ export function listChannelsRequest(args?: ListChannelsArgs): {
 } {
   const opts: { [k: string]: any } = args || {}
   if (args && args.peer) {
-    if (IS_LND) opts.peer = Buffer.from(args.peer, 'hex')
+    if (IS_LND_OR_PROXY) opts.peer = Buffer.from(args.peer, 'hex')
     if (IS_GREENLIGHT) opts.node_id = args.peer
   }
   return opts
@@ -352,7 +359,7 @@ export interface ListPeersResponse {
 export function listPeersResponse(
   res: ListPeersResponse | GreenlightListPeersResponse
 ): ListPeersResponse {
-  if (IS_LND) return res as ListPeersResponse
+  if (IS_LND_OR_PROXY) return res as ListPeersResponse
   if (IS_GREENLIGHT) {
     return <ListPeersResponse>{
       peers: (res as GreenlightListPeersResponse).peers.map(
@@ -409,7 +416,7 @@ export interface GreenlightKeysendRequest {
 export function keysendRequest(
   req: KeysendRequest
 ): KeysendRequest | GreenlightKeysendRequest {
-  if (IS_LND) return req
+  if (IS_LND_OR_PROXY) return req
   if (IS_GREENLIGHT) {
     const r = <GreenlightKeysendRequest>{
       node_id: req.dest,
@@ -483,7 +490,7 @@ export interface GreenlightPayment {
 export function keysendResponse(
   res: SendPaymentResponse | GreenlightPayment
 ): SendPaymentResponse {
-  if (IS_LND) return res as SendPaymentResponse
+  if (IS_LND_OR_PROXY) return res as SendPaymentResponse
   if (IS_GREENLIGHT) {
     const r = res as GreenlightPayment
     const route = <Route>{}
@@ -502,7 +509,7 @@ export function keysendResponse(
 }
 
 export function subscribeCommand(): string {
-  if (IS_LND) return 'subscribeInvoices'
+  if (IS_LND_OR_PROXY) return 'subscribeInvoices'
   if (IS_GREENLIGHT) return 'streamIncoming'
   return 'subscribeInvoices'
 }
@@ -572,7 +579,7 @@ interface GreenlightIncomingPayment {
 export function subscribeResponse(
   res: Invoice | GreenlightIncomingPayment
 ): Invoice {
-  if (IS_LND) return res as Invoice
+  if (IS_LND_OR_PROXY) return res as Invoice
   if (IS_GREENLIGHT) {
     const r1 = res as GreenlightIncomingPayment
     if (!r1.offchain) return <Invoice>{}
@@ -620,7 +627,7 @@ export interface GreenlightConnectPeerArgs {
 export function connectPeerRequest(
   req: ConnectPeerArgs
 ): ConnectPeerArgs | GreenlightConnectPeerArgs {
-  if (IS_LND) return req
+  if (IS_LND_OR_PROXY) return req
   if (IS_GREENLIGHT) {
     return <GreenlightConnectPeerArgs>{
       node_id: req.addr.pubkey,
@@ -637,7 +644,7 @@ interface GreenlightConnectPeerResponse {
 export function connectPeerResponse(
   res: ConnectPeerResponse | GreenlightConnectPeerResponse
 ): ConnectPeerResponse {
-  if (IS_LND) return res as ConnectPeerResponse
+  if (IS_LND_OR_PROXY) return res as ConnectPeerResponse
   if (IS_GREENLIGHT) {
     return <GreenlightConnectPeerResponse>{}
   }
