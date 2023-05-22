@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.disappearingMessages = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = void 0;
+exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.disappearingMessages = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = exports.getMessageByUuid = void 0;
 const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
@@ -31,6 +31,21 @@ const reversal_1 = require("../utils/reversal");
 // store all current running jobs in memory
 const jobs = {};
 const config = (0, config_1.loadConfig)();
+const getMessageByUuid = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const tenant = req.owner.id;
+    const uuid = req.params.uuid;
+    if (!uuid)
+        return (0, res_1.failure)(res, 'no uuid supplied');
+    const message = (yield models_1.models.Message.findOne({
+        where: { tenant, uuid },
+    }));
+    (0, res_1.success)(res, {
+        message: jsonUtils.messageToJson(message),
+    });
+});
+exports.getMessageByUuid = getMessageByUuid;
 // deprecated
 const getMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.owner)

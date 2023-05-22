@@ -41,6 +41,19 @@ const jobs = {}
 
 const config = loadConfig()
 
+export const getMessageByUuid = async (req: Req, res: Res): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  const uuid = req.params.uuid
+  if (!uuid) return failure(res, 'no uuid supplied')
+  const message: Message = (await models.Message.findOne({
+    where: { tenant, uuid },
+  })) as Message
+  success(res, {
+    message: jsonUtils.messageToJson(message),
+  })
+}
+
 // deprecated
 export const getMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
