@@ -1,0 +1,31 @@
+{
+  "development": {
+    "lightning_provider": "CLN",
+    "hub_api_url": "None",
+    "proxy_initial_sats": 20000,
+    "proxy_new_nodes": 2,
+    "proxy_lnd_ip": "127.0.0.1",
+    "proxy_admin_token": "r46bnf8ibrhbb424heba",
+    "proxy_admin_url": "http://localhost:5050",
+    "dont_ping_hub": true,
+    "proxy_lnd_port": "11111",
+    "proxy_tls_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/proxy/cert/tls.cert",
+    "proxy_macaroons_dir": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/proxy/macaroons",
+    "node_ip": "127.0.0.1",
+    "lnd_ip": "127.0.0.1",
+    "lnd_port": "10012",
+    "cln_ca_cert": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/cln/dave-cln/regtest/ca.pem",
+    "cln_device_key": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/cln/dave-cln/regtest/client-key.pem",
+    "cln_device_cert": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/cln/dave-cln/regtest/client.pem",
+    "node_http_protocol": "http",
+    "node_http_port": "3004",
+    "tribes_mqtt_port": "1883",
+    "tribes_insecure": true,
+    "public_url": "127.0.0.1:3004",
+    "media_host": "localhost:5555",
+    "connect_ui": true,
+    "logging_level": "debug",
+    "mqtt_host": "127.0.0.1",
+    "proxy_hd_keys": true
+  }
+}
