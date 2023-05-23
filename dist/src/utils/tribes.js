@@ -571,14 +571,11 @@ function genSignedTimestamp(ownerPubkey) {
         // console.log('genSignedTimestamp')
         const now = moment().unix();
         const lightining = yield LND.loadLightning();
-        const contacts = yield models_1.models.Contact.findAll();
-        console.log('All contacts', contacts);
-        console.log('Owner Pubkey', ownerPubkey);
         const contact = (yield models_1.models.Contact.findOne({
             where: { isOwner: true, publicKey: ownerPubkey },
         }));
         const tsBytes = Buffer.from(now.toString(16), 'hex');
-        const utf8Sign = LND.isCLN(lightining) && contact.id === 1;
+        const utf8Sign = LND.isCLN(lightining) && contact && contact.id === 1;
         let sig = '';
         if (utf8Sign) {
             const bytesBase64 = tsBytes.toString('base64');

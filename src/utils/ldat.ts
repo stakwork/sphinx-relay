@@ -43,7 +43,7 @@ async function tokenFromTerms({
       const contact = (await models.Contact.findOne({
         where: { isOwner: true, publicKey: ownerPubkey! },
       })) as ContactRecord
-      if (Lightning.isCLN(lightning) && contact.id === 1) {
+      if (Lightning.isCLN(lightning) && contact && contact.id === 1) {
         const bytesBase64 = ldat.bytes.toString('base64')
         const bytesUtf8 = Buffer.from(bytesBase64, 'utf8')
         sig = await Lightning.signBuffer(bytesUtf8, ownerPubkey)

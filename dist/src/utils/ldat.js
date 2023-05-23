@@ -43,7 +43,7 @@ function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey, }) {
                 const contact = (yield models_1.models.Contact.findOne({
                     where: { isOwner: true, publicKey: ownerPubkey },
                 }));
-                if (Lightning.isCLN(lightning) && contact.id === 1) {
+                if (Lightning.isCLN(lightning) && contact && contact.id === 1) {
                     const bytesBase64 = ldat.bytes.toString('base64');
                     const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
                     sig = yield Lightning.signBuffer(bytesUtf8, ownerPubkey);
