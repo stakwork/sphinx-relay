@@ -44,7 +44,7 @@ function tokenFromTerms({ host, muid, ttl, pubkey, meta, ownerPubkey, }) {
                     where: { isOwner: true, publicKey: ownerPubkey },
                 }));
                 if (Lightning.isCLN(lightning) && contact && contact.id === 1) {
-                    const bytesBase64 = ldat.bytes.toString('base64');
+                    const bytesBase64 = urlBase64(ldat.bytes);
                     const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
                     sig = yield Lightning.signBuffer(bytesUtf8, ownerPubkey);
                 }

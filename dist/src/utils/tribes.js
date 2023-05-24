@@ -578,7 +578,7 @@ function genSignedTimestamp(ownerPubkey) {
         const utf8Sign = LND.isCLN(lightining) && contact && contact.id === 1;
         let sig = '';
         if (utf8Sign) {
-            const bytesBase64 = tsBytes.toString('base64');
+            const bytesBase64 = urlBase64(tsBytes);
             const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
             sig = yield LND.signBuffer(bytesUtf8, ownerPubkey);
         }
