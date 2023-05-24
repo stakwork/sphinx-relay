@@ -520,17 +520,7 @@ function signer(req, res) {
         if (!req.params.challenge)
             return resUtils.failure(res, 'no challenge');
         try {
-            const lightining = yield Lightning.loadLightning();
-            let sig = '';
-            if (Lightning.isCLN(lightining) && req.owner.id === 1) {
-                const mediaHex = Buffer.from(req.params.challenge, 'hex');
-                const bytesBase64 = mediaHex.toString('base64');
-                const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
-                sig = yield Lightning.signBuffer(bytesUtf8, req.owner.publicKey);
-            }
-            else {
-                yield Lightning.signBuffer(Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey);
-            }
+            const sig = yield Lightning.signBuffer(Buffer.from(req.params.challenge, 'base64'), req.owner.publicKey);
             const sigBytes = zbase32.decode(sig);
             const sigBase64 = (0, ldat_1.urlBase64FromBytes)(sigBytes);
             resUtils.success(res, {
