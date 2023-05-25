@@ -100,4 +100,4 @@ jobs:
           docker logs alice.sphinx
           docker logs tribes.sphinx
           docker ps
-          docker log stack_relaysetup_1
+          docker logs stack_relaysetup_1
