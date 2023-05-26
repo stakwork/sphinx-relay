@@ -94,6 +94,7 @@ function tribe3Msgs(t, node1, node2, node3) {
         //Here we get the tribe which should have the correct channels
         const r = yield (0, get_1.getCheckTribe)(t, node1, tribe.id);
         const channelTribe = yield (0, get_1.getTribeByUuid)(t, r);
+        console.log(channelTribe);
         t.true(tribeSeverAddChannelResponse.response.id == channelTribe.channels[0].id, 'First tribe added should have an id of the response we get back when we call for tribes');
         t.true(tribeSeverAddChannelResponse2.response.id == channelTribe.channels[1].id, 'second tribe added should have an id of the response we get back when we call for tribes');
         t.true(tribeSeverAddChannelResponse.response.name == createChannelBody.name &&

@@ -7,4 +7,6 @@ export const config = {
   tribeHostInternal: 'tribes.sphinx:13000',
   allowedFee: 4,
   cache: false,
+  authHost: 'localhost:9090',
+  authHostInternal: `auth.sphinx:9090`,
 }
