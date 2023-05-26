@@ -2,9 +2,9 @@
   "development": {
     "node_ip": "127.0.0.1",
     "lnd_ip": "127.0.0.1",
-    "lnd_port": "10009",
-    "tls_location": "/Users/Bucko/Repos/sphinx/sphinx-stack/lnd/bob/.lnd/tls.cert",
-    "macaroon_location": "/Users/Bucko/Repos/sphinx/sphinx-stack/lnd/bob/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
+    "lnd_port": "10010",
+    "tls_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/bob/.lnd/tls.cert",
+    "macaroon_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/bob/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
     "node_http_protocol": "http",
     "node_http_port": "3002",
     "media_host": "localhost:5555",

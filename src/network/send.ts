@@ -6,6 +6,7 @@ import {
   ChatMember as ChatMemberModel,
   ChatRecord,
   ChatBotRecord,
+  MessageRecord,
 } from '../models'
 import * as LND from '../grpc/lightning'
 import { asyncForEach, sleep } from '../helpers'
@@ -22,6 +23,7 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
+import { errMsgString } from '../utils/errMsgString'
 
 const config = loadConfig()
 
@@ -43,6 +45,15 @@ export interface SendMessageParams {
   isForwarded?: boolean
   forwardedFromContactId?: number
   realSatsContactId?: number
+}
+
+interface ReversePaymentInput {
+  tenant: number
+  originalMessage: MessageRecord
+  msgToBeSent: Msg
+  error: any
+  amount: number | undefined
+  sender: Partial<ContactRecord | Contact>
 }
 
 /**
@@ -186,6 +197,16 @@ export async function sendMessage({
     logging.Network
   )
   const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId)
+  if (realSatsContactId && realSatsIndex < 0) {
+    await sleep(1000)
+    return await initiateReversal({
+      tenant,
+      msg,
+      error: 'user is no longer in tribe',
+      amount,
+      sender,
+    })
+  }
   if (realSatsIndex > 0) {
     contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0])
   }
@@ -245,6 +266,7 @@ export async function sendMessage({
       no = error
       if (realSatsContactId && contactId === realSatsContactId) {
         //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
+        await initiateReversal({ tenant, msg, error, amount, sender })
         break
       }
     }
@@ -537,5 +559,54 @@ async function interceptTribeMsgForHiddenCmds(
       logging.Network
     )
     return false
+  }
+}
+
+async function reversePayment({
+  tenant,
+  originalMessage,
+  msgToBeSent,
+  error,
+  amount,
+  sender,
+}: ReversePaymentInput) {
+  try {
+    //Get the original sender
+    const originalContact = (await models.Contact.findOne({
+      where: { id: originalMessage.sender, tenant },
+    })) as ContactRecord
+    const errorMsg = errMsgString(error)
+    const m = await personalizeMessage(msgToBeSent, originalContact, true)
+    m.error_message = errorMsg
+    const opts = {
+      dest: originalContact.publicKey,
+      data: m,
+      amt: Math.max(amount || 0, constants.min_sat_amount),
+      route_hint: originalContact.routeHint || '',
+    }
+    await signAndSend(opts, sender)
+    await originalMessage.update({
+      status: constants.statuses.failed,
+      errorMessage: errorMsg,
+    })
+    sphinxLogger.info('Sats reversal was successful')
+  } catch (error) {
+    sphinxLogger.error(`Failed to reverse sats ${error}`, logging.Network)
+  }
+}
+
+async function initiateReversal({ tenant, msg, error, amount, sender }) {
+  const originalMessage = (await models.Message.findOne({
+    where: { tenant, uuid: msg.message.uuid },
+  })) as MessageRecord
+  if (originalMessage.sender !== tenant) {
+    await reversePayment({
+      tenant,
+      originalMessage,
+      msgToBeSent: msg,
+      error,
+      amount,
+      sender,
+    })
   }
 }

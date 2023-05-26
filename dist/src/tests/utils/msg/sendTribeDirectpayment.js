@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTribeDirectPayment = void 0;
+exports.sendDirectPayment = exports.sendTribeDirectPayment = void 0;
 const http = require("ava-http");
 const helpers_1 = require("../helpers");
 const config_1 = require("../../config");
@@ -22,24 +22,13 @@ function sendTribeDirectPayment(t, node1, node2, replyMessage, amount, tribe) {
         //make sure that node2's message exists from node1 perspective
         const msgExists = yield (0, get_1.getCheckNewMsgs)(t, node1, replyMessage.uuid);
         t.truthy(msgExists, 'message being replied to should exist');
-        //get uuid from node2's message
-        const replyUuid = replyMessage.uuid;
-        t.truthy(replyUuid, 'replyUuid should exist');
-        //get tribeId from node1 perspective
-        const tribeId = yield (0, get_1.getTribeIdFromUUID)(t, node1, tribe);
-        t.truthy(tribeId, 'tribeId should exist');
-        //create boost message object for node2's message which is represented by replyUuid
-        const v = {
-            pay: true,
-            contact_id: null,
-            text: '',
-            chat_id: tribeId,
-            reply_uuid: replyUuid,
-            amount: amount,
-            message_price: 0,
-        };
-        //node1 sends a boost on node2's message
-        const msg = yield http.post(node1.external_ip + '/messages', (0, helpers_1.makeArgs)(node1, v));
+        const msg = yield sendDirectPayment({
+            t,
+            tribe,
+            node: node1,
+            amount,
+            replyMessage,
+        });
         t.true(msg.success, 'msg should exist');
         //wait for boost message to process
         const msgUuid = msg.response.uuid;
@@ -64,4 +53,28 @@ function boostBalances(t, payer, payee) {
         return [payerBal, payeeBal];
     });
 }
+function sendDirectPayment({ t, node, tribe, amount, replyMessage, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        //get uuid from node2's message
+        const replyUuid = replyMessage.uuid;
+        t.truthy(replyUuid, 'replyUuid should exist');
+        //get tribeId from node1 perspective
+        const tribeId = yield (0, get_1.getTribeIdFromUUID)(t, node, tribe);
+        t.truthy(tribeId, 'tribeId should exist');
+        //create boost message object for node2's message which is represented by replyUuid
+        const v = {
+            pay: true,
+            contact_id: null,
+            text: '',
+            chat_id: tribeId,
+            reply_uuid: replyUuid,
+            amount: amount,
+            message_price: 0,
+        };
+        //node1 sends a boost on node2's message
+        const msg = yield http.post(node.external_ip + '/messages', (0, helpers_1.makeArgs)(node, v));
+        return msg;
+    });
+}
+exports.sendDirectPayment = sendDirectPayment;
 //# sourceMappingURL=sendTribeDirectpayment.js.map

@@ -21,6 +21,7 @@ const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
+const errMsgString_1 = require("../utils/errMsgString");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
@@ -133,6 +134,16 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
         let no = null;
         logger_1.sphinxLogger.info(`=> sending to ${contactIds.length} 'contacts'`, logger_1.logging.Network);
         const realSatsIndex = contactIds.findIndex((cid) => cid === realSatsContactId);
+        if (realSatsContactId && realSatsIndex < 0) {
+            yield (0, helpers_1.sleep)(1000);
+            return yield initiateReversal({
+                tenant,
+                msg,
+                error: 'user is no longer in tribe',
+                amount,
+                sender,
+            });
+        }
         if (realSatsIndex > 0) {
             contactIds.unshift(contactIds.splice(realSatsIndex, 1)[0]);
         }
@@ -185,6 +196,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                 no = error;
                 if (realSatsContactId && contactId === realSatsContactId) {
                     //If a member boost, and an admin can't forward the sat to the receipt, send the boost back or store in a table and retry later
+                    yield initiateReversal({ tenant, msg, error, amount, sender });
                     break;
                 }
             }
@@ -424,6 +436,51 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
         catch (error) {
             logger_1.sphinxLogger.error(`Failed to check if hidden command ${error}`, logger_1.logging.Network);
             return false;
+        }
+    });
+}
+function reversePayment({ tenant, originalMessage, msgToBeSent, error, amount, sender, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            //Get the original sender
+            const originalContact = (yield models_1.models.Contact.findOne({
+                where: { id: originalMessage.sender, tenant },
+            }));
+            const errorMsg = (0, errMsgString_1.errMsgString)(error);
+            const m = yield (0, msg_1.personalizeMessage)(msgToBeSent, originalContact, true);
+            m.error_message = errorMsg;
+            const opts = {
+                dest: originalContact.publicKey,
+                data: m,
+                amt: Math.max(amount || 0, constants_1.default.min_sat_amount),
+                route_hint: originalContact.routeHint || '',
+            };
+            yield signAndSend(opts, sender);
+            yield originalMessage.update({
+                status: constants_1.default.statuses.failed,
+                errorMessage: errorMsg,
+            });
+            logger_1.sphinxLogger.info('Sats reversal was successful');
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`Failed to reverse sats ${error}`, logger_1.logging.Network);
+        }
+    });
+}
+function initiateReversal({ tenant, msg, error, amount, sender }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const originalMessage = (yield models_1.models.Message.findOne({
+            where: { tenant, uuid: msg.message.uuid },
+        }));
+        if (originalMessage.sender !== tenant) {
+            yield reversePayment({
+                tenant,
+                originalMessage,
+                msgToBeSent: msg,
+                error,
+                amount,
+                sender,
+            });
         }
     });
 }

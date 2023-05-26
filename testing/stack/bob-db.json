@@ -1,0 +1,6 @@
+{
+  "development": {
+    "dialect": "sqlite",
+    "storage": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/relay/db/bob.db"
+  }
+}

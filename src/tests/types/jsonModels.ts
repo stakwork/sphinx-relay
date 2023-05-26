@@ -49,6 +49,7 @@ export interface Message {
   recipient_pic: string
   person?: string
   cached?: boolean
+  error_message?: string
 }
 
 export interface Chat {

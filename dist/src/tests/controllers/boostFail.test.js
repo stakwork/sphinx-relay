@@ -20,7 +20,7 @@ const get_1 = require("../utils/get");
 /*
 npx ava src/tests/controllers/boostFail.test.ts --verbose --serial --timeout=2m
 */
-(0, ava_1.default)('test boostFail: create tribe, join tribe, send messages, boost messages,ensure if admin cant boost other tribe members should not get the message, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
+(0, ava_1.default)('test boostFail: create tribe, join tribe, send messages, boost messages,send direct payment, ensure if admin cant boost other tribe members should not get the message, leave tribe, delete tribe', (t) => __awaiter(void 0, void 0, void 0, function* () {
     yield boostFail(t, 0, 1, 2);
 }));
 function boostFail(t, index1, index2, index3) {
@@ -66,12 +66,49 @@ function boostFail(t, index1, index2, index3) {
         //Node 3 should not get the boost message, because the bosst should fail
         const checkNode3 = yield (0, get_1.shouldNotGetNewMsgs)(t, node3, boost.response.uuid);
         t.true(checkNode3, 'Node3 should not receive the boost message');
-        //NODE2 LEAVES TRIBE
-        let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
-        t.true(left2, 'node2 should leave tribe');
+        //Node3 tries to boost Node2
+        const node3Boost = yield (0, msg_1.boostAsMessage)(t, tribe, node3, tribeMessage2, 520000);
+        yield (0, helpers_1.sleep)(1000);
+        const node3boostedMsg = yield (0, get_1.getMsgByUuid)(t, node3, node3Boost.response);
+        t.truthy(node3boostedMsg, 'Message should exist');
+        if (node3boostedMsg)
+            t.truthy(node3boostedMsg.error_message, 'there should be an error message');
+        //Node 2 should not get the boost message sent by node3, because the boost should fail
+        const checkNode6 = yield (0, get_1.shouldNotGetNewMsgs)(t, node2, node3Boost.response.uuid);
+        t.true(checkNode6, 'Node3 should not receive the boost message sent by node2');
         //NODE3 LEAVES TRIBE
         let left3 = yield (0, del_1.leaveTribe)(t, node3, tribe);
         t.true(left3, 'node3 should leave tribe');
+        yield (0, helpers_1.sleep)(1000);
+        //send boost to a user who has left the tribe
+        const boost2 = yield (0, msg_1.boostAsMessage)(t, tribe, node2, tribeMessage3, 11);
+        yield (0, helpers_1.sleep)(1000);
+        const boostedMsg = yield (0, get_1.getMsgByUuid)(t, node2, boost2.response);
+        t.truthy(boostedMsg, 'Message should exist');
+        if (boostedMsg)
+            t.truthy(boostedMsg.error_message, 'there should be an error message');
+        //Node 3 should not get the boost message sent by node2, because the boost should fail
+        const checkNode4 = yield (0, get_1.shouldNotGetNewMsgs)(t, node3, boost2.response.uuid);
+        t.true(checkNode4, 'Node3 should not receive the boost message sent by node2');
+        //Send direct payment to a user who has left the tribe
+        const sendDirectPayment1 = yield (0, msg_1.sendDirectPayment)({
+            t,
+            node: node2,
+            tribe,
+            amount: 100,
+            replyMessage: tribeMessage3,
+        });
+        yield (0, helpers_1.sleep)(1000);
+        const paymentSent = yield (0, get_1.getMsgByUuid)(t, node2, sendDirectPayment1.response);
+        t.truthy(paymentSent, 'Message should exist');
+        if (paymentSent)
+            t.truthy(paymentSent.error_message, 'there should be an error message');
+        //Node 3 should not get the boost message sent by node2, because the boost should fail
+        const checkNode5 = yield (0, get_1.shouldNotGetNewMsgs)(t, node3, sendDirectPayment1.response.uuid);
+        t.true(checkNode5, 'Node3 should not receive the boost message sent by node2');
+        //NODE2 LEAVES TRIBE
+        let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
+        t.true(left2, 'node2 should leave tribe');
         //NODE1 DELETES TRIBE
         let delTribe2 = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe2, 'node1 should delete tribe');

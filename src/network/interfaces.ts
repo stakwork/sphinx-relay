@@ -60,6 +60,7 @@ export interface Msg {
   message: MessageContent
   chat: ChatContent
   sender: SenderContent
+  error_message?: string
 }
 
 export interface BotMsg extends Msg {
@@ -80,6 +81,7 @@ export interface Payload extends BotMsg, AdminPayload {
   dest?: string
   owner: Contact
   message: PayloadMessageContent
+  error_message?: string
 }
 
 export interface AdminPayload {
