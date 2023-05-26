@@ -138,6 +138,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   //Here we get the tribe which should have the correct channels
   const r = await getCheckTribe(t, node1, tribe.id)
   const channelTribe = await getTribeByUuid(t, r)
+  console.log(channelTribe)
   t.true(
     tribeSeverAddChannelResponse.response.id == channelTribe.channels[0].id,
     'First tribe added should have an id of the response we get back when we call for tribes'
