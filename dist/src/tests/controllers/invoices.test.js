@@ -17,12 +17,12 @@ const helpers = require("../utils/helpers");
   npx ava src/tests/controllers/invoices.test.ts --verbose --serial --timeout=2m
 */
 (0, ava_1.default)('test invoices: create invoice, get invoice details, pay invoice, check invoice payment status', (t) => __awaiter(void 0, void 0, void 0, function* () {
-    yield invoices(t, 0, 1);
+    yield helpers.iterate(nodes_1.default, (node1, node2) => __awaiter(void 0, void 0, void 0, function* () {
+        yield yield invoices(t, node1, node2);
+    }));
 }));
-function invoices(t, index1, index2) {
+function invoices(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
-        let node1 = nodes_1.default[index1];
-        let node2 = nodes_1.default[index2];
         console.log(`Checking invoices for ${node1.alias} and ${node2.alias}`);
         //Create an Invoice
         const createdInvoice = yield (0, invoices_1.createInvoice)(t, node1, 12, 'test invoice');
@@ -41,7 +41,7 @@ function invoices(t, index1, index2) {
         //Get Invoice details again to confirm invoice was paid
         const invoiceDetail2 = yield (0, invoices_1.getInvoice)(t, node1, paymentRequest);
         const invoicePaymentStatus = invoiceDetail2.response.settled;
-        t.true(invoicePaymentStatus, 'Payment should have been made');
+        t.true(invoicePaymentStatus, `Payment should have been made by ${node2.alias} to ${node1.alias}`);
     });
 }
 //# sourceMappingURL=invoices.test.js.map

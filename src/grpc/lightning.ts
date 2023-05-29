@@ -1224,9 +1224,31 @@ export async function getInvoiceHandler(
   const payment_hash_bytes = Buffer.from(payment_hash, 'hex')
   return new Promise(async (resolve, reject) => {
     try {
-      const lightning = await loadLightning()
+      const lightning = await loadLightning(true, ownerPubkey)
       if (isGL(lightning)) {
         return //Fixing this later
+      } else if (isLND(lightning) || isProxy(lightning)) {
+        ;(<any>lightning).lookupInvoice(
+          { r_hash: payment_hash_bytes },
+          function (err, response) {
+            if (err) {
+              sphinxLogger.error([err], logging.Lightning)
+              reject(err)
+            }
+            if (response) {
+              const invoice = {
+                settled: response?.settled,
+                payment_request: response?.payment_request,
+                payment_hash: response?.r_hash.toString('hex'),
+                preimage: response?.settled
+                  ? response?.r_preimage.toString('hex')
+                  : '',
+                amount: convertMsatToSat(response.amt_paid),
+              }
+              resolve(invoice)
+            }
+          }
+        )
       } else if (isCLN(lightning)) {
         await lightning.listInvoices(
           {
@@ -1255,28 +1277,6 @@ export async function getInvoiceHandler(
                 resolve(invoice)
               }
               resolve({})
-            }
-          }
-        )
-      } else if (isLND(lightning) || isProxy(lightning)) {
-        ;(<any>lightning).lookupInvoice(
-          { r_hash: payment_hash_bytes },
-          function (err, response) {
-            if (err) {
-              sphinxLogger.error([err], logging.Lightning)
-              reject(err)
-            }
-            if (response) {
-              const invoice = {
-                settled: response?.settled,
-                payment_request: response?.payment_request,
-                payment_hash: response?.r_hash.toString('hex'),
-                preimage: response?.settled
-                  ? response?.r_preimage.toString('hex')
-                  : '',
-                amount: convertMsatToSat(response.amt_paid),
-              }
-              resolve(invoice)
             }
           }
         )

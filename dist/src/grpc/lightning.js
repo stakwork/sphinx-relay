@@ -1054,9 +1054,30 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
         const payment_hash_bytes = Buffer.from(payment_hash, 'hex');
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const lightning = yield loadLightning();
+                const lightning = yield loadLightning(true, ownerPubkey);
                 if (isGL(lightning)) {
                     return; //Fixing this later
+                }
+                else if (isLND(lightning) || (0, proxy_1.isProxy)(lightning)) {
+                    ;
+                    lightning.lookupInvoice({ r_hash: payment_hash_bytes }, function (err, response) {
+                        if (err) {
+                            logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
+                            reject(err);
+                        }
+                        if (response) {
+                            const invoice = {
+                                settled: response === null || response === void 0 ? void 0 : response.settled,
+                                payment_request: response === null || response === void 0 ? void 0 : response.payment_request,
+                                payment_hash: response === null || response === void 0 ? void 0 : response.r_hash.toString('hex'),
+                                preimage: (response === null || response === void 0 ? void 0 : response.settled)
+                                    ? response === null || response === void 0 ? void 0 : response.r_preimage.toString('hex')
+                                    : '',
+                                amount: convertMsatToSat(response.amt_paid),
+                            };
+                            resolve(invoice);
+                        }
+                    });
                 }
                 else if (isCLN(lightning)) {
                     yield lightning.listInvoices({
@@ -1082,27 +1103,6 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
                                 resolve(invoice);
                             }
                             resolve({});
-                        }
-                    });
-                }
-                else if (isLND(lightning) || (0, proxy_1.isProxy)(lightning)) {
-                    ;
-                    lightning.lookupInvoice({ r_hash: payment_hash_bytes }, function (err, response) {
-                        if (err) {
-                            logger_1.sphinxLogger.error([err], logger_1.logging.Lightning);
-                            reject(err);
-                        }
-                        if (response) {
-                            const invoice = {
-                                settled: response === null || response === void 0 ? void 0 : response.settled,
-                                payment_request: response === null || response === void 0 ? void 0 : response.payment_request,
-                                payment_hash: response === null || response === void 0 ? void 0 : response.r_hash.toString('hex'),
-                                preimage: (response === null || response === void 0 ? void 0 : response.settled)
-                                    ? response === null || response === void 0 ? void 0 : response.r_preimage.toString('hex')
-                                    : '',
-                                amount: convertMsatToSat(response.amt_paid),
-                            };
-                            resolve(invoice);
                         }
                     });
                 }

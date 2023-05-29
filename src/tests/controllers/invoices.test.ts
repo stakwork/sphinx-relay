@@ -8,13 +8,12 @@ import * as helpers from '../utils/helpers'
 */
 
 test('test invoices: create invoice, get invoice details, pay invoice, check invoice payment status', async (t) => {
-  await invoices(t, 0, 1)
+  await helpers.iterate(nodes, async (node1, node2) => {
+    await await invoices(t, node1, node2)
+  })
 })
 
-async function invoices(t, index1, index2) {
-  let node1 = nodes[index1]
-  let node2 = nodes[index2]
-
+async function invoices(t, node1, node2) {
   console.log(`Checking invoices for ${node1.alias} and ${node2.alias}`)
 
   //Create an Invoice
@@ -42,5 +41,8 @@ async function invoices(t, index1, index2) {
   //Get Invoice details again to confirm invoice was paid
   const invoiceDetail2 = await getInvoice(t, node1, paymentRequest)
   const invoicePaymentStatus = invoiceDetail2.response.settled
-  t.true(invoicePaymentStatus, 'Payment should have been made')
+  t.true(
+    invoicePaymentStatus,
+    `Payment should have been made by ${node2.alias} to ${node1.alias}`
+  )
 }
