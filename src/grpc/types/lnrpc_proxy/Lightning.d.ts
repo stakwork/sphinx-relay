@@ -47,6 +47,10 @@ import type {
   ListChannelsResponse__Output as _lnrpc_proxy_ListChannelsResponse__Output,
 } from '../lnrpc_proxy/ListChannelsResponse'
 import type {
+  PaymentHash as _lnrpc_proxy_PaymentHash,
+  PaymentHash__Output as _lnrpc_proxy_PaymentHash__Output,
+} from '../lnrpc_proxy/PaymentHash'
+import type {
   QueryRoutesRequest as _lnrpc_proxy_QueryRoutesRequest,
   QueryRoutesRequest__Output as _lnrpc_proxy_QueryRoutesRequest__Output,
 } from '../lnrpc_proxy/QueryRoutesRequest'
@@ -285,6 +289,47 @@ export interface LightningClient extends grpc.Client {
     callback: grpc.requestCallback<_lnrpc_proxy_ListChannelsResponse__Output>
   ): grpc.ClientUnaryCall
 
+  LookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    metadata: grpc.Metadata,
+    options: grpc.CallOptions,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  LookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    metadata: grpc.Metadata,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  LookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    options: grpc.CallOptions,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  LookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  lookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    metadata: grpc.Metadata,
+    options: grpc.CallOptions,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  lookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    metadata: grpc.Metadata,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  lookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    options: grpc.CallOptions,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+  lookupInvoice(
+    argument: _lnrpc_proxy_PaymentHash,
+    callback: grpc.requestCallback<_lnrpc_proxy_Invoice__Output>
+  ): grpc.ClientUnaryCall
+
   QueryRoutes(
     argument: _lnrpc_proxy_QueryRoutesRequest,
     metadata: grpc.Metadata,
@@ -495,6 +540,11 @@ export interface LightningHandlers extends grpc.UntypedServiceImplementation {
     _lnrpc_proxy_ListChannelsResponse
   >
 
+  LookupInvoice: grpc.handleUnaryCall<
+    _lnrpc_proxy_PaymentHash__Output,
+    _lnrpc_proxy_Invoice
+  >
+
   QueryRoutes: grpc.handleUnaryCall<
     _lnrpc_proxy_QueryRoutesRequest__Output,
     _lnrpc_proxy_QueryRoutesResponse
@@ -551,6 +601,12 @@ export interface LightningDefinition extends grpc.ServiceDefinition {
     _lnrpc_proxy_ListChannelsResponse,
     _lnrpc_proxy_ListChannelsRequest__Output,
     _lnrpc_proxy_ListChannelsResponse__Output
+  >
+  LookupInvoice: MethodDefinition<
+    _lnrpc_proxy_PaymentHash,
+    _lnrpc_proxy_Invoice,
+    _lnrpc_proxy_PaymentHash__Output,
+    _lnrpc_proxy_Invoice__Output
   >
   QueryRoutes: MethodDefinition<
     _lnrpc_proxy_QueryRoutesRequest,
