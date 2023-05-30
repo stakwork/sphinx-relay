@@ -37,7 +37,7 @@
   },
   {
     "alias": "dave",
-    "pubkey": "037ec785c6004d512ebaeb0020f81a2bcdb6fccc9539f7b891f704289ebc65a4e3",
+    "pubkey": "030841d1519f19c68e80efc5ef5af3460ca4bfa17486fda9baca878b9ef255358f",
     "ip": "http://host.docker.internal:3004",
     "external_ip": "http://localhost:3004",
     "proxy_ip": "http://proxy.sphinx:5050",

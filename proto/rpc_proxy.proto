@@ -83,6 +83,13 @@ service Lightning {
     */
     rpc AddInvoice (Invoice) returns (AddInvoiceResponse);
 
+    /* lncli: `lookupinvoice`
+    LookupInvoice attempts to look up an invoice according to its payment hash.
+    The passed payment hash *must* be exactly 32 bytes, if not, an error is
+    returned.
+    */
+    rpc LookupInvoice (PaymentHash) returns (Invoice);
+    
     /*
     SubscribeInvoices returns a uni-directional stream (server -> client) for
     notifying the client of newly added/settled invoices. The caller can
@@ -1551,4 +1558,3 @@ message ChannelUpdate {
     */
     bytes extra_opaque_data = 12;
 }
-
