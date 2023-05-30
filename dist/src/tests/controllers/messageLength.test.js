@@ -39,19 +39,19 @@ function messageLengthTest(t, node1, node2) {
         //NODE1 SENDS A TEXT MESSAGE TO NODE2
         const text = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text);
-        yield (0, helpers_1.sleep)(1000);
+        yield (0, helpers_1.sleep)(2000);
         const text2 = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text2);
-        yield (0, helpers_1.sleep)(1000);
+        yield (0, helpers_1.sleep)(2000);
         const text3 = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text3);
-        yield (0, helpers_1.sleep)(1000);
+        yield (0, helpers_1.sleep)(2000);
         const text4 = (0, helpers_1.randomText)();
         yield (0, msg_1.sendMessage)(t, node1, node2, text4);
-        yield (0, helpers_1.sleep)(1000);
+        yield (0, helpers_1.sleep)(2000);
         //t.true(messageSent.success, 'node1 should send text message to node2')
         const newMessagesResponse = yield (0, get_1.getCheckMsgs)(t, node2, date, limit, offset, 'desc');
-        t.true(newMessagesResponse.new_messages_total == 4, 'node2 should have 4 new message');
+        t.true(newMessagesResponse.new_messages_total == 4, `node2(${node2.alias}) should have 4 new message from ${node1.alias}`);
         t.true(decrypt(newMessagesResponse.new_messages[0], node2) == text4, 'first message should be the newest message');
         t.true(decrypt(newMessagesResponse.new_messages[1], node2) == text3, 'first message should be the newest message');
         const newMessagesResponse2 = yield (0, get_1.getCheckAllMessages)(t, node2, limit, offset, 'desc');
@@ -75,18 +75,21 @@ function decrypt(message, node) {
 }
 function longMessage(t, node1, node2) {
     return __awaiter(this, void 0, void 0, function* () {
-        const limit = 1;
-        const offset = 0;
         const added = yield (0, save_1.addContact)(t, node1, node2);
         t.true(added, 'n1 should add n2 as contact');
         //Send the message
         const longText = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Risus feugiat in ante metus dictum at tempor. Ut enim blandit volutpat maecenas volutpat. Velit dignissim sodales ut eu. Eget nunc scelerisque viverra mauris in aliquam sem. Dictum varius duis at consectetur lorem. Maecenas volutpat blandit aliquam etiam erat velit scelerisque. Id velit ut tortor pretium viverra suspendisse potenti. Placerat vestibulum lectus mauris ultrices eros in cursus turpis. Integer vitae justo eget magna. Duis tristique sollicitudin nibh sit amet commodo nulla facilisi nullam. Vitae congue mauris rhoncus aenean vel elit scelerisque mauris. Vitae sapien pellentesque habitant morbi tristique. Varius vel pharetra vel turpis nunc eget lorem dolor. Pellentesque massa placerat duis ultricies lacus sed turpis. Augue neque gravida in fermentum et sollicitudin. Adipiscing elit pellentesque habitant morbi tristique.';
         console.log('sending long message to', node2.alias);
-        yield (0, msg_1.sendMessage)(t, node1, node2, longText);
-        yield (0, helpers_1.sleep)(1000);
+        const longTextMsg = yield (0, msg_1.sendMessage)(t, node1, node2, longText);
+        yield (0, helpers_1.sleep)(3000);
         //Checking for the new long message
-        const onlyMessage = yield (0, get_1.getCheckAllMessages)(t, node2, limit, offset, 'desc');
-        t.true(decrypt(onlyMessage.new_messages[0], node2) == longText, 'reciever should get long message');
+        const node2LongText = yield (0, get_1.getMsgByUuid)(t, node2, longTextMsg);
+        if (node2LongText) {
+            t.true(decrypt(node2LongText, node2) == longText, `reciever(${node2.alias}) sent by ${node1.alias} should get long message from ${node1.alias}`);
+        }
+        else {
+            t.true(node2LongText, `Node2(${node2.alias}) should have received long message from ${node1.alias}`);
+        }
         // clean up
         //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
         const allContacts = yield (0, get_1.getContacts)(t, node1);

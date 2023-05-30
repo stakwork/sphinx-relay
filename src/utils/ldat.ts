@@ -2,6 +2,7 @@ import * as zbase32 from './zbase32'
 import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'
 import { sphinxLogger, logging } from './logger'
+import { ContactRecord, models } from '../models'
 
 const config = loadConfig()
 
@@ -37,7 +38,18 @@ async function tokenFromTerms({
 
     const ldat = startLDAT(theHost, muid, pubkey64, exp, meta)
     if (pubkey != '') {
-      const sig = await Lightning.signBuffer(ldat.bytes, ownerPubkey)
+      let sig
+      const lightning = await Lightning.loadLightning()
+      const contact = (await models.Contact.findOne({
+        where: { isOwner: true, publicKey: ownerPubkey! },
+      })) as ContactRecord
+      if (Lightning.isCLN(lightning) && contact && contact.id === 1) {
+        const bytesBase64 = urlBase64(ldat.bytes)
+        const bytesUtf8 = Buffer.from(bytesBase64, 'utf8')
+        sig = await Lightning.signBuffer(bytesUtf8, ownerPubkey)
+      } else {
+        sig = await Lightning.signBuffer(ldat.bytes, ownerPubkey)
+      }
       const sigBytes = zbase32.decode(sig)
       return ldat.terms + '.' + urlBase64FromBytes(sigBytes)
     } else {

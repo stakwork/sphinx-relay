@@ -45,6 +45,9 @@ function createTribe(t, node, escrowAmount, escrowMillis, ppm, privacy) {
         const r = yield (0, get_1.getCheckTribe)(t, node, newTribeId);
         //check that the chat was found
         t.true(typeof r === 'object', 'the newly created chat should be found');
+        //check the tribe owner  id
+        const tribe = yield (0, get_1.getTribeByUuid)(t, r);
+        t.true(tribe.owner_pubkey === c.response.owner_pubkey, 'Owner Id should be the same on every level');
         return r;
     });
 }
