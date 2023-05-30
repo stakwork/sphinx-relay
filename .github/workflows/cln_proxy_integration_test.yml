@@ -1,4 +1,4 @@
-name: Integration Test
+name: CLN Proxy Integration Test
 on:
   pull_request:
     branches:
@@ -66,7 +66,7 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone -b update/proxy-tag https://github.com/stakwork/sphinx-stack.git stack
+          git clone https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
@@ -81,7 +81,7 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml --project-dir ./stack up -d;
+            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/cln-proxy.yml --project-dir ./stack up -d;
             sleep 240;
             docker ps
             docker logs meme.sphinx

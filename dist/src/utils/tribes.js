@@ -570,12 +570,25 @@ function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         // console.log('genSignedTimestamp')
         const now = moment().unix();
+        const lightining = yield LND.loadLightning();
+        const contact = (yield models_1.models.Contact.findOne({
+            where: { isOwner: true, publicKey: ownerPubkey },
+        }));
         const tsBytes = Buffer.from(now.toString(16), 'hex');
-        const sig = yield LND.signBuffer(tsBytes, ownerPubkey);
+        const utf8Sign = LND.isCLN(lightining) && contact && contact.id === 1;
+        let sig = '';
+        if (utf8Sign) {
+            const bytesBase64 = urlBase64(tsBytes);
+            const bytesUtf8 = Buffer.from(bytesBase64, 'utf8');
+            sig = yield LND.signBuffer(bytesUtf8, ownerPubkey);
+        }
+        else {
+            sig = yield LND.signBuffer(tsBytes, ownerPubkey);
+        }
         const sigBytes = zbase32.decode(sig);
         const totalLength = tsBytes.length + sigBytes.length;
         const buf = Buffer.concat([tsBytes, sigBytes], totalLength);
-        return urlBase64(buf);
+        return utf8Sign ? '.' + urlBase64(buf) : urlBase64(buf);
     });
 }
 exports.genSignedTimestamp = genSignedTimestamp;

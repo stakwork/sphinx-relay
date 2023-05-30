@@ -1,7 +1,7 @@
 import { Assertions } from 'ava'
 import * as http from 'ava-http'
 import { makeArgs } from '../helpers'
-import { getCheckTribe } from '../get'
+import { getCheckTribe, getTribeByUuid } from '../get'
 import { NodeConfig } from '../../types'
 
 export async function createTribe(
@@ -44,6 +44,13 @@ export async function createTribe(
   const r = await getCheckTribe(t, node, newTribeId)
   //check that the chat was found
   t.true(typeof r === 'object', 'the newly created chat should be found')
+
+  //check the tribe owner  id
+  const tribe = await getTribeByUuid(t, r)
+  t.true(
+    tribe.owner_pubkey === c.response.owner_pubkey,
+    'Owner Id should be the same on every level'
+  )
 
   return r
 }
