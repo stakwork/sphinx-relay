@@ -34,6 +34,7 @@ import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger, logging } from '../utils/logger'
 import { Payload, AdminPayload } from './interfaces'
+import * as sha from 'js-sha256'
 
 const config = loadConfig()
 /*
@@ -600,12 +601,14 @@ const hashCache: { [k: string]: boolean } = {}
 export async function parseKeysendInvoice(
   i: interfaces.Invoice
 ): Promise<void> {
-  try {
-    const hash = i.r_hash.toString('base64')
-    if (hashCache[hash]) return
-    hashCache[hash] = true
-  } catch (e) {
-    sphinxLogger.error('failed hash cache in parseKeysendInvoice')
+  if (Lightning.IS_GREENLIGHT) {
+    try {
+      const hash = sha.sha256.hex(JSON.stringify(i))
+      if (hashCache[hash]) return
+      hashCache[hash] = true
+    } catch (e) {
+      sphinxLogger.error('failed hash cache in parseKeysendInvoice')
+    }
   }
 
   const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInvoiceHandler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.getInvoiceHandler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = exports.IS_GREENLIGHT = void 0;
 const fs = require("fs");
 const grpc = require("@grpc/grpc-js");
 const proto_1 = require("./proto");
@@ -30,7 +30,7 @@ const short = require("short-uuid");
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 const IS_LND = config.lightning_provider === 'LND';
-const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
+exports.IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 const IS_CLN = config.lightning_provider === 'CLN';
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
@@ -44,7 +44,7 @@ function isLND(client) {
 }
 exports.isLND = isLND;
 function isGL(client) {
-    return IS_GREENLIGHT;
+    return exports.IS_GREENLIGHT;
 }
 exports.isGL = isGL;
 function isCLN(client) {
@@ -91,7 +91,7 @@ function loadLightning(tryProxy, ownerPubkey) {
         if (lightningClient) {
             return lightningClient;
         }
-        if (IS_GREENLIGHT) {
+        if (exports.IS_GREENLIGHT) {
             const credentials = (0, exports.loadMtlsCredentials)();
             const descriptor = (0, proto_1.loadProto)('greenlight');
             const greenlight = descriptor.greenlight;
@@ -323,8 +323,9 @@ function keysend(opts, ownerPubkey) {
             }
             try {
                 const preimage = crypto.randomBytes(32);
+                const payment_hash = Buffer.from(sha.sha256.arrayBuffer(preimage));
                 const dest_custom_records = {
-                    [`${exports.LND_KEYSEND_KEY}`]: preimage,
+                    [exports.LND_KEYSEND_KEY]: preimage,
                 };
                 if (opts.extra_tlv) {
                     Object.entries(opts.extra_tlv).forEach(([k, v]) => {
@@ -332,15 +333,21 @@ function keysend(opts, ownerPubkey) {
                     });
                 }
                 if (opts.data) {
-                    dest_custom_records[`${exports.SPHINX_CUSTOM_RECORD_KEY}`] = Buffer.from(opts.data, 'utf-8');
+                    dest_custom_records[exports.SPHINX_CUSTOM_RECORD_KEY] = Buffer.from(opts.data, 'utf-8');
                 }
+                // feature bits:
+                //  9: tlv-onion
+                // 15: payment-addr
+                // 30: amp (required)
+                const keysend_features = [9];
+                const amp_features = [9, 15, 30];
                 const options = {
                     amt: Math.max(opts.amt, constants_1.default.min_sat_amount || 3),
                     final_cltv_delta: constants_1.default.final_cltv_delta,
                     dest: Buffer.from(opts.dest, 'hex'),
                     dest_custom_records,
-                    payment_hash: Buffer.from(sha.sha256.arrayBuffer(preimage)),
-                    dest_features: [9],
+                    payment_hash,
+                    dest_features: keysend_features,
                 };
                 // add in route hints
                 if (opts.route_hint && opts.route_hint.includes(':')) {
@@ -399,31 +406,54 @@ function keysend(opts, ownerPubkey) {
                         });
                     }
                     else {
-                        // console.log("SEND sendPaymentV2", options)
-                        // new sendPayment (with optional route hints)
+                        delete options.payment_hash;
+                        delete dest_custom_records[exports.LND_KEYSEND_KEY];
+                        options.dest_features = amp_features;
+                        options.amp = true;
                         options.fee_limit_sat = FEE_LIMIT_SAT;
                         options.timeout_seconds = 16;
                         const router = loadRouter();
                         const call = router.sendPaymentV2(options);
                         call.on('data', function (payment) {
-                            const state = payment.status || payment.state;
-                            if (payment.payment_error) {
-                                reject(payment.payment_error);
-                            }
-                            else {
-                                if (state === 'IN_FLIGHT') {
-                                    // do nothing
+                            return __awaiter(this, void 0, void 0, function* () {
+                                const ampState = payment.status || payment.state;
+                                if (payment.payment_error) {
+                                    reject(payment.payment_error);
                                 }
-                                else if (state === 'FAILED_NO_ROUTE') {
-                                    reject(payment.failure_reason || payment);
+                                else {
+                                    if (ampState === 'SUCCEEDED') {
+                                        resolve(payment);
+                                    }
+                                    else if (ampState !== 'IN_FLIGHT') {
+                                        logger_1.sphinxLogger.debug(`AMP ${ampState}, trying keysend`, logger_1.logging.Lightning);
+                                        yield new Promise((resolve, reject) => router.resetMissionControl({}, (err) => err ? reject(err) : resolve()));
+                                        // restore options
+                                        options.payment_hash = payment_hash;
+                                        options.dest_custom_records[exports.LND_KEYSEND_KEY] = preimage;
+                                        options.dest_features = keysend_features;
+                                        delete options.amp;
+                                        const call = router.sendPaymentV2(options);
+                                        call.on('data', function (payment) {
+                                            const keysendState = payment.status || payment.state;
+                                            if (payment.payment_error) {
+                                                reject(payment.payment_error);
+                                            }
+                                            else {
+                                                if (keysendState === 'SUCCEEDED') {
+                                                    resolve(payment);
+                                                }
+                                                else if (keysendState !== 'IN_FLIGHT') {
+                                                    logger_1.sphinxLogger.debug(`AMP ${ampState} and keysend ${keysendState}`, logger_1.logging.Lightning);
+                                                    reject(payment.failure_reason || payment);
+                                                }
+                                            }
+                                        });
+                                        call.on('error', function (err) {
+                                            reject(err);
+                                        });
+                                    }
                                 }
-                                else if (state === 'FAILED') {
-                                    reject(payment.failure_reason || payment);
-                                }
-                                else if (state === 'SUCCEEDED') {
-                                    resolve(payment);
-                                }
-                            }
+                            });
                         });
                         call.on('error', function (err) {
                             reject(err);
@@ -633,7 +663,7 @@ function signBuffer(msg, ownerPubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            if (IS_GREENLIGHT) {
+            if (exports.IS_GREENLIGHT) {
                 const pld = interfaces.greenlightSignMessagePayload(msg);
                 const sig = libhsmd_1.default.Handle(1024, 0, null, pld);
                 const sigBuf = Buffer.from(sig, 'hex');
@@ -677,7 +707,7 @@ function verifyMessage(msg, sig, ownerPubkey) {
     return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
         try {
             const lightning = yield loadLightning(true, ownerPubkey); // try proxy
-            if (IS_GREENLIGHT) {
+            if (exports.IS_GREENLIGHT) {
                 const fullBytes = zbase32.decode(sig);
                 const sigBytes = fullBytes.slice(1);
                 const recidBytes = fullBytes.slice(0, 1);
@@ -964,7 +994,7 @@ function complexBalances(ownerPubkey) {
         logger_1.sphinxLogger.info('complexBalances', logger_1.logging.Lightning);
         const channelList = yield listChannels({}, ownerPubkey);
         const { channels } = channelList;
-        if (IS_GREENLIGHT) {
+        if (exports.IS_GREENLIGHT) {
             const local_balance = channels.reduce((a, chan) => a + parseInt(chan.local_balance), 0);
             return {
                 reserve: 0,

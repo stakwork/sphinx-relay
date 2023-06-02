@@ -1,4 +1,4 @@
-import { loadLightning } from './lightning'
+import { loadLightning, SPHINX_CUSTOM_RECORD_KEY } from './lightning'
 import * as network from '../network'
 import { tryToUnlockLND } from '../utils/unlock'
 import { receiveNonKeysend } from './regular'
@@ -31,7 +31,13 @@ export function subscribeInvoices(
         return
       }
       // console.log("IS KEYSEND", inv.is_keysend)
-      if (inv.is_keysend) {
+      if (
+        (inv.htlcs &&
+          inv.htlcs[0] &&
+          inv.htlcs[0].custom_records &&
+          SPHINX_CUSTOM_RECORD_KEY in inv.htlcs[0].custom_records) ||
+        inv.is_keysend
+      ) {
         parseKeysendInvoice(inv)
       } else {
         receiveNonKeysend(inv)

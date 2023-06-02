@@ -381,18 +381,20 @@ export function listPeersResponse(
   return <ListPeersResponse>{}
 }
 
-type DestCustomRecords = { [k: string]: Buffer }
+export type DestCustomRecords = { [k: string]: Buffer }
+export type FeatureBits = NonNullable<SendRequest['dest_features']>
 export interface KeysendRequest {
   amt: number
   final_cltv_delta: number
   dest: Buffer
   dest_custom_records: DestCustomRecords
-  payment_hash: Buffer
-  dest_features: SendRequest['dest_features']
+  payment_hash?: Buffer
+  dest_features: FeatureBits
   route_hints?: RouteHint[]
   fee_limit?: { [k: string]: number }
   fee_limit_sat?: number
   timeout_seconds?: number
+  amp?: boolean
 }
 interface GreenlightHop {
   node_id: Buffer
@@ -560,6 +562,7 @@ export interface Invoice {
   htlcs: InvoiceHTLC[]
   features: { [k: string]: any }
   is_keysend: boolean
+  is_amp: boolean
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface Payment {

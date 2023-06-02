@@ -26,7 +26,7 @@ import * as short from 'short-uuid'
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
 const IS_LND = config.lightning_provider === 'LND'
-const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
+export const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT'
 const IS_CLN = config.lightning_provider === 'CLN'
 
 export const LND_KEYSEND_KEY = 5482373484
@@ -387,8 +387,9 @@ export function keysend(
     }
     try {
       const preimage = crypto.randomBytes(32)
-      const dest_custom_records = {
-        [`${LND_KEYSEND_KEY}`]: preimage,
+      const payment_hash = Buffer.from(sha.sha256.arrayBuffer(preimage))
+      const dest_custom_records: interfaces.DestCustomRecords = {
+        [LND_KEYSEND_KEY]: preimage,
       }
       if (opts.extra_tlv) {
         Object.entries(opts.extra_tlv).forEach(([k, v]) => {
@@ -396,18 +397,24 @@ export function keysend(
         })
       }
       if (opts.data) {
-        dest_custom_records[`${SPHINX_CUSTOM_RECORD_KEY}`] = Buffer.from(
+        dest_custom_records[SPHINX_CUSTOM_RECORD_KEY] = Buffer.from(
           opts.data,
           'utf-8'
         )
       }
+      // feature bits:
+      //  9: tlv-onion
+      // 15: payment-addr
+      // 30: amp (required)
+      const keysend_features: interfaces.FeatureBits = [9]
+      const amp_features: interfaces.FeatureBits = [9, 15, 30 as any]
       const options: interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
         final_cltv_delta: constants.final_cltv_delta,
         dest: Buffer.from(opts.dest, 'hex'),
         dest_custom_records,
-        payment_hash: Buffer.from(sha.sha256.arrayBuffer(preimage)),
-        dest_features: [9],
+        payment_hash,
+        dest_features: keysend_features,
       }
       // add in route hints
       if (opts.route_hint && opts.route_hint.includes(':')) {
@@ -463,25 +470,57 @@ export function keysend(
             }
           })
         } else {
-          // console.log("SEND sendPaymentV2", options)
-          // new sendPayment (with optional route hints)
+          delete options.payment_hash
+          delete dest_custom_records[LND_KEYSEND_KEY]
+          options.dest_features = amp_features
+          options.amp = true
+
           options.fee_limit_sat = FEE_LIMIT_SAT
           options.timeout_seconds = 16
           const router = loadRouter()
           const call = router.sendPaymentV2(options)
-          call.on('data', function (payment) {
-            const state = payment.status || payment.state
+          call.on('data', async function (payment) {
+            const ampState: string = payment.status || payment.state
             if (payment.payment_error) {
               reject(payment.payment_error)
             } else {
-              if (state === 'IN_FLIGHT') {
-                // do nothing
-              } else if (state === 'FAILED_NO_ROUTE') {
-                reject(payment.failure_reason || payment)
-              } else if (state === 'FAILED') {
-                reject(payment.failure_reason || payment)
-              } else if (state === 'SUCCEEDED') {
+              if (ampState === 'SUCCEEDED') {
                 resolve(payment)
+              } else if (ampState !== 'IN_FLIGHT') {
+                sphinxLogger.debug(
+                  `AMP ${ampState}, trying keysend`,
+                  logging.Lightning
+                )
+                await new Promise<void>((resolve, reject) =>
+                  router.resetMissionControl({}, (err) =>
+                    err ? reject(err) : resolve()
+                  )
+                )
+                // restore options
+                options.payment_hash = payment_hash
+                options.dest_custom_records[LND_KEYSEND_KEY] = preimage
+                options.dest_features = keysend_features
+                delete options.amp
+                const call = router.sendPaymentV2(options)
+                call.on('data', function (payment) {
+                  const keysendState: string = payment.status || payment.state
+                  if (payment.payment_error) {
+                    reject(payment.payment_error)
+                  } else {
+                    if (keysendState === 'SUCCEEDED') {
+                      resolve(payment)
+                    } else if (keysendState !== 'IN_FLIGHT') {
+                      sphinxLogger.debug(
+                        `AMP ${ampState} and keysend ${keysendState}`,
+                        logging.Lightning
+                      )
+                      reject(payment.failure_reason || payment)
+                    }
+                  }
+                })
+                call.on('error', function (err) {
+                  reject(err)
+                })
               }
             }
           })
