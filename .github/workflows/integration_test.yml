@@ -47,6 +47,7 @@ jobs:
             'deleteMessages',
             'boostFail',
             'sphinxAuth',
+            'ampPayment',
           ]
         node: [16]
     steps:
@@ -65,16 +66,14 @@ jobs:
         run: |
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
-        run: |
-          git clone -b update/proxy-tag https://github.com/stakwork/sphinx-stack.git stack
+        uses: actions/checkout@v3
+        with:
+          repository: antonilol/sphinx-stack
+          ref: amp
+          path: stack
       - name: give permissions
         working-directory: ./stack
-        run: |
-          chmod 777 ./bitcoind;    
-          chmod 777 -R ./relay;
-          chmod 777 -R ./lnd;
-          chmod 777 -R ./proxy;
-          chmod 777 -R ./cln;
+        run: chmod 777 -R bitcoind relay lnd proxy cln
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
@@ -88,11 +87,8 @@ jobs:
             docker logs dave.sphinx
             docker wait stack_relaysetup_1
             cat stack/relay/NODES.json;
-      - name: copy file
-        uses: canastro/copy-file-action@master
-        with:
-          source: 'stack/relay/NODES.json'
-          target: 'relay/src/tests/configs/nodes.json'
+      - name: Copy nodes.json
+        run: cp stack/relay/NODES.json relay/src/tests/configs/nodes.json
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m

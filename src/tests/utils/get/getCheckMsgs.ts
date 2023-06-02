@@ -6,7 +6,7 @@ import { Assertions } from 'ava'
 export function getCheckMsgs(
   _t: Assertions,
   node: NodeConfig,
-  date: any,
+  date: Date,
   limit: number,
   offset: number,
   order: string = 'asc'
@@ -21,7 +21,7 @@ export function getCheckMsgs(
 async function timeout(
   i: number,
   node: NodeConfig,
-  date: any,
+  date: Date,
   limit: number,
   offset: number,
   order: string,
@@ -29,7 +29,10 @@ async function timeout(
   reject
 ) {
   const msgRes = await http.get(
-    `${node.external_ip}/msgs?date=${date}&limit=${limit}&offset=${offset}&order=${order}`,
+    `${node.external_ip}/msgs?date=${date
+      .toISOString()
+      .replace(/T/, ' ')
+      .replace(/\..+/, '')}&limit=${limit}&offset=${offset}&order=${order}`,
     makeArgs(node)
   )
   if (msgRes.response.new_messages && msgRes.response.new_messages.length) {

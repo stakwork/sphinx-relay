@@ -39,7 +39,11 @@ function subscribeInvoices(parseKeysendInvoice) {
                     return;
                 }
                 // console.log("IS KEYSEND", inv.is_keysend)
-                if (inv.is_keysend) {
+                if ((inv.htlcs &&
+                    inv.htlcs[0] &&
+                    inv.htlcs[0].custom_records &&
+                    lightning_1.SPHINX_CUSTOM_RECORD_KEY in inv.htlcs[0].custom_records) ||
+                    inv.is_keysend) {
                     parseKeysendInvoice(inv);
                 }
                 else {

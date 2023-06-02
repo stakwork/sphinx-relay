@@ -30,6 +30,7 @@ const proxy_1 = require("../utils/proxy");
 const bolt11 = require("@boltz/bolt11");
 const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
+const sha = require("js-sha256");
 const config = (0, config_1.loadConfig)();
 /*
 delete type:
@@ -556,14 +557,16 @@ function saveAnonymousKeysend(inv, memo, sender_pubkey, tenant) {
 const hashCache = {};
 function parseKeysendInvoice(i) {
     return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const hash = i.r_hash.toString('base64');
-            if (hashCache[hash])
-                return;
-            hashCache[hash] = true;
-        }
-        catch (e) {
-            logger_1.sphinxLogger.error('failed hash cache in parseKeysendInvoice');
+        if (Lightning.IS_GREENLIGHT) {
+            try {
+                const hash = sha.sha256.hex(JSON.stringify(i));
+                if (hashCache[hash])
+                    return;
+                hashCache[hash] = true;
+            }
+            catch (e) {
+                logger_1.sphinxLogger.error('failed hash cache in parseKeysendInvoice');
+            }
         }
         const recs = i.htlcs && i.htlcs[0] && i.htlcs[0].custom_records;
         let dest = '';
