@@ -49,7 +49,8 @@ export function loadConfig() {
   return {
     lightning_provider: provider,
     logging:
-      logg || 'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT,BOTS',
+      logg ||
+      'TRIBES,MEME,NOTIFICATION,EXPRESS,NETWORK,DB,PROXY,LSAT,BOTS,PAYMENT_TRACKING',
     min_sat: parseInt(min_sat) || DEFAULT_MIN_SAT,
     final_cltv_delta: parseInt(final_cltv_delta) || DEFAULT_FINAL_CLTV_DELTA,
     senza_url: ENV.SENZA_URL || config.senza_url,

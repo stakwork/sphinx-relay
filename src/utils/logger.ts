@@ -43,6 +43,7 @@ interface Logging {
   Greenlight: string
   SSL: string
   Bots: string
+  PaymentTracking: string
 }
 
 const logging: Logging = {
@@ -58,6 +59,7 @@ const logging: Logging = {
   Greenlight: 'GREENLIGHT',
   SSL: 'SSL',
   Bots: 'BOTS',
+  PaymentTracking: 'PAYMENT_TRACKING',
 }
 
 async function sphinxLoggerBase(

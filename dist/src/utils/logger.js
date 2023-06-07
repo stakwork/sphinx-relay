@@ -47,6 +47,7 @@ const logging = {
     Greenlight: 'GREENLIGHT',
     SSL: 'SSL',
     Bots: 'BOTS',
+    PaymentTracking: 'PAYMENT_TRACKING',
 };
 exports.logging = logging;
 function sphinxLoggerBase(message, loggingType = 'MISC', level) {

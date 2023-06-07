@@ -517,6 +517,10 @@ export async function keysendMessage(
   ownerPubkey?: string
 ): Promise<interfaces.SendPaymentResponse> {
   sphinxLogger.info('keysendMessage', logging.Lightning)
+  sphinxLogger.info(
+    `=> keysendMessage from ${ownerPubkey} ${JSON.stringify(opts, null, 2)}`,
+    logging.PaymentTracking
+  )
   return new Promise(async function (resolve, reject) {
     if (!opts.data || typeof opts.data !== 'string') {
       return reject('string plz')

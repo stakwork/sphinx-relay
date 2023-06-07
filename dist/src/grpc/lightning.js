@@ -455,6 +455,7 @@ const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('keysendMessage', logger_1.logging.Lightning);
+        logger_1.sphinxLogger.info(`=> keysendMessage from ${ownerPubkey} ${JSON.stringify(opts, null, 2)}`, logger_1.logging.PaymentTracking);
         return new Promise(function (resolve, reject) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (!opts.data || typeof opts.data !== 'string') {
