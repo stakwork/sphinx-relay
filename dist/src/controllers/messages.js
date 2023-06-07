@@ -432,10 +432,10 @@ Receive a message and store it in the database.
 */
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, cached, } = yield helpers.parseReceiveParams(payload);
-    logger_1.sphinxLogger.info(`received message on tenant ${owner.id} chat ${chat.id}`);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
+    logger_1.sphinxLogger.info(`received message on tenant ${owner.id} chat ${chat.id}`);
     const tenant = owner.id;
     const text = content || '';
     let date = new Date();

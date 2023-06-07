@@ -527,11 +527,12 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     person,
     cached,
   } = await helpers.parseReceiveParams(payload)
-  sphinxLogger.info(`received message on tenant ${owner.id} chat ${chat.id}`)
 
   if (!owner || !sender || !chat) {
     return sphinxLogger.info('=> no group chat!')
   }
+  sphinxLogger.info(`received message on tenant ${owner.id} chat ${chat.id}`)
+
   const tenant: number = owner.id
   const text = content || ''
 
