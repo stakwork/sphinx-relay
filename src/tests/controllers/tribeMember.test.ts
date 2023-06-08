@@ -5,7 +5,7 @@ import { createTribe } from '../utils/save'
 import { sendTribeMessage } from '../utils/msg'
 import { NodeConfig } from '../types'
 import * as http from 'ava-http'
-import { makeArgs } from '../utils/helpers'
+import { makeArgs, sleep } from '../utils/helpers'
 
 /*
     npx ava src/tests/controllers/tribeMember.test.ts --verbose --serial --timeout=2m
@@ -37,6 +37,7 @@ async function tribeMemberTest(
   //   contact_key: node2.contact_key,
   // }
   //node1 creates new tribe
+  await sleep(1000)
   let member = await http.post(
     node1.external_ip + '/tribe_member',
     makeArgs(node1, body)
@@ -45,6 +46,7 @@ async function tribeMemberTest(
   //check that new tribe was created successfully
   t.true(member.success, 'member should be successful')
 
+  await sleep(1000)
   await sendTribeMessage(t, node1, tribe, 'hello')
   console.log('msg sent')
 
