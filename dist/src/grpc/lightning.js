@@ -314,6 +314,14 @@ function sendPayment(payment_request, ownerPubkey) {
     });
 }
 exports.sendPayment = sendPayment;
+function maxfee(amt) {
+    if (amt < 100) {
+        return FEE_LIMIT_SAT;
+    }
+    else {
+        return Math.round(amt * 0.05);
+    }
+}
 function keysend(opts, ownerPubkey) {
     logger_1.sphinxLogger.info('keysend', logger_1.logging.Lightning);
     return new Promise(function (resolve, reject) {
@@ -359,9 +367,7 @@ function keysend(opts, ownerPubkey) {
                     // console.log("SEND sendPaymentSync", options)
                     // set a fee limit if its a small payment
                     // LND default is 100% which may be too small
-                    if (options.amt < 10) {
-                        options.fee_limit = { fixed: FEE_LIMIT_SAT };
-                    }
+                    options.fee_limit = { fixed: maxfee(options.amt) };
                     lightning.sendPaymentSync(options, (err, response) => {
                         if (err || !response) {
                             reject(err);
@@ -405,9 +411,7 @@ function keysend(opts, ownerPubkey) {
                     else {
                         // console.log("SEND sendPaymentV2", options)
                         // new sendPayment (with optional route hints)
-                        if (options.amt < 10) {
-                            options.fee_limit_sat = FEE_LIMIT_SAT;
-                        }
+                        options.fee_limit_sat = maxfee(options.amt);
                         options.timeout_seconds = 16;
                         const router = loadRouter();
                         const call = router.sendPaymentV2(options);

@@ -369,6 +369,14 @@ export async function sendPayment(
   })
 }
 
+function maxfee(amt: number): number {
+  if (amt < 100) {
+    return FEE_LIMIT_SAT
+  } else {
+    return Math.round(amt * 0.05)
+  }
+}
+
 export interface KeysendOpts {
   amt: number
   dest: string
@@ -426,9 +434,7 @@ export function keysend(
         // console.log("SEND sendPaymentSync", options)
         // set a fee limit if its a small payment
         // LND default is 100% which may be too small
-        if (options.amt < 10) {
-          options.fee_limit = { fixed: FEE_LIMIT_SAT }
-        }
+        options.fee_limit = { fixed: maxfee(options.amt) }
         lightning.sendPaymentSync(options, (err, response) => {
           if (err || !response) {
             reject(err)
@@ -469,9 +475,7 @@ export function keysend(
         } else {
           // console.log("SEND sendPaymentV2", options)
           // new sendPayment (with optional route hints)
-          if (options.amt < 10) {
-            options.fee_limit_sat = FEE_LIMIT_SAT
-          }
+          options.fee_limit_sat = maxfee(options.amt)
           options.timeout_seconds = 16
           const router = loadRouter()
           const call = router.sendPaymentV2(options)
