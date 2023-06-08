@@ -60,6 +60,7 @@
     "dateformat": "^3.0.3",
     "decamelize": "^3.1.1",
     "express": "^4.16.4",
+    "express-rate-limit": "^6.7.0",
     "express-winston": "^4.0.2",
     "form-data": "^3.0.0",
     "fs": "^0.0.1-security",
