@@ -192,6 +192,7 @@ function set(app) {
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
+        app.get('/my_ip', (request, response) => response.send(request.ip));
         // rate limit these routes:
         app.use(limiter);
         app.post('/messages', messages.sendMessage);

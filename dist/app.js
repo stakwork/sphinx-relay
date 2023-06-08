@@ -84,6 +84,12 @@ function finishSetup() {
 function setupApp() {
     return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
         const app = express();
+        if (config.rate_limit_trust_proxy) {
+            const rate_limit_trust_proxy = parseInt(config.rate_limit_trust_proxy);
+            if (rate_limit_trust_proxy > 0) {
+                app.set('trust proxy', rate_limit_trust_proxy);
+            }
+        }
         app.use(helmet());
         app.use(express.json({
             limit: '5MB',
