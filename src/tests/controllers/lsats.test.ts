@@ -1,7 +1,7 @@
 import test, { ExecutionContext } from 'ava'
 import { Lsat } from 'lsat-js'
 import { NodeConfig } from '../types'
-import { makeRelayRequest } from '../utils/helpers'
+import { makeRelayRequest, sleep } from '../utils/helpers'
 import nodes from '../nodes'
 
 import { saveLsat } from '../utils/save'
@@ -13,6 +13,10 @@ const bob: NodeConfig = nodes[1]
 interface Context {
   identifiers: string[]
 }
+
+/*
+npx ava src/tests/controllers/lsats.test.ts --verbose --serial --timeout=2m
+*/
 
 const getIdentifierFromToken = (token: string): string =>
   Lsat.fromToken(token).id
@@ -43,6 +47,7 @@ test.after.always('cleanup lsats', async (t: ExecutionContext<Context>) => {
 })
 
 test.serial('saveLsat', async (t: ExecutionContext<Context>) => {
+  await sleep(1000)
   const token = await saveLsat(t, nodes[0], nodes[1])
 
   t.assert(token.length, 'expected an lsat token in response')
@@ -50,6 +55,7 @@ test.serial('saveLsat', async (t: ExecutionContext<Context>) => {
 })
 
 test.serial('getLsat', async (t: ExecutionContext<Context>) => {
+  await sleep(1000)
   const token = await saveLsat(t, alice, bob)
   const identifier = addLsatToContext(t, token)
 
@@ -67,6 +73,7 @@ test.serial('listLsats', async (t: ExecutionContext<Context>) => {
 
   while (counter < lsatCount) {
     counter++
+    await sleep(1000)
     const token = await saveLsat(t, alice, bob)
     addLsatToContext(t, token)
   }
@@ -76,6 +83,7 @@ test.serial('listLsats', async (t: ExecutionContext<Context>) => {
 })
 
 test.serial('updateLsat', async (t: ExecutionContext<Context>) => {
+  await sleep(1000)
   const token = await saveLsat(t, alice, bob)
   const identifier = addLsatToContext(t, token)
   let lsat = await getLsat(t, alice, identifier)
@@ -95,6 +103,7 @@ test.serial('updateLsat', async (t: ExecutionContext<Context>) => {
 })
 
 test.serial('deleteLsats', async (t: ExecutionContext<Context>) => {
+  await sleep(1000)
   const token = await saveLsat(t, alice, bob)
   const identifier = getIdentifierFromToken(token)
   await makeRelayRequest('del', `/lsats/${identifier}`, alice)

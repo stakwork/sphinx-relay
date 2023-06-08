@@ -88,7 +88,9 @@ function tribe3Msgs(t, node1, node2, node3) {
             host: internalTribeHost,
             name: 'testChannel2',
         };
+        yield (0, helpers_1.sleep)(1000);
         const tribeSeverAddChannelResponse = yield http.post(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, createChannelBody));
+        yield (0, helpers_1.sleep)(1000);
         const tribeSeverAddChannelResponse2 = yield http.post(node1.external_ip + '/tribe_channel', (0, helpers_1.makeArgs)(node1, createChannelBody2));
         console.log(tribeSeverAddChannelResponse, tribeSeverAddChannelResponse2);
         //Here we get the tribe which should have the correct channels
