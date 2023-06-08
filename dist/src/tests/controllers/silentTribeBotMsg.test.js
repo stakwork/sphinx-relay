@@ -38,9 +38,11 @@ function silentTribeBotMsg(t, node1, node2, node3) {
             tribe.owner_route_hint = node1.routeHint;
         let join2 = yield (0, save_1.joinTribe)(t, node3, tribe);
         t.true(join2, 'node3 should join tribe');
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 INSTALLS CALLRECORDING BOT
         const text2 = '/bot install callRecording';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text2);
+        yield (0, helpers_1.sleep)(1000);
         //NODE1 INSTALLS WELCOME BOT
         const text = '/bot install welcome';
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, text);

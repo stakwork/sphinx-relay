@@ -36,10 +36,12 @@ function tribeMemberTest(t, node1, node2) {
         //   contact_key: node2.contact_key,
         // }
         //node1 creates new tribe
+        yield (0, helpers_1.sleep)(1000);
         let member = yield http.post(node1.external_ip + '/tribe_member', (0, helpers_1.makeArgs)(node1, body));
         console.log('member', member);
         //check that new tribe was created successfully
         t.true(member.success, 'member should be successful');
+        yield (0, helpers_1.sleep)(1000);
         yield (0, msg_1.sendTribeMessage)(t, node1, tribe, 'hello');
         console.log('msg sent');
         //NODE1 DELETES THE TRIBE
