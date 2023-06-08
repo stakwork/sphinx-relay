@@ -32,7 +32,7 @@ const IS_CLN = config.lightning_provider === 'CLN'
 export const LND_KEYSEND_KEY = 5482373484
 export const SPHINX_CUSTOM_RECORD_KEY = 133773310
 
-const FEE_LIMIT_SAT = 10000
+const FEE_LIMIT_SAT = 21
 
 let lightningClient:
   | LightningClient
@@ -315,7 +315,7 @@ export async function sendPayment(
     if (isProxy(lightning)) {
       const opts = {
         payment_request,
-        fee_limit: { fixed: FEE_LIMIT_SAT },
+        // fee_limit: { fixed: FEE_LIMIT_SAT },
       }
       lightning.sendPaymentSync(opts, (err, response) => {
         if (err || !response) {
@@ -424,7 +424,11 @@ export function keysend(
       const lightning = await loadLightning(true, ownerPubkey) // try proxy
       if (isProxy(lightning)) {
         // console.log("SEND sendPaymentSync", options)
-        options.fee_limit = { fixed: FEE_LIMIT_SAT }
+        // set a fee limit if its a small payment
+        // LND default is 100% which may be too small
+        if (options.amt < 10) {
+          options.fee_limit = { fixed: FEE_LIMIT_SAT }
+        }
         lightning.sendPaymentSync(options, (err, response) => {
           if (err || !response) {
             reject(err)
@@ -465,7 +469,9 @@ export function keysend(
         } else {
           // console.log("SEND sendPaymentV2", options)
           // new sendPayment (with optional route hints)
-          options.fee_limit_sat = FEE_LIMIT_SAT
+          if (options.amt < 10) {
+            options.fee_limit_sat = FEE_LIMIT_SAT
+          }
           options.timeout_seconds = 16
           const router = loadRouter()
           const call = router.sendPaymentV2(options)
