@@ -254,7 +254,7 @@ function sendPayment(payment_request, ownerPubkey) {
             if ((0, proxy_1.isProxy)(lightning)) {
                 const opts = {
                     payment_request,
-                    // fee_limit: { fixed: FEE_LIMIT_SAT },
+                    fee_limit: { fixed: 100 },
                 };
                 lightning.sendPaymentSync(opts, (err, response) => {
                     if (err || !response) {
@@ -307,7 +307,7 @@ function sendPayment(payment_request, ownerPubkey) {
                     call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
                         reject(err);
                     }));
-                    call.write({ payment_request });
+                    call.write({ payment_request, fee_limit: { fixed: 100 } });
                 }
             }
         });

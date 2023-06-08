@@ -315,7 +315,7 @@ export async function sendPayment(
     if (isProxy(lightning)) {
       const opts = {
         payment_request,
-        // fee_limit: { fixed: FEE_LIMIT_SAT },
+        fee_limit: { fixed: 100 },
       }
       lightning.sendPaymentSync(opts, (err, response) => {
         if (err || !response) {
@@ -363,7 +363,7 @@ export async function sendPayment(
         call.on('error', async (err) => {
           reject(err)
         })
-        call.write({ payment_request })
+        call.write({ payment_request, fee_limit: { fixed: 100 } })
       }
     }
   })
