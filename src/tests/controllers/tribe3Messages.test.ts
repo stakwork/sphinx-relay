@@ -1,7 +1,7 @@
 import test from 'ava'
 import * as http from 'ava-http'
 import { config } from '../config'
-import { makeArgs, randomText } from '../utils/helpers'
+import { makeArgs, randomText, sleep } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import { sendTribeMessage, checkMessageDecryption } from '../utils/msg'
@@ -125,10 +125,12 @@ export async function tribe3Msgs(t, node1, node2, node3) {
     name: 'testChannel2',
   }
 
+  await sleep(1000)
   const tribeSeverAddChannelResponse = await http.post(
     node1.external_ip + '/tribe_channel',
     makeArgs(node1, createChannelBody)
   )
+  await sleep(1000)
   const tribeSeverAddChannelResponse2 = await http.post(
     node1.external_ip + '/tribe_channel',
     makeArgs(node1, createChannelBody2)
