@@ -78,6 +78,7 @@ async function finishSetup() {
   setupDone()
 }
 
+//
 function setupApp() {
   return new Promise(async (resolve) => {
     const app = express()
