@@ -1,7 +1,7 @@
 import test, { ExecutionContext } from 'ava'
 import * as moment from 'moment'
 import nodes from '../nodes'
-import { randomText, iterate } from '../utils/helpers'
+import { randomText, iterate, sleep } from '../utils/helpers'
 import { getContactAndCheckKeyExchange } from '../utils/get'
 import { NodeConfig, Message } from '../types'
 import { Assertions } from 'ava'
@@ -47,6 +47,7 @@ async function checkDuplicateTransportTokens(
     node1.transportToken,
     `${node1.authToken}|${moment().unix()}`
   )
+  await sleep(1000)
   let added = await http.post(node1.external_ip + '/contacts', {
     headers: {
       'x-transport-token': transportToken,
@@ -95,6 +96,7 @@ async function check1MinuteOldRequest(
   const currentTime = moment().unix() - 1 * 61
   let error
   try {
+    await sleep(1000)
     await http.post(node1.external_ip + '/contacts', {
       headers: {
         'x-transport-token': rsa.encrypt(
@@ -132,6 +134,7 @@ async function checkContactsWithTransportToken(
   console.log('added contact!')
 
   const text = randomText()
+  await sleep(1000)
   let messageSent = await sendMessageAndCheckDecryption(t, node1, node2, text)
   t.truthy(messageSent, 'node1 should send text message to node2')
   console.log('sent message!')
@@ -150,6 +153,7 @@ async function addContact(
     route_hint: node2.routeHint || '',
   }
 
+  await sleep(1000)
   //node1 adds node2 as contact
   const add = await http.post(
     node1.external_ip + '/contacts',
