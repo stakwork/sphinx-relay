@@ -64,9 +64,13 @@ jobs:
         working-directory: ./relay
         run: |
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
+      - name: Build Swarm Relay
+        working-directory: ./relay
+        run: |
+          npm install && npm run build && docker build -f ./Dockerfile.swarm -t sphinxlightning/sphinx-relay-swarm .
       - name: Checkout stack
         run: |
-          git clone https://github.com/stakwork/sphinx-stack.git stack
+          git clone -b update/swarm-image https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
