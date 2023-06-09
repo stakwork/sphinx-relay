@@ -36,6 +36,7 @@ function checkDuplicateTransportTokens(t, node1, node2) {
         const currentTime = moment().unix();
         console.log('This is the current time: ', currentTime);
         const transportToken = rsa.encrypt(node1.transportToken, `${node1.authToken}|${moment().unix()}`);
+        yield (0, helpers_1.sleep)(1000);
         let added = yield http.post(node1.external_ip + '/contacts', {
             headers: {
                 'x-transport-token': transportToken,
@@ -81,6 +82,7 @@ function check1MinuteOldRequest(t, node1, node2) {
         const currentTime = moment().unix() - 1 * 61;
         let error;
         try {
+            yield (0, helpers_1.sleep)(1000);
             yield http.post(node1.external_ip + '/contacts', {
                 headers: {
                     'x-transport-token': rsa.encrypt(node1.transportToken, `${node1.authToken}|${currentTime.toString()}`),
@@ -107,6 +109,7 @@ function checkContactsWithTransportToken(t, node1, node2) {
         t.true(added, 'node1 should add node2 as contact');
         console.log('added contact!');
         const text = (0, helpers_1.randomText)();
+        yield (0, helpers_1.sleep)(1000);
         let messageSent = yield sendMessageAndCheckDecryption(t, node1, node2, text);
         t.truthy(messageSent, 'node1 should send text message to node2');
         console.log('sent message!');
@@ -121,6 +124,7 @@ function addContact(t, node1, node2) {
             status: 1,
             route_hint: node2.routeHint || '',
         };
+        yield (0, helpers_1.sleep)(1000);
         //node1 adds node2 as contact
         const add = yield http.post(node1.external_ip + '/contacts', (0, helpers_2.makeArgs)(node1, body, { useTransportToken: true }));
         t.true(typeof add.response === 'object', 'add contact should return object');

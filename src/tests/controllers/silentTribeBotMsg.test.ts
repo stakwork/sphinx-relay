@@ -36,10 +36,12 @@ async function silentTribeBotMsg(t, node1, node2, node3) {
   let join2 = await joinTribe(t, node3, tribe)
   t.true(join2, 'node3 should join tribe')
 
+  await sleep(1000)
   //NODE1 INSTALLS CALLRECORDING BOT
   const text2 = '/bot install callRecording'
   await sendTribeMessage(t, node1, tribe, text2)
 
+  await sleep(1000)
   //NODE1 INSTALLS WELCOME BOT
   const text = '/bot install welcome'
   await sendTribeMessage(t, node1, tribe, text)

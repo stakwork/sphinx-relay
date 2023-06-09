@@ -41,6 +41,13 @@ const action = require("./actionHistory");
 const feeds = require("./getFeeds");
 const contentFeedStatus = require("./contentFeedStatus");
 const callRecording_1 = require("../builtin/utill/callRecording");
+const express_rate_limit_1 = require("express-rate-limit");
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 1000,
+    max: 1,
+    standardHeaders: true,
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -64,10 +71,7 @@ function set(app) {
         app.delete('/chat/:id', chats.deleteChat);
         app.put('/chat/:id', chats.addGroupMembers);
         app.put('/kick/:chat_id/:contact_id', chats.kickChatMember);
-        app.post('/tribe', chatTribes.joinTribe);
-        app.post('/tribe_channel', chatTribes.createChannel);
         app.delete('/tribe_channel', chatTribes.deleteChannel);
-        app.post('/tribe_member', chats.addTribeMember);
         app.put('/member/:contactId/:status/:messageId', chatTribes.approveOrRejectMember);
         app.put('/group/:id', chatTribes.editTribe);
         app.put('/chat_pin/:id', chatTribes.pinToTribe);
@@ -82,8 +86,6 @@ function set(app) {
         app.put('/contacts/:id', contacts.updateContact);
         app.put('/block/:contact_id', contacts.blockContact);
         app.put('/unblock/:contact_id', contacts.unblockContact);
-        app.post('/contacts/:id/keys', contacts.exchangeKeys);
-        app.post('/contacts', contacts.createContact);
         app.delete('/contacts/:id', contacts.deleteContact);
         app.get('/latest_contacts', contacts.getLatestContacts);
         app.post('/generate_external', contacts.generateOwnerWithExternalSigner);
@@ -109,7 +111,6 @@ function set(app) {
         app.get('/allmessages', messages.getAllMessages);
         app.get('/messages', messages.getMessages);
         app.delete('/message/:id', messages.deleteMessage);
-        app.post('/messages', messages.sendMessage);
         app.post('/messages/:chat_id/read', messages.readMessages);
         app.post('/messages/clear', messages.clearMessages);
         app.delete('/messages', messages.disappearingMessages);
@@ -117,25 +118,17 @@ function set(app) {
         app.get('/subscriptions', subcriptions.getAllSubscriptions);
         app.get('/subscription/:id', subcriptions.getSubscription);
         app.delete('/subscription/:id', subcriptions.deleteSubscription);
-        app.post('/subscriptions', subcriptions.createSubscription);
         app.put('/subscription/:id', subcriptions.editSubscription);
         app.get('/subscriptions/contact/:contactId', subcriptions.getSubscriptionsForContact);
         app.put('/subscription/:id/pause', subcriptions.pauseSubscription);
         app.put('/subscription/:id/restart', subcriptions.restartSubscription);
-        app.post('/attachment', media.sendAttachmentMessage);
-        app.post('/purchase', media.purchase);
         app.get('/signer/:challenge', media.signer);
         app.post('/verify_external', auth.verifyAuthRequest);
         app.get('/request_transport_key', auth.requestTransportKey);
-        app.post('/stream', feed.streamFeed);
         app.get('/app_versions', details.getAppVersions);
         app.get('/relay_version', details.getRelayVersion);
-        app.post('/invoices', invoices.createInvoice);
         app.get('/invoices', invoices.listInvoices);
-        app.put('/invoices', invoices.payInvoice);
-        app.post('/invoices/cancel', invoices.cancelInvoice);
         app.get('/invoice', invoices.getInvoice);
-        app.post('/payment', payments.sendPayment);
         app.get('/payments', payments.listPayments);
         app.get('/channels', details.getChannels);
         app.get('/balance', details.getBalance);
@@ -199,6 +192,23 @@ function set(app) {
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
+        app.get('/my_ip', (request, response) => response.send(request.ip));
+        // rate limit these routes:
+        app.use(limiter);
+        app.post('/messages', messages.sendMessage);
+        app.post('/contacts/:id/keys', contacts.exchangeKeys);
+        app.post('/contacts', contacts.createContact);
+        app.post('/tribe', chatTribes.joinTribe);
+        app.post('/tribe_channel', chatTribes.createChannel);
+        app.post('/tribe_member', chats.addTribeMember);
+        app.post('/attachment', media.sendAttachmentMessage);
+        app.post('/purchase', media.purchase);
+        app.post('/stream', feed.streamFeed);
+        app.post('/invoices', invoices.createInvoice);
+        app.put('/invoices', invoices.payInvoice);
+        app.post('/invoices/cancel', invoices.cancelInvoice);
+        app.post('/payment', payments.sendPayment);
+        app.post('/subscriptions', subcriptions.createSubscription);
         // following routes are only for proxy admin user (isAdmin=true)
         app.use(auth_1.proxyAdminMiddleware);
         app.get('/add_user', admin.addProxyUser);

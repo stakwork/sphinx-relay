@@ -139,7 +139,8 @@ function no_auth(path) {
         path == '/request_transport_key' ||
         path == '/webhook' ||
         path == '/has_admin' ||
-        path == '/initial_admin_pubkey');
+        path == '/initial_admin_pubkey' ||
+        path == '/my_ip');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {

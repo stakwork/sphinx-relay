@@ -78,9 +78,17 @@ async function finishSetup() {
   setupDone()
 }
 
+//
 function setupApp() {
   return new Promise(async (resolve) => {
     const app = express()
+
+    if (config.rate_limit_trust_proxy) {
+      const rate_limit_trust_proxy = parseInt(config.rate_limit_trust_proxy)
+      if (rate_limit_trust_proxy > 0) {
+        app.set('trust proxy', rate_limit_trust_proxy)
+      }
+    }
 
     app.use(helmet())
     app.use(

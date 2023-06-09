@@ -34,7 +34,7 @@ const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 const IS_CLN = config.lightning_provider === 'CLN';
 exports.LND_KEYSEND_KEY = 5482373484;
 exports.SPHINX_CUSTOM_RECORD_KEY = 133773310;
-const FEE_LIMIT_SAT = 10000;
+const FEE_LIMIT_SAT = 21;
 let lightningClient;
 let walletUnlocker;
 let routerClient;
@@ -254,7 +254,7 @@ function sendPayment(payment_request, ownerPubkey) {
             if ((0, proxy_1.isProxy)(lightning)) {
                 const opts = {
                     payment_request,
-                    fee_limit: { fixed: FEE_LIMIT_SAT },
+                    fee_limit: { fixed: 100 },
                 };
                 lightning.sendPaymentSync(opts, (err, response) => {
                     if (err || !response) {
@@ -307,13 +307,21 @@ function sendPayment(payment_request, ownerPubkey) {
                     call.on('error', (err) => __awaiter(this, void 0, void 0, function* () {
                         reject(err);
                     }));
-                    call.write({ payment_request });
+                    call.write({ payment_request, fee_limit: { fixed: 100 } });
                 }
             }
         });
     });
 }
 exports.sendPayment = sendPayment;
+function maxfee(amt) {
+    if (amt < 100) {
+        return FEE_LIMIT_SAT;
+    }
+    else {
+        return Math.round(amt * 0.05);
+    }
+}
 function keysend(opts, ownerPubkey) {
     logger_1.sphinxLogger.info('keysend', logger_1.logging.Lightning);
     return new Promise(function (resolve, reject) {
@@ -357,7 +365,9 @@ function keysend(opts, ownerPubkey) {
                 const lightning = yield loadLightning(true, ownerPubkey); // try proxy
                 if ((0, proxy_1.isProxy)(lightning)) {
                     // console.log("SEND sendPaymentSync", options)
-                    options.fee_limit = { fixed: FEE_LIMIT_SAT };
+                    // set a fee limit if its a small payment
+                    // LND default is 100% which may be too small
+                    options.fee_limit = { fixed: maxfee(options.amt) };
                     lightning.sendPaymentSync(options, (err, response) => {
                         if (err || !response) {
                             reject(err);
@@ -401,7 +411,7 @@ function keysend(opts, ownerPubkey) {
                     else {
                         // console.log("SEND sendPaymentV2", options)
                         // new sendPayment (with optional route hints)
-                        options.fee_limit_sat = FEE_LIMIT_SAT;
+                        options.fee_limit_sat = maxfee(options.amt);
                         options.timeout_seconds = 16;
                         const router = loadRouter();
                         const call = router.sendPaymentV2(options);

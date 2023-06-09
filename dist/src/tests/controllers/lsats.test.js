@@ -17,6 +17,9 @@ const save_1 = require("../utils/save");
 const get_1 = require("../utils/get");
 const alice = nodes_1.default[0];
 const bob = nodes_1.default[1];
+/*
+npx ava src/tests/controllers/lsats.test.ts --verbose --serial --timeout=2m
+*/
 const getIdentifierFromToken = (token) => lsat_js_1.Lsat.fromToken(token).id;
 const addLsatToContext = (t, token) => {
     const identifier = getIdentifierFromToken(token);
@@ -39,11 +42,13 @@ ava_1.default.after.always('cleanup lsats', (t) => __awaiter(void 0, void 0, voi
     }
 }));
 ava_1.default.serial('saveLsat', (t) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.sleep)(1000);
     const token = yield (0, save_1.saveLsat)(t, nodes_1.default[0], nodes_1.default[1]);
     t.assert(token.length, 'expected an lsat token in response');
     addLsatToContext(t, token);
 }));
 ava_1.default.serial('getLsat', (t) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.sleep)(1000);
     const token = yield (0, save_1.saveLsat)(t, alice, bob);
     const identifier = addLsatToContext(t, token);
     const { lsat } = yield (0, helpers_1.makeRelayRequest)('get', `/lsats/${identifier}`, alice);
@@ -58,6 +63,7 @@ ava_1.default.serial('listLsats', (t) => __awaiter(void 0, void 0, void 0, funct
     let counter = 0;
     while (counter < lsatCount) {
         counter++;
+        yield (0, helpers_1.sleep)(1000);
         const token = yield (0, save_1.saveLsat)(t, alice, bob);
         addLsatToContext(t, token);
     }
@@ -65,6 +71,7 @@ ava_1.default.serial('listLsats', (t) => __awaiter(void 0, void 0, void 0, funct
     t.assert(lsats.length === initialCount + lsatCount);
 }));
 ava_1.default.serial('updateLsat', (t) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.sleep)(1000);
     const token = yield (0, save_1.saveLsat)(t, alice, bob);
     const identifier = addLsatToContext(t, token);
     let lsat = yield (0, get_1.getLsat)(t, alice, identifier);
@@ -80,6 +87,7 @@ ava_1.default.serial('updateLsat', (t) => __awaiter(void 0, void 0, void 0, func
     t.deepEqual(updated, metadata);
 }));
 ava_1.default.serial('deleteLsats', (t) => __awaiter(void 0, void 0, void 0, function* () {
+    yield (0, helpers_1.sleep)(1000);
     const token = yield (0, save_1.saveLsat)(t, alice, bob);
     const identifier = getIdentifierFromToken(token);
     yield (0, helpers_1.makeRelayRequest)('del', `/lsats/${identifier}`, alice);

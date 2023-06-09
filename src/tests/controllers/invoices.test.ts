@@ -16,7 +16,7 @@ test('test invoices: create invoice, get invoice details, pay invoice, check inv
 async function invoices(t, node1, node2) {
   console.log(`Checking invoices for ${node1.alias} and ${node2.alias}`)
 
-  console.log(`${node1.alias} generating invoice to be paind by ${node2.alias}`)
+  console.log(`${node1.alias} generating invoice to be paid by ${node2.alias}`)
 
   //Create an Invoice
   const createdInvoice = await createInvoice(t, node1, 12, 'test invoice')
@@ -34,6 +34,7 @@ async function invoices(t, node1, node2) {
     'Payment request gotten from getInvoice should equal payment request from create invoice'
   )
 
+  await helpers.sleep(1000)
   //Node2 pays the invoice
   const paidInvoice = await payInvoice(t, node2, paymentRequest)
   t.true(paidInvoice.success, 'Invoice should have been paid')
@@ -48,24 +49,34 @@ async function invoices(t, node1, node2) {
     `Payment should have been made by ${node2.alias} to ${node1.alias}`
   )
 
-  console.log(`${node2.alias} generating invoice to be paind by ${node1.alias}`)
+  console.log(`${node2.alias} generating invoice to be paid by ${node1.alias}`)
 
   //Create an Invoice by node 2
+  await helpers.sleep(1000)
   const createdInvoice2 = await createInvoice(t, node2, 12, 'test invoice')
+  if (node1.alias === 'alice' && node2.alias === 'virtualNode0') {
+    console.log(createdInvoice2)
+  }
   const paymentRequest2 = createdInvoice2.response.invoice
   t.truthy(paymentRequest2, 'Payment request should have been created')
 
   //Get Invoice details by node 2
   const invoiceDetail3 = await getInvoice(t, node2, paymentRequest2)
   const invoicePaymentRequest2 = invoiceDetail3.response.payment_request
-  t.truthy(invoicePaymentRequest2, 'Payment request should exist')
+  if (node1.alias === 'alice' && node2.alias === 'virtualNode0') {
+    console.log(invoiceDetail3)
+  }
+  t.truthy(
+    invoicePaymentRequest2,
+    `Payment request should exist for ${node2.alias} when testing with ${node1.alias}`
+  )
 
   //Payment request gotten from getInvoice should equal payment request from create invoice
   t.true(
     paymentRequest2 === invoicePaymentRequest2,
     'Payment request gotten from getInvoice should equal payment request from create invoice'
   )
-
+  await helpers.sleep(1000)
   //Node2 pays the invoice
   const paidInvoice2 = await payInvoice(t, node1, paymentRequest2)
   t.true(paidInvoice2.success, 'Invoice should have been paid')
