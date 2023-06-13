@@ -45,7 +45,7 @@ function initAndSubscribeTopics(onMessage) {
             }));
             if (!(allOwners && allOwners.length))
                 return;
-            (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
+            yield (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                 if (c.publicKey && c.publicKey.length === 66) {
                     const firstUser = c.id === 1;
                     // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
@@ -56,6 +56,7 @@ function initAndSubscribeTopics(onMessage) {
                     // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
                 }
             }));
+            logger_1.sphinxLogger.info('[TRIBES] all clients + subscriptions complete!');
         }
         catch (e) {
             logger_1.sphinxLogger.error(`TRIBES ERROR ${e}`);
