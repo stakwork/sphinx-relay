@@ -209,6 +209,7 @@ function set(app) {
         app.post('/invoices/cancel', invoices.cancelInvoice);
         app.post('/payment', payments.sendPayment);
         app.post('/subscriptions', subcriptions.createSubscription);
+        app.post('/update_channel_policy', details.updateChannelPolicy);
         // following routes are only for proxy admin user (isAdmin=true)
         app.use(auth_1.proxyAdminMiddleware);
         app.get('/add_user', admin.addProxyUser);

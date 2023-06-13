@@ -264,3 +264,14 @@ export async function clearForTesting(req: Req, res) {
     failure(res, e)
   }
 }
+
+export const updateChannelPolicy = async (req: Req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  try {
+    const { base_fee } = req.body
+    await Lightning.updateChannelPolicies(base_fee)
+    return success(res, 'updated successfully')
+  } catch (error) {
+    return failure(res, error)
+  }
+}
