@@ -59,7 +59,7 @@ async function initAndSubscribeTopics(
       where: { isOwner: true },
     })) as Contact[]
     if (!(allOwners && allOwners.length)) return
-    asyncForEach(allOwners, async (c) => {
+    await asyncForEach(allOwners, async (c) => {
       if (c.publicKey && c.publicKey.length === 66) {
         const firstUser = c.id === 1
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
@@ -69,6 +69,7 @@ async function initAndSubscribeTopics(
         // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
+    sphinxLogger.info('[TRIBES] all clients + subscriptions complete!')
   } catch (e) {
     sphinxLogger.error(`TRIBES ERROR ${e}`)
   }
