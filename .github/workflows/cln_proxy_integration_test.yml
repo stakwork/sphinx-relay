@@ -66,7 +66,7 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone -b update/swarm-image https://github.com/stakwork/sphinx-stack.git stack
+          git clone -b update/proxy-latest https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
