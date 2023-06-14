@@ -47,6 +47,8 @@ jobs:
             'deleteMessages',
             'boostFail',
             'sphinxAuth',
+            'fees',
+            'feeDeduction',
           ]
         node: [16]
     steps:
