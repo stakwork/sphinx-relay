@@ -143,3 +143,21 @@ export function makeJwtArgs(jwt, body) {
     body,
   }
 }
+
+export async function updateChannelPolicy(
+  t,
+  node: NodeConfig,
+  base_fee: number
+) {
+  const v = {
+    base_fee,
+  }
+  const r = await http.post(
+    node.external_ip + '/update_channel_policy',
+    makeArgs(node, v)
+  )
+
+  t.true(r.success, 'channel policy was updated successfully')
+
+  return r
+}
