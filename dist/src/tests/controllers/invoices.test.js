@@ -13,6 +13,7 @@ const ava_1 = require("ava");
 const invoices_1 = require("../utils/invoices");
 const nodes_1 = require("../nodes");
 const helpers = require("../utils/helpers");
+const get_1 = require("../utils/get");
 /*
   npx ava src/tests/controllers/invoices.test.ts --verbose --serial --timeout=2m
 */
@@ -44,6 +45,15 @@ function invoices(t, node1, node2) {
         const invoiceDetail2 = yield (0, invoices_1.getInvoice)(t, node1, paymentRequest);
         const invoicePaymentStatus = invoiceDetail2.response.settled;
         t.true(invoicePaymentStatus, `Payment should have been made by ${node2.alias} to ${node1.alias}`);
+        if (node2.alias.includes('virtualNode') || node2.alias === 'dave') {
+            const balance = yield (0, get_1.getBalance)(t, node2);
+            yield helpers.sleep(1000);
+            const invoice = yield (0, invoices_1.createInvoice)(t, node1, balance + 100, 'test invoice');
+            const paymentRequest = invoice.response.invoice;
+            yield helpers.sleep(1000);
+            const pay = yield (0, invoices_1.payInvoice)(t, node2, paymentRequest);
+            t.false(pay.success, 'Response is suppose to be false because we have insufficent balance');
+        }
         console.log(`${node2.alias} generating invoice to be paid by ${node1.alias}`);
         //Create an Invoice by node 2
         yield helpers.sleep(1000);

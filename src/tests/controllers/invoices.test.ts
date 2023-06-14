@@ -51,7 +51,6 @@ async function invoices(t, node1, node2) {
   )
 
   if (node2.alias.includes('virtualNode') || node2.alias === 'dave') {
-    console.log('=====>', node2.alias, '<=====')
     const balance = await getBalance(t, node2)
     await helpers.sleep(1000)
     const invoice = await createInvoice(t, node1, balance + 100, 'test invoice')

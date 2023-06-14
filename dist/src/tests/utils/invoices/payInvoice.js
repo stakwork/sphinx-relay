@@ -14,10 +14,15 @@ const http = require("ava-http");
 const helpers_1 = require("../../utils/helpers");
 function payInvoice(t, node, payment_request) {
     return __awaiter(this, void 0, void 0, function* () {
-        const v = { payment_request };
-        const r = yield http.put(node.external_ip + '/invoices', (0, helpers_1.makeArgs)(node, v));
-        t.true(r.success, 'Put method should have succeeded');
-        return r;
+        try {
+            const v = { payment_request };
+            const r = yield http.put(node.external_ip + '/invoices', (0, helpers_1.makeArgs)(node, v));
+            t.true(r.success, 'Put method should have succeeded');
+            return r;
+        }
+        catch (error) {
+            return error.error;
+        }
     });
 }
 exports.payInvoice = payInvoice;
