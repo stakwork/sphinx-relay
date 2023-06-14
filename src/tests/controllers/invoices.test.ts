@@ -2,6 +2,7 @@ import test from 'ava'
 import { createInvoice, getInvoice, payInvoice } from '../utils/invoices'
 import nodes from '../nodes'
 import * as helpers from '../utils/helpers'
+import { getBalance } from '../utils/get'
 
 /*
   npx ava src/tests/controllers/invoices.test.ts --verbose --serial --timeout=2m
@@ -49,6 +50,19 @@ async function invoices(t, node1, node2) {
     `Payment should have been made by ${node2.alias} to ${node1.alias}`
   )
 
+  if (node2.alias.includes('virtualNode') || node2.alias === 'dave') {
+    console.log('=====>', node2.alias, '<=====')
+    const balance = await getBalance(t, node2)
+    await helpers.sleep(1000)
+    const invoice = await createInvoice(t, node1, balance + 100, 'test invoice')
+    const paymentRequest = invoice.response.invoice
+    await helpers.sleep(1000)
+    const pay = await payInvoice(t, node2, paymentRequest)
+    t.false(
+      pay.success,
+      'Response is suppose to be false because we have insufficent balance'
+    )
+  }
   console.log(`${node2.alias} generating invoice to be paid by ${node1.alias}`)
 
   //Create an Invoice by node 2
@@ -63,9 +77,6 @@ async function invoices(t, node1, node2) {
   //Get Invoice details by node 2
   const invoiceDetail3 = await getInvoice(t, node2, paymentRequest2)
   const invoicePaymentRequest2 = invoiceDetail3.response.payment_request
-  if (node1.alias === 'alice' && node2.alias === 'virtualNode0') {
-    console.log(invoiceDetail3)
-  }
   t.truthy(
     invoicePaymentRequest2,
     `Payment request should exist for ${node2.alias} when testing with ${node1.alias}`
