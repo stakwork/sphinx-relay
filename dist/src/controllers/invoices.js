@@ -42,7 +42,9 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     logger_1.sphinxLogger.info(`[pay invoice] ${payment_request}`);
+    logger_1.sphinxLogger.info(`[pay invoice] => from ${tenant}`);
     try {
+        logger_1.sphinxLogger.info(`[pay invoice] => pubkey: ${req.owner.publicKey}`);
         const response = yield Lightning.sendPayment(payment_request, req.owner.publicKey);
         logger_1.sphinxLogger.info(`[pay invoice data] ${JSON.stringify(response)}`);
         const message = (yield models_1.models.Message.findOne({

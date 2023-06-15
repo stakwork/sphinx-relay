@@ -37,8 +37,10 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
     return
   }
   sphinxLogger.info(`[pay invoice] ${payment_request}`)
+  sphinxLogger.info(`[pay invoice] => from ${tenant}`)
 
   try {
+    sphinxLogger.info(`[pay invoice] => pubkey: ${req.owner.publicKey}`)
     const response = await Lightning.sendPayment(
       payment_request,
       req.owner.publicKey
