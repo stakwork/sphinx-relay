@@ -68,6 +68,7 @@ const constants = {
   network_types: {
     lightning: 0,
     mqtt: 1,
+    co_tenant: 2,
   },
   payment_errors: {
     timeout: 'Timed Out',

@@ -17,13 +17,14 @@ import {
 } from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
-import { typesToForward } from './receive'
+import { typesToForward, receiveCoTenantMessage } from './receive'
 import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
+import { isProxy } from '../utils/proxy'
 
 const config = loadConfig()
 
@@ -237,6 +238,15 @@ export async function sendMessage({
 
       let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
 
+      if (isProxy() && isTribeOwner) {
+        const coTenant = (await models.Contact.findOne({
+          where: { publicKey: contact.publicKey, isOwner: true },
+        })) as Contact
+        if (coTenant) {
+          mqttTopic = `co_tenant/${destkey}`
+        }
+      }
+
       // sending a payment to one subscriber, buying a pic from OG poster
       // or boost to og poster
       if (isTribeOwner && amount && realSatsContactId === contactId) {
@@ -322,7 +332,10 @@ export function signAndSend(
         This is because the tribe owner is acting as the gate to get
         the message through to the rest of the members, but sending
         to the other members in the chat should not cost sats      */
-      if (mqttTopic) {
+      const arr = mqttTopic?.split('/')
+      if (arr && arr[0] === 'co_tenant') {
+        await receiveCoTenantMessage(mqttTopic!, data)
+      } else if (mqttTopic) {
         await tribes.publish(
           mqttTopic,
           data,

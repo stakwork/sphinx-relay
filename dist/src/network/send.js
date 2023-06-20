@@ -22,6 +22,7 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
+const proxy_1 = require("../utils/proxy");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
@@ -170,6 +171,14 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     continue; // skip (for tribe owner broadcasting, not back to the sender)
                 }
                 let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+                if ((0, proxy_1.isProxy)() && isTribeOwner) {
+                    const coTenant = (yield models_1.models.Contact.findOne({
+                        where: { publicKey: contact.publicKey, isOwner: true },
+                    }));
+                    if (coTenant) {
+                        mqttTopic = `co_tenant/${destkey}`;
+                    }
+                }
                 // sending a payment to one subscriber, buying a pic from OG poster
                 // or boost to og poster
                 if (isTribeOwner && amount && realSatsContactId === contactId) {
@@ -242,7 +251,11 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
                   This is because the tribe owner is acting as the gate to get
                   the message through to the rest of the members, but sending
                   to the other members in the chat should not cost sats      */
-                if (mqttTopic) {
+                const arr = mqttTopic === null || mqttTopic === void 0 ? void 0 : mqttTopic.split('/');
+                if (arr && arr[0] === 'co_tenant') {
+                    yield (0, receive_1.receiveCoTenantMessage)(mqttTopic, data);
+                }
+                else if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, ownerPubkey, () => {
                         if (!replayingHistory) {
                             if (mqttTopic)
