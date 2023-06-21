@@ -516,7 +516,7 @@ export async function receiveMqttMessage(
 }
 
 export async function receiveCoTenantMessage(
-  topic: string,
+  destination: string,
   message: string
 ): Promise<void> {
   try {
@@ -524,10 +524,7 @@ export async function receiveCoTenantMessage(
     const payload = await parseAndVerifyPayload(message)
     if (!payload) return // skip it if not parsed
     payload.network_type = constants.network_types.co_tenant
-
-    const arr = topic.split('/')
-    const dest = arr[1]
-    onReceive(payload, dest)
+    onReceive(payload, destination)
   } catch (e) {
     sphinxLogger.error('failed receiveCoTenantMessage', logging.Network)
   }

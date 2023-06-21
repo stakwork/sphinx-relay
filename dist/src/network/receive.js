@@ -469,7 +469,7 @@ function receiveMqttMessage(topic, message) {
     });
 }
 exports.receiveMqttMessage = receiveMqttMessage;
-function receiveCoTenantMessage(topic, message) {
+function receiveCoTenantMessage(destination, message) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // check topic is signed by sender?
@@ -477,9 +477,7 @@ function receiveCoTenantMessage(topic, message) {
             if (!payload)
                 return; // skip it if not parsed
             payload.network_type = constants_1.default.network_types.co_tenant;
-            const arr = topic.split('/');
-            const dest = arr[1];
-            onReceive(payload, dest);
+            onReceive(payload, destination);
         }
         catch (e) {
             logger_1.sphinxLogger.error('failed receiveCoTenantMessage', logger_1.logging.Network);
