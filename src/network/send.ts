@@ -326,7 +326,7 @@ export function signAndSend(
         await tribes.publish(
           mqttTopic,
           data,
-          ownerPubkey,
+          owner as Contact,
           () => {
             if (!replayingHistory) {
               if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)

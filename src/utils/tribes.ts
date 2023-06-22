@@ -64,8 +64,8 @@ async function initAndSubscribeTopics(
         const firstUser = c.id === 1
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
         if (isProxy() && !c.authToken) return
-        const cl = await lazyClient(c.publicKey, host, onMessage, firstUser)
-        await specialSubscribe(cl, c)
+        await lazyClient(c, host, onMessage, firstUser)
+        // await specialSubscribe(cl, c)
         // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
@@ -76,7 +76,7 @@ async function initAndSubscribeTopics(
 }
 
 async function initializeClient(
-  pubkey: string,
+  contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
   xpubres?: XpubRes
@@ -85,12 +85,12 @@ async function initializeClient(
     let connected = false
     async function reconnect() {
       try {
-        let signer = pubkey
+        let signer = contact.publicKey
         if (xpubres && xpubres.pubkey) signer = xpubres.pubkey
         const pwd = await genSignedTimestamp(signer)
         if (connected) return
         const url = mqttURL(host)
-        let username = pubkey
+        let username = contact.publicKey
         if (xpubres && xpubres.xpub) username = xpubres.xpub
         const cl = mqtt.connect(url, {
           username: username,
@@ -112,6 +112,9 @@ async function initializeClient(
           sphinxLogger.info(`connected!`, logging.Tribes)
           if (!clients[username]) clients[username] = {}
           clients[username][host] = cl // ADD TO MAIN STATE
+          // subscribe here
+          await specialSubscribe(cl, contact)
+
           cl.on('close', function (e) {
             sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
             // setTimeout(() => reconnect(), 2000);
@@ -150,12 +153,12 @@ async function proxyXpub(): Promise<XpubRes> {
 }
 
 async function lazyClient(
-  pubkey: string,
+  contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
   isFirstUser?: boolean
 ): Promise<mqtt.Client> {
-  let username = pubkey
+  let username = contact.publicKey
   let xpubres: XpubRes | undefined
   // "first user" is the pubkey of the lightning node behind proxy
   // they DO NOT use the xpub auth
@@ -171,7 +174,7 @@ async function lazyClient(
   ) {
     return clients[username][host]
   }
-  const cl = await initializeClient(pubkey, host, onMessage, xpubres)
+  const cl = await initializeClient(contact, host, onMessage, xpubres)
   return cl
 }
 
@@ -182,8 +185,8 @@ export async function newSubscription(
   console.log('=> newSubscription:', c.publicKey)
   const host = getHost()
   const isFirstUser = c.id === 1
-  const client = await lazyClient(c.publicKey, host, onMessage, isFirstUser)
-  specialSubscribe(client, c)
+  await lazyClient(c, host, onMessage, isFirstUser)
+  // specialSubscribe(client, c)
 }
 
 function specialSubscribe(cl: mqtt.Client, c: Contact) {
@@ -198,15 +201,15 @@ function specialSubscribe(cl: mqtt.Client, c: Contact) {
 export async function publish(
   topic: string,
   msg: string,
-  ownerPubkey: string,
+  owner: Contact,
   cb: () => void,
   isFirstUser?: boolean
 ): Promise<void> {
-  if (ownerPubkey.length !== 66) {
+  if (owner.publicKey.length !== 66) {
     return sphinxLogger.warning('invalid pubkey, not 66 len')
   }
   const host = getHost()
-  const client = await lazyClient(ownerPubkey, host, () => {}, isFirstUser)
+  const client = await lazyClient(owner, host, () => {}, isFirstUser)
   if (client)
     client.publish(topic, msg, optz, function (err) {
       if (err) sphinxLogger.error(`error publishing ${err}`, logging.Tribes)
@@ -252,15 +255,16 @@ export function printTribesClients(): string {
 }
 
 export async function addExtraHost(
-  pubkey: string,
+  contact: Contact,
   host: string,
   onMessage: (topic: string, message: Buffer) => void
 ): Promise<void> {
+  const pubkey = contact.publicKey
   // console.log("ADD EXTRA HOST", printTribesClients(), host);
   if (getHost() === host) return // not for default host
   if (clients[pubkey] && clients[pubkey][host]) return // already exists
-  const client = await lazyClient(pubkey, host, onMessage)
-  client.subscribe(`${pubkey}/#`, optz)
+  await lazyClient(contact, host, onMessage)
+  // client.subscribe(`${pubkey}/#`, optz)
 }
 
 function mqttURL(h: string) {
