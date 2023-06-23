@@ -51,7 +51,7 @@ function initAndSubscribeTopics(onMessage) {
                     // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
                     if ((0, proxy_1.isProxy)() && !c.authToken)
                         return;
-                    const cl = yield lazyClient(c.publicKey, host, onMessage, firstUser);
+                    const cl = yield lazyClient(c, host, onMessage, firstUser, true);
                     yield specialSubscribe(cl, c);
                     // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
                 }
@@ -63,21 +63,21 @@ function initAndSubscribeTopics(onMessage) {
         }
     });
 }
-function initializeClient(pubkey, host, onMessage, xpubres) {
+function initializeClient(contact, host, onMessage, xpubres, skip_subscribe) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let connected = false;
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     try {
-                        let signer = pubkey;
+                        let signer = contact.publicKey;
                         if (xpubres && xpubres.pubkey)
                             signer = xpubres.pubkey;
                         const pwd = yield genSignedTimestamp(signer);
                         if (connected)
                             return;
                         const url = mqttURL(host);
-                        let username = pubkey;
+                        let username = contact.publicKey;
                         if (xpubres && xpubres.xpub)
                             username = xpubres.xpub;
                         const cl = mqtt.connect(url, {
@@ -100,6 +100,10 @@ function initializeClient(pubkey, host, onMessage, xpubres) {
                                 if (!clients[username])
                                     clients[username] = {};
                                 clients[username][host] = cl; // ADD TO MAIN STATE
+                                if (!skip_subscribe) {
+                                    // subscribe here
+                                    yield specialSubscribe(cl, contact);
+                                }
                                 cl.on('close', function (e) {
                                     logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
                                     // setTimeout(() => reconnect(), 2000);
@@ -143,9 +147,9 @@ function proxyXpub() {
         return xpub_res;
     });
 }
-function lazyClient(pubkey, host, onMessage, isFirstUser) {
+function lazyClient(contact, host, onMessage, isFirstUser, skip_subscribe) {
     return __awaiter(this, void 0, void 0, function* () {
-        let username = pubkey;
+        let username = contact.publicKey;
         let xpubres;
         // "first user" is the pubkey of the lightning node behind proxy
         // they DO NOT use the xpub auth
@@ -160,7 +164,7 @@ function lazyClient(pubkey, host, onMessage, isFirstUser) {
             clients[username][host].connected) {
             return clients[username][host];
         }
-        const cl = yield initializeClient(pubkey, host, onMessage, xpubres);
+        const cl = yield initializeClient(contact, host, onMessage, xpubres, skip_subscribe);
         return cl;
     });
 }
@@ -169,8 +173,8 @@ function newSubscription(c, onMessage) {
         console.log('=> newSubscription:', c.publicKey);
         const host = getHost();
         const isFirstUser = c.id === 1;
-        const client = yield lazyClient(c.publicKey, host, onMessage, isFirstUser);
-        specialSubscribe(client, c);
+        yield lazyClient(c, host, onMessage, isFirstUser);
+        // specialSubscribe(client, c)
     });
 }
 exports.newSubscription = newSubscription;
@@ -183,13 +187,13 @@ function specialSubscribe(cl, c) {
         cl.subscribe(`${c.publicKey}/#`);
     }
 }
-function publish(topic, msg, ownerPubkey, cb, isFirstUser) {
+function publish(topic, msg, owner, cb, isFirstUser) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (ownerPubkey.length !== 66) {
+        if (owner.publicKey.length !== 66) {
             return logger_1.sphinxLogger.warning('invalid pubkey, not 66 len');
         }
         const host = getHost();
-        const client = yield lazyClient(ownerPubkey, host, () => { }, isFirstUser);
+        const client = yield lazyClient(owner, host, () => { }, isFirstUser);
         if (client)
             client.publish(topic, msg, optz, function (err) {
                 if (err)
@@ -236,15 +240,16 @@ function printTribesClients() {
     return JSON.stringify(ret);
 }
 exports.printTribesClients = printTribesClients;
-function addExtraHost(pubkey, host, onMessage) {
+function addExtraHost(contact, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        const pubkey = contact.publicKey;
         // console.log("ADD EXTRA HOST", printTribesClients(), host);
         if (getHost() === host)
             return; // not for default host
         if (clients[pubkey] && clients[pubkey][host])
             return; // already exists
-        const client = yield lazyClient(pubkey, host, onMessage);
-        client.subscribe(`${pubkey}/#`, optz);
+        yield lazyClient(contact, host, onMessage);
+        // client.subscribe(`${pubkey}/#`, optz)
     });
 }
 exports.addExtraHost = addExtraHost;
