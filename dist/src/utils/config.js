@@ -118,6 +118,7 @@ function loadConfig() {
         store_cache: ENV.STORE_CACHE || config.store_cache || DEFAULT_STORE_CACHE,
         default_prune: ENV.DEFAULT_PRUNE || config.default_prune || DEFAULT_PRUNE,
         rate_limit_trust_proxy: ENV.RATE_LIMIT_TRUST_PROXY || config.rate_limit_trust_proxy,
+        host_name: ENV.HOST_NAME || config.host_name,
     };
 }
 exports.loadConfig = loadConfig;
