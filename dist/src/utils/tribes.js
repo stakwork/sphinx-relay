@@ -51,8 +51,8 @@ function initAndSubscribeTopics(onMessage) {
                     // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
                     if ((0, proxy_1.isProxy)() && !c.authToken)
                         return;
-                    yield lazyClient(c, host, onMessage, firstUser);
-                    // await specialSubscribe(cl, c)
+                    const cl = yield lazyClient(c, host, onMessage, firstUser, true);
+                    yield specialSubscribe(cl, c);
                     // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
                 }
             }));
@@ -63,7 +63,7 @@ function initAndSubscribeTopics(onMessage) {
         }
     });
 }
-function initializeClient(contact, host, onMessage, xpubres) {
+function initializeClient(contact, host, onMessage, xpubres, skip_subscribe) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let connected = false;
@@ -100,8 +100,10 @@ function initializeClient(contact, host, onMessage, xpubres) {
                                 if (!clients[username])
                                     clients[username] = {};
                                 clients[username][host] = cl; // ADD TO MAIN STATE
-                                // subscribe here
-                                yield specialSubscribe(cl, contact);
+                                if (!skip_subscribe) {
+                                    // subscribe here
+                                    yield specialSubscribe(cl, contact);
+                                }
                                 cl.on('close', function (e) {
                                     logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
                                     // setTimeout(() => reconnect(), 2000);
@@ -145,7 +147,7 @@ function proxyXpub() {
         return xpub_res;
     });
 }
-function lazyClient(contact, host, onMessage, isFirstUser) {
+function lazyClient(contact, host, onMessage, isFirstUser, skip_subscribe) {
     return __awaiter(this, void 0, void 0, function* () {
         let username = contact.publicKey;
         let xpubres;
@@ -162,7 +164,7 @@ function lazyClient(contact, host, onMessage, isFirstUser) {
             clients[username][host].connected) {
             return clients[username][host];
         }
-        const cl = yield initializeClient(contact, host, onMessage, xpubres);
+        const cl = yield initializeClient(contact, host, onMessage, xpubres, skip_subscribe);
         return cl;
     });
 }

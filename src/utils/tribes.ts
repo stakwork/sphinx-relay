@@ -64,8 +64,8 @@ async function initAndSubscribeTopics(
         const firstUser = c.id === 1
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
         if (isProxy() && !c.authToken) return
-        await lazyClient(c, host, onMessage, firstUser)
-        // await specialSubscribe(cl, c)
+        const cl = await lazyClient(c, host, onMessage, firstUser, true)
+        await specialSubscribe(cl, c)
         // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
@@ -79,7 +79,8 @@ async function initializeClient(
   contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
-  xpubres?: XpubRes
+  xpubres?: XpubRes,
+  skip_subscribe?: boolean
 ): Promise<mqtt.Client> {
   return new Promise(async (resolve) => {
     let connected = false
@@ -112,8 +113,10 @@ async function initializeClient(
           sphinxLogger.info(`connected!`, logging.Tribes)
           if (!clients[username]) clients[username] = {}
           clients[username][host] = cl // ADD TO MAIN STATE
-          // subscribe here
-          await specialSubscribe(cl, contact)
+          if (!skip_subscribe) {
+            // subscribe here
+            await specialSubscribe(cl, contact)
+          }
 
           cl.on('close', function (e) {
             sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
@@ -156,7 +159,8 @@ async function lazyClient(
   contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
-  isFirstUser?: boolean
+  isFirstUser?: boolean,
+  skip_subscribe?: boolean
 ): Promise<mqtt.Client> {
   let username = contact.publicKey
   let xpubres: XpubRes | undefined
@@ -174,7 +178,13 @@ async function lazyClient(
   ) {
     return clients[username][host]
   }
-  const cl = await initializeClient(contact, host, onMessage, xpubres)
+  const cl = await initializeClient(
+    contact,
+    host,
+    onMessage,
+    xpubres,
+    skip_subscribe
+  )
   return cl
 }
 
