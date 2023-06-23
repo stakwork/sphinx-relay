@@ -173,8 +173,8 @@ function newSubscription(c, onMessage) {
         console.log('=> newSubscription:', c.publicKey);
         const host = getHost();
         const isFirstUser = c.id === 1;
-        yield lazyClient(c, host, onMessage, isFirstUser);
-        // specialSubscribe(client, c)
+        const client = yield lazyClient(c, host, onMessage, isFirstUser);
+        yield specialSubscribe(client, c);
     });
 }
 exports.newSubscription = newSubscription;

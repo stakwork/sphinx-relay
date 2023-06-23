@@ -195,8 +195,8 @@ export async function newSubscription(
   console.log('=> newSubscription:', c.publicKey)
   const host = getHost()
   const isFirstUser = c.id === 1
-  await lazyClient(c, host, onMessage, isFirstUser)
-  // specialSubscribe(client, c)
+  const client = await lazyClient(c, host, onMessage, isFirstUser)
+  await specialSubscribe(client, c)
 }
 
 function specialSubscribe(cl: mqtt.Client, c: Contact) {
