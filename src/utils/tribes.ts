@@ -117,7 +117,9 @@ async function initializeClient(
           // for HD-enabled proxy, subscribe to all owners pubkeys here
           if (xpubres && allOwners) {
             for (let o of allOwners) {
-              await specialSubscribe(cl, o)
+              // contact #1 has his own client
+              const isFirstUser = contact.id === 1
+              if (!isFirstUser) await specialSubscribe(cl, o)
             }
           } else {
             // else just this contact (legacy)
