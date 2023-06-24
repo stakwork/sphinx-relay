@@ -33,6 +33,8 @@ const DEFAULT_PRUNE = null;
 const DEFAULT_PEOPLE_HOST = 'people.sphinx.chat';
 // const DEFAULT_TRIBES_HOST = 'tribes.sphinx.chat'
 // const DEFAULT_MQTT_HOST = 'tribes.sphinx.chat'
+const DEFAULT_SWARM_INVITE_PRICE = 2000;
+const DEFAULT_SWARM_ADMIN_INVITE_PERCENTAGE = 10;
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
@@ -119,6 +121,13 @@ function loadConfig() {
         default_prune: ENV.DEFAULT_PRUNE || config.default_prune || DEFAULT_PRUNE,
         rate_limit_trust_proxy: ENV.RATE_LIMIT_TRUST_PROXY || config.rate_limit_trust_proxy,
         host_name: ENV.HOST_NAME || config.host_name,
+        allow_swarm_invite: ENV.ALLOW_SWARM_INVITE || config.allow_swarm_invite,
+        swarm_invite_price: ENV.SWARM_INVITE_PRICE ||
+            config.swarm_invite_price ||
+            DEFAULT_SWARM_INVITE_PRICE,
+        swarm_admin_invite_percentage: ENV.SWARM_ADMIN_INVITE_PERCENTAGE ||
+            config.swarm_admin_invite_percentage ||
+            DEFAULT_SWARM_ADMIN_INVITE_PERCENTAGE,
     };
 }
 exports.loadConfig = loadConfig;
