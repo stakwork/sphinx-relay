@@ -61,11 +61,9 @@ async function initAndSubscribeTopics(
     if (!(allOwners && allOwners.length)) return
     await asyncForEach(allOwners, async (c) => {
       if (c.publicKey && c.publicKey.length === 66) {
-        const firstUser = c.id === 1
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
         if (isProxy() && !c.authToken) return
-        const cl = await lazyClient(c, host, onMessage, firstUser, true)
-        await specialSubscribe(cl, c)
+        await lazyClient(c, host, onMessage, allOwners)
         // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
@@ -80,7 +78,7 @@ async function initializeClient(
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
   xpubres?: XpubRes,
-  skip_subscribe?: boolean
+  allOwners?: Contact[]
 ): Promise<mqtt.Client> {
   return new Promise(async (resolve) => {
     let connected = false
@@ -111,10 +109,18 @@ async function initializeClient(
             return
           }
           sphinxLogger.info(`connected!`, logging.Tribes)
+
+          // ADD TO MAIN clients STATE
           if (!clients[username]) clients[username] = {}
-          clients[username][host] = cl // ADD TO MAIN STATE
-          if (!skip_subscribe) {
-            // subscribe here
+          clients[username][host] = cl
+
+          // for HD-enabled proxy, subscribe to all owners pubkeys here
+          if (xpubres && allOwners) {
+            for (let o of allOwners) {
+              await specialSubscribe(cl, o)
+            }
+          } else {
+            // else just this contact (legacy)
             await specialSubscribe(cl, contact)
           }
 
@@ -159,13 +165,13 @@ async function lazyClient(
   contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
-  isFirstUser?: boolean,
-  skip_subscribe?: boolean
+  allOwners?: Contact[]
 ): Promise<mqtt.Client> {
   let username = contact.publicKey
   let xpubres: XpubRes | undefined
   // "first user" is the pubkey of the lightning node behind proxy
   // they DO NOT use the xpub auth
+  const isFirstUser = contact.id === 1
   if (config.proxy_hd_keys && !isFirstUser) {
     xpubres = await proxyXpub()
     // set the username to be the xpub
@@ -183,7 +189,7 @@ async function lazyClient(
     host,
     onMessage,
     xpubres,
-    skip_subscribe
+    allOwners
   )
   return cl
 }
@@ -194,9 +200,7 @@ export async function newSubscription(
 ) {
   console.log('=> newSubscription:', c.publicKey)
   const host = getHost()
-  const isFirstUser = c.id === 1
-  const client = await lazyClient(c, host, onMessage, isFirstUser)
-  await specialSubscribe(client, c)
+  await lazyClient(c, host, onMessage)
 }
 
 function specialSubscribe(cl: mqtt.Client, c: Contact) {
@@ -219,7 +223,7 @@ export async function publish(
     return sphinxLogger.warning('invalid pubkey, not 66 len')
   }
   const host = getHost()
-  const client = await lazyClient(owner, host, () => {}, isFirstUser)
+  const client = await lazyClient(owner, host)
   if (client)
     client.publish(topic, msg, optz, function (err) {
       if (err) sphinxLogger.error(`error publishing ${err}`, logging.Tribes)
