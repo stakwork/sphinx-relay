@@ -74,6 +74,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'profile_filters', 'TEXT');
         addTableColumn('sphinx_chat_members', 'total_earned', 'BIGINT');
         addTableColumn('sphinx_chat_members', 'reputation', 'BIGINT');
+        addTableColumn('sphinx_invites', 'connection_string', 'TEXT');
         addTenant('sphinx_chat_members');
         addTenant('sphinx_chats');
         addTenant('sphinx_bots');
