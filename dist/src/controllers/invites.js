@@ -21,6 +21,9 @@ const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
 const Lightning = require("../grpc/lightning");
 const constants_1 = require("../constants");
+const bolt11 = require("@boltz/bolt11");
+const socket = require("../utils/socket");
+const notify_1 = require("../notify");
 const config = (0, config_1.loadConfig)();
 const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { invite_string } = req.body;
@@ -142,14 +145,6 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.createInvite = createInvite;
 function createInviteSwarm(params, tenant, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        // pending: 0,
-        // ready: 1,
-        // delivered: 2,
-        // in_progress: 3,
-        // complete: 4,
-        // expired: 5,
-        // payment_pending: 6,
-        console.log(params.invite);
         try {
             const rootpk = yield (0, proxy_1.getProxyRootPubkey)();
             const payment = yield Lightning.addInvoice({ memo: 'payment for invite', value: config.swarm_invite_price }, rootpk);
@@ -178,6 +173,77 @@ function createInviteSwarm(params, tenant, res) {
         catch (error) {
             logger_1.sphinxLogger.error(`=> create swarm invite ERROR ${error}`);
             return (0, res_1.failure)(res, error);
+        }
+    });
+}
+function checkSwarmInvitePaymentStatus() {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const invites = (yield models_1.models.Invite.findAll({
+                where: { status: constants_1.default.invite_statuses.payment_pending },
+            }));
+            const rootpk = yield (0, proxy_1.getProxyRootPubkey)();
+            for (let i = 0; i < invites.length; i++) {
+                const invite = invites[i];
+                const decoded_invoice = bolt11.decode(invite.invoice);
+                if (decoded_invoice) {
+                    const paymentHash = ((_a = decoded_invoice.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
+                    if (paymentHash) {
+                        const invoice = (yield Lightning.getInvoiceHandler(paymentHash, rootpk));
+                        if (invoice.settled) {
+                            //Update invite status to ready and create a new User by admin
+                            yield finishSwarmInvite(invite);
+                        }
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.log(error);
+            logger_1.sphinxLogger.error(`Error checking invite payment status`, error);
+            throw error;
+        }
+    });
+}
+setInterval(() => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield checkSwarmInvitePaymentStatus();
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(`error checking swarm invite Status ${error}`);
+    }
+}), 60000);
+function finishSwarmInvite(invite) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const rootpk = yield (0, proxy_1.getProxyRootPubkey)();
+            const dbInvite = (yield models_1.models.Invite.findOne({
+                where: { inviteString: invite.inviteString },
+            }));
+            const initialSat = config.swarm_invite_price -
+                (config.swarm_invite_price * config.swarm_admin_invite_percentage) / 100;
+            const newUser = (yield (0, proxy_1.generateNewUser)(rootpk, initialSat));
+            const connection_string = `connect::${config.host_name}::${newUser.publicKey}`;
+            console.log(connection_string);
+            const contact = (yield models_1.models.Contact.findOne({
+                where: { id: dbInvite.contactId },
+            }));
+            const owner = (yield models_1.models.Contact.findOne({
+                where: { id: dbInvite.tenant },
+            }));
+            // await dbInvite.update({ status: constants.invite_statuses.ready })
+            socket.sendJson({
+                type: 'invite',
+                response: jsonUtils.inviteToJson(dbInvite),
+            }, owner.id);
+            if (contact) {
+                (0, notify_1.sendNotification)(new models_1.Chat(), contact.alias, 'invite', owner);
+            }
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`Error finishing up swarm invite ${error}`);
+            throw error;
         }
     });
 }

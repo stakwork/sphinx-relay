@@ -26,6 +26,7 @@
     "logging_level": "debug",
     "mqtt_host": "127.0.0.1",
     "proxy_hd_keys": true,
-    "allow_swarm_invite": true
+    "allow_swarm_invite": true,
+    "host_name": "localhost:3004"
   }
 }
