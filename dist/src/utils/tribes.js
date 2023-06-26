@@ -25,6 +25,7 @@ const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
 const interfaces_1 = require("../grpc/interfaces");
 const config = (0, config_1.loadConfig)();
+// MAIN CLIENTS STATE (caching already connected clients)
 // {pubkey: {host: Client} }
 const CLIENTS = {};
 const optz = { qos: 0 };
@@ -101,7 +102,7 @@ function initializeClient(contact, host, onMessage, xpubres, allOwners) {
                                 CLIENTS[username][host] = cl;
                                 // for HD-enabled proxy, subscribe to all owners pubkeys here
                                 if (xpubres && allOwners) {
-                                    for (let o of allOwners) {
+                                    for (const o of allOwners) {
                                         // contact #1 has his own client
                                         const isFirstUser = contact.id === 1;
                                         if (!isFirstUser)
