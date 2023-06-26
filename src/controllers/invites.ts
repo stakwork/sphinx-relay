@@ -1,4 +1,4 @@
-import { models, Invite, Contact } from '../models'
+import { models, Invite, Contact, ContactRecord, InviteRecord } from '../models'
 import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
@@ -7,6 +7,12 @@ import { failure } from '../utils/res'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { Response } from 'express'
+import { loadConfig } from '../utils/config'
+import { getProxyRootPubkey, isProxy } from '../utils/proxy'
+import * as Lightning from '../grpc/lightning'
+import constants from '../constants'
+
+const config = loadConfig()
 
 export const finishInvite = async (
   req: Req,
@@ -142,5 +148,53 @@ export const createInvite = async (
     res.end()
   }
 
-  createInviteInHub(params, onSuccess, onFailure)
+  if (config.allow_swarm_invite && isProxy()) {
+    createInviteSwarm(params, tenant, res)
+  } else {
+    createInviteInHub(params, onSuccess, onFailure)
+  }
+}
+
+async function createInviteSwarm(params, tenant, res: Response) {
+  // pending: 0,
+  // ready: 1,
+  // delivered: 2,
+  // in_progress: 3,
+  // complete: 4,
+  // expired: 5,
+  // payment_pending: 6,
+  console.log(params.invite)
+  try {
+    const rootpk = await getProxyRootPubkey()
+    const payment = await Lightning.addInvoice(
+      { memo: 'payment for invite', value: config.swarm_invite_price },
+      rootpk
+    )
+    const contact: Contact = (await models.Contact.create({
+      alias: params.invite.contact_nickname,
+      status: 0,
+      tenant,
+    })) as ContactRecord
+    const invite = (await models.Invite.create({
+      welcomeMessage: params.invite.message,
+      contactId: contact.id,
+      status: constants.invite_statuses.payment_pending,
+      inviteString: params.invite.pin,
+      tenant,
+      invoice: payment.payment_request,
+      price: config.swarm_invite_price,
+    })) as InviteRecord
+
+    const contactJson = jsonUtils.contactToJson(contact)
+    if (invite) {
+      contactJson.invite = jsonUtils.inviteToJson(invite)
+    }
+
+    res.status(200)
+    res.json({ success: true, contact: contactJson })
+    res.end()
+  } catch (error) {
+    sphinxLogger.error(`=> create swarm invite ERROR ${error}`)
+    return failure(res, error)
+  }
 }

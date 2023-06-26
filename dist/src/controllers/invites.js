@@ -17,6 +17,11 @@ const hub_1 = require("../hub");
 // import * as proxy from '../utils/proxy'
 const res_1 = require("../utils/res");
 const logger_1 = require("../utils/logger");
+const config_1 = require("../utils/config");
+const proxy_1 = require("../utils/proxy");
+const Lightning = require("../grpc/lightning");
+const constants_1 = require("../constants");
+const config = (0, config_1.loadConfig)();
 const finishInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { invite_string } = req.body;
     const params = {
@@ -127,7 +132,53 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.json(response);
         res.end();
     };
-    (0, hub_1.createInviteInHub)(params, onSuccess, onFailure);
+    if (config.allow_swarm_invite && (0, proxy_1.isProxy)()) {
+        createInviteSwarm(params, tenant, res);
+    }
+    else {
+        (0, hub_1.createInviteInHub)(params, onSuccess, onFailure);
+    }
 });
 exports.createInvite = createInvite;
+function createInviteSwarm(params, tenant, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // pending: 0,
+        // ready: 1,
+        // delivered: 2,
+        // in_progress: 3,
+        // complete: 4,
+        // expired: 5,
+        // payment_pending: 6,
+        console.log(params.invite);
+        try {
+            const rootpk = yield (0, proxy_1.getProxyRootPubkey)();
+            const payment = yield Lightning.addInvoice({ memo: 'payment for invite', value: config.swarm_invite_price }, rootpk);
+            const contact = (yield models_1.models.Contact.create({
+                alias: params.invite.contact_nickname,
+                status: 0,
+                tenant,
+            }));
+            const invite = (yield models_1.models.Invite.create({
+                welcomeMessage: params.invite.message,
+                contactId: contact.id,
+                status: constants_1.default.invite_statuses.payment_pending,
+                inviteString: params.invite.pin,
+                tenant,
+                invoice: payment.payment_request,
+                price: config.swarm_invite_price,
+            }));
+            const contactJson = jsonUtils.contactToJson(contact);
+            if (invite) {
+                contactJson.invite = jsonUtils.inviteToJson(invite);
+            }
+            res.status(200);
+            res.json({ success: true, contact: contactJson });
+            res.end();
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`=> create swarm invite ERROR ${error}`);
+            return (0, res_1.failure)(res, error);
+        }
+    });
+}
 //# sourceMappingURL=invites.js.map
