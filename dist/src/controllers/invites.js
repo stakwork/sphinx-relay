@@ -208,7 +208,9 @@ function checkSwarmInvitePaymentStatus() {
 }
 setInterval(() => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield checkSwarmInvitePaymentStatus();
+        if ((0, proxy_1.isProxy)() && config.allow_swarm_invite) {
+            yield checkSwarmInvitePaymentStatus();
+        }
     }
     catch (error) {
         logger_1.sphinxLogger.error(`error checking swarm invite Status ${error}`);
@@ -225,14 +227,17 @@ function finishSwarmInvite(invite) {
                 (config.swarm_invite_price * config.swarm_admin_invite_percentage) / 100;
             const newUser = (yield (0, proxy_1.generateNewUser)(rootpk, initialSat));
             const connection_string = `connect::${config.host_name}::${newUser.publicKey}`;
-            console.log(connection_string);
             const contact = (yield models_1.models.Contact.findOne({
                 where: { id: dbInvite.contactId },
             }));
             const owner = (yield models_1.models.Contact.findOne({
                 where: { id: dbInvite.tenant },
             }));
-            // await dbInvite.update({ status: constants.invite_statuses.ready })
+            yield dbInvite.update({
+                status: constants_1.default.invite_statuses.ready,
+                connectionString: connection_string,
+            });
+            console.log(dbInvite.dataValues);
             socket.sendJson({
                 type: 'invite',
                 response: jsonUtils.inviteToJson(dbInvite),

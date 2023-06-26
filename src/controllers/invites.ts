@@ -244,7 +244,9 @@ async function checkSwarmInvitePaymentStatus() {
 
 setInterval(async () => {
   try {
-    await checkSwarmInvitePaymentStatus()
+    if (isProxy() && config.allow_swarm_invite) {
+      await checkSwarmInvitePaymentStatus()
+    }
   } catch (error) {
     sphinxLogger.error(`error checking swarm invite Status ${error}`)
   }
@@ -262,14 +264,17 @@ async function finishSwarmInvite(invite: InviteRecord) {
       (config.swarm_invite_price * config.swarm_admin_invite_percentage) / 100
     const newUser = (await generateNewUser(rootpk, initialSat)) as ContactRecord
     const connection_string = `connect::${config.host_name}::${newUser.publicKey}`
-    console.log(connection_string)
+
     const contact: Contact = (await models.Contact.findOne({
       where: { id: dbInvite.contactId },
     })) as Contact
     const owner: Contact = (await models.Contact.findOne({
       where: { id: dbInvite.tenant },
     })) as Contact
-    // await dbInvite.update({ status: constants.invite_statuses.ready })
+    await dbInvite.update({
+      status: constants.invite_statuses.ready,
+      connectionString: connection_string,
+    })
 
     socket.sendJson(
       {
