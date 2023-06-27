@@ -24,8 +24,9 @@ import { txIndexFromChannelId } from '../grpc/interfaces'
 
 const config = loadConfig()
 
+// MAIN CLIENTS STATE (caching already connected clients)
 // {pubkey: {host: Client} }
-const clients: { [k: string]: { [k: string]: mqtt.Client } } = {}
+const CLIENTS: { [k: string]: { [k: string]: mqtt.Client } } = {}
 
 interface CacheMsgInput {
   preview: string
@@ -61,36 +62,40 @@ async function initAndSubscribeTopics(
     if (!(allOwners && allOwners.length)) return
     await asyncForEach(allOwners, async (c) => {
       if (c.publicKey && c.publicKey.length === 66) {
-        const firstUser = c.id === 1
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
         if (isProxy() && !c.authToken) return
-        const cl = await lazyClient(c.publicKey, host, onMessage, firstUser)
-        await specialSubscribe(cl, c)
+        await lazyClient(c, host, onMessage, allOwners)
         // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
-    sphinxLogger.info('[TRIBES] all clients + subscriptions complete!')
+    sphinxLogger.info('[TRIBES] all CLIENTS + subscriptions complete!')
   } catch (e) {
     sphinxLogger.error(`TRIBES ERROR ${e}`)
   }
 }
 
+interface LazyClientRes {
+  client: mqtt.Client
+  isFresh: boolean
+}
+
 async function initializeClient(
-  pubkey: string,
+  contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
-  xpubres?: XpubRes
-): Promise<mqtt.Client> {
+  xpubres?: XpubRes,
+  allOwners?: Contact[]
+): Promise<LazyClientRes> {
   return new Promise(async (resolve) => {
     let connected = false
     async function reconnect() {
       try {
-        let signer = pubkey
+        let signer = contact.publicKey
         if (xpubres && xpubres.pubkey) signer = xpubres.pubkey
         const pwd = await genSignedTimestamp(signer)
         if (connected) return
         const url = mqttURL(host)
-        let username = pubkey
+        let username = contact.publicKey
         if (xpubres && xpubres.xpub) username = xpubres.xpub
         const cl = mqtt.connect(url, {
           username: username,
@@ -102,22 +107,38 @@ async function initializeClient(
           // first check if its already connected to this host (in case it takes a long time)
           connected = true
           if (
-            clients[username] &&
-            clients[username][host] &&
-            clients[username][host].connected
+            CLIENTS[username] &&
+            CLIENTS[username][host] &&
+            CLIENTS[username][host].connected
           ) {
-            resolve(clients[username][host])
+            resolve({ client: CLIENTS[username][host], isFresh: false })
             return
           }
           sphinxLogger.info(`connected!`, logging.Tribes)
-          if (!clients[username]) clients[username] = {}
-          clients[username][host] = cl // ADD TO MAIN STATE
+
+          // ADD TO MAIN CLIENTS STATE
+          if (!CLIENTS[username]) CLIENTS[username] = {}
+          CLIENTS[username][host] = cl
+
+          // for HD-enabled proxy, subscribe to all owners pubkeys here
+          if (xpubres && allOwners) {
+            for (const o of allOwners) {
+              // contact #1 has his own client
+              const isFirstUser = contact.id === 1
+              if (!isFirstUser) await specialSubscribe(cl, o)
+            }
+          } else {
+            // else just this contact (legacy)
+            await specialSubscribe(cl, contact)
+          }
+
           cl.on('close', function (e) {
             sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
             // setTimeout(() => reconnect(), 2000);
             connected = false
-            if (clients[username] && clients[username][host]) {
-              delete clients[username][host]
+            // REMOVE FROM MAIN CLIENTS STATE
+            if (CLIENTS[username] && CLIENTS[username][host]) {
+              delete CLIENTS[username][host]
             }
           })
           cl.on('error', function (e) {
@@ -127,7 +148,8 @@ async function initializeClient(
             // console.log("============>>>>> GOT A MSG", topic, message)
             if (onMessage) onMessage(topic, message)
           })
-          resolve(cl)
+          // new client! isFresh = true
+          resolve({ client: cl, isFresh: true })
         })
       } catch (e) {
         sphinxLogger.error(`error initializing ${e}`, logging.Tribes)
@@ -150,29 +172,29 @@ async function proxyXpub(): Promise<XpubRes> {
 }
 
 async function lazyClient(
-  pubkey: string,
+  contact: Contact,
   host: string,
   onMessage?: (topic: string, message: Buffer) => void,
-  isFirstUser?: boolean
-): Promise<mqtt.Client> {
-  let username = pubkey
+  allOwners?: Contact[]
+): Promise<LazyClientRes> {
+  let username = contact.publicKey
   let xpubres: XpubRes | undefined
   // "first user" is the pubkey of the lightning node behind proxy
   // they DO NOT use the xpub auth
+  const isFirstUser = contact.id === 1
   if (config.proxy_hd_keys && !isFirstUser) {
     xpubres = await proxyXpub()
     // set the username to be the xpub
     if (xpubres?.xpub) username = xpubres?.xpub
   }
   if (
-    clients[username] &&
-    clients[username][host] &&
-    clients[username][host].connected
+    CLIENTS[username] &&
+    CLIENTS[username][host] &&
+    CLIENTS[username][host].connected
   ) {
-    return clients[username][host]
+    return { client: CLIENTS[username][host], isFresh: false }
   }
-  const cl = await initializeClient(pubkey, host, onMessage, xpubres)
-  return cl
+  return await initializeClient(contact, host, onMessage, xpubres, allOwners)
 }
 
 export async function newSubscription(
@@ -181,9 +203,11 @@ export async function newSubscription(
 ) {
   console.log('=> newSubscription:', c.publicKey)
   const host = getHost()
-  const isFirstUser = c.id === 1
-  const client = await lazyClient(c.publicKey, host, onMessage, isFirstUser)
-  specialSubscribe(client, c)
+  const lazy = await lazyClient(c, host, onMessage)
+  if (!lazy.isFresh) {
+    // if its a cached client (HD proxy mode, 2nd virtual owner)
+    await specialSubscribe(lazy.client, c)
+  }
 }
 
 function specialSubscribe(cl: mqtt.Client, c: Contact) {
@@ -198,17 +222,17 @@ function specialSubscribe(cl: mqtt.Client, c: Contact) {
 export async function publish(
   topic: string,
   msg: string,
-  ownerPubkey: string,
+  owner: Contact,
   cb: () => void,
   isFirstUser?: boolean
 ): Promise<void> {
-  if (ownerPubkey.length !== 66) {
+  if (owner.publicKey.length !== 66) {
     return sphinxLogger.warning('invalid pubkey, not 66 len')
   }
   const host = getHost()
-  const client = await lazyClient(ownerPubkey, host, () => {}, isFirstUser)
-  if (client)
-    client.publish(topic, msg, optz, function (err) {
+  const lazy = await lazyClient(owner, host)
+  if (lazy?.client)
+    lazy.client.publish(topic, msg, optz, function (err) {
       if (err) sphinxLogger.error(`error publishing ${err}`, logging.Tribes)
       else if (cb) cb()
     })
@@ -240,7 +264,7 @@ export async function publish(
 
 export function printTribesClients(): string {
   const ret = {}
-  Object.entries(clients).forEach((entry) => {
+  Object.entries(CLIENTS).forEach((entry) => {
     const pk = entry[0]
     const obj = entry[1]
     ret[pk] = {}
@@ -252,15 +276,16 @@ export function printTribesClients(): string {
 }
 
 export async function addExtraHost(
-  pubkey: string,
+  contact: Contact,
   host: string,
   onMessage: (topic: string, message: Buffer) => void
 ): Promise<void> {
+  const pubkey = contact.publicKey
   // console.log("ADD EXTRA HOST", printTribesClients(), host);
   if (getHost() === host) return // not for default host
-  if (clients[pubkey] && clients[pubkey][host]) return // already exists
-  const client = await lazyClient(pubkey, host, onMessage)
-  client.subscribe(`${pubkey}/#`, optz)
+  if (CLIENTS[pubkey] && CLIENTS[pubkey][host]) return // already exists
+  await lazyClient(contact, host, onMessage)
+  // client.subscribe(`${pubkey}/#`, optz)
 }
 
 function mqttURL(h: string) {

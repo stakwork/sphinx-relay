@@ -175,11 +175,7 @@ export async function doJoinTribe(body: { [k: string]: any }, owner: Contact) {
           status: constants.chat_statuses.approved,
           tenant,
         })
-        tribes.addExtraHost(
-          theOwner.publicKey,
-          host,
-          network.receiveMqttMessage
-        )
+        tribes.addExtraHost(theOwner, host, network.receiveMqttMessage)
         resolve(jsonUtils.chatToJson(chat))
       },
     })

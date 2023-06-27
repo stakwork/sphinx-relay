@@ -243,7 +243,7 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
                   the message through to the rest of the members, but sending
                   to the other members in the chat should not cost sats      */
                 if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data, ownerPubkey, () => {
+                    yield tribes.publish(mqttTopic, data, owner, () => {
                         if (!replayingHistory) {
                             if (mqttTopic)
                                 checkIfAutoConfirm(opts.data, ownerID);

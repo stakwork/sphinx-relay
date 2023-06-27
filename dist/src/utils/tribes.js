@@ -25,8 +25,9 @@ const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
 const interfaces_1 = require("../grpc/interfaces");
 const config = (0, config_1.loadConfig)();
+// MAIN CLIENTS STATE (caching already connected clients)
 // {pubkey: {host: Client} }
-const clients = {};
+const CLIENTS = {};
 const optz = { qos: 0 };
 let XPUB_RES;
 // this runs at relay startup
@@ -47,37 +48,35 @@ function initAndSubscribeTopics(onMessage) {
                 return;
             yield (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                 if (c.publicKey && c.publicKey.length === 66) {
-                    const firstUser = c.id === 1;
                     // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
                     if ((0, proxy_1.isProxy)() && !c.authToken)
                         return;
-                    const cl = yield lazyClient(c.publicKey, host, onMessage, firstUser);
-                    yield specialSubscribe(cl, c);
+                    yield lazyClient(c, host, onMessage, allOwners);
                     // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
                 }
             }));
-            logger_1.sphinxLogger.info('[TRIBES] all clients + subscriptions complete!');
+            logger_1.sphinxLogger.info('[TRIBES] all CLIENTS + subscriptions complete!');
         }
         catch (e) {
             logger_1.sphinxLogger.error(`TRIBES ERROR ${e}`);
         }
     });
 }
-function initializeClient(pubkey, host, onMessage, xpubres) {
+function initializeClient(contact, host, onMessage, xpubres, allOwners) {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let connected = false;
             function reconnect() {
                 return __awaiter(this, void 0, void 0, function* () {
                     try {
-                        let signer = pubkey;
+                        let signer = contact.publicKey;
                         if (xpubres && xpubres.pubkey)
                             signer = xpubres.pubkey;
                         const pwd = yield genSignedTimestamp(signer);
                         if (connected)
                             return;
                         const url = mqttURL(host);
-                        let username = pubkey;
+                        let username = contact.publicKey;
                         if (xpubres && xpubres.xpub)
                             username = xpubres.xpub;
                         const cl = mqtt.connect(url, {
@@ -90,22 +89,37 @@ function initializeClient(pubkey, host, onMessage, xpubres) {
                             return __awaiter(this, void 0, void 0, function* () {
                                 // first check if its already connected to this host (in case it takes a long time)
                                 connected = true;
-                                if (clients[username] &&
-                                    clients[username][host] &&
-                                    clients[username][host].connected) {
-                                    resolve(clients[username][host]);
+                                if (CLIENTS[username] &&
+                                    CLIENTS[username][host] &&
+                                    CLIENTS[username][host].connected) {
+                                    resolve({ client: CLIENTS[username][host], isFresh: false });
                                     return;
                                 }
                                 logger_1.sphinxLogger.info(`connected!`, logger_1.logging.Tribes);
-                                if (!clients[username])
-                                    clients[username] = {};
-                                clients[username][host] = cl; // ADD TO MAIN STATE
+                                // ADD TO MAIN CLIENTS STATE
+                                if (!CLIENTS[username])
+                                    CLIENTS[username] = {};
+                                CLIENTS[username][host] = cl;
+                                // for HD-enabled proxy, subscribe to all owners pubkeys here
+                                if (xpubres && allOwners) {
+                                    for (const o of allOwners) {
+                                        // contact #1 has his own client
+                                        const isFirstUser = contact.id === 1;
+                                        if (!isFirstUser)
+                                            yield specialSubscribe(cl, o);
+                                    }
+                                }
+                                else {
+                                    // else just this contact (legacy)
+                                    yield specialSubscribe(cl, contact);
+                                }
                                 cl.on('close', function (e) {
                                     logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
                                     // setTimeout(() => reconnect(), 2000);
                                     connected = false;
-                                    if (clients[username] && clients[username][host]) {
-                                        delete clients[username][host];
+                                    // REMOVE FROM MAIN CLIENTS STATE
+                                    if (CLIENTS[username] && CLIENTS[username][host]) {
+                                        delete CLIENTS[username][host];
                                     }
                                 });
                                 cl.on('error', function (e) {
@@ -116,7 +130,8 @@ function initializeClient(pubkey, host, onMessage, xpubres) {
                                     if (onMessage)
                                         onMessage(topic, message);
                                 });
-                                resolve(cl);
+                                // new client! isFresh = true
+                                resolve({ client: cl, isFresh: true });
                             });
                         });
                     }
@@ -143,34 +158,36 @@ function proxyXpub() {
         return xpub_res;
     });
 }
-function lazyClient(pubkey, host, onMessage, isFirstUser) {
+function lazyClient(contact, host, onMessage, allOwners) {
     return __awaiter(this, void 0, void 0, function* () {
-        let username = pubkey;
+        let username = contact.publicKey;
         let xpubres;
         // "first user" is the pubkey of the lightning node behind proxy
         // they DO NOT use the xpub auth
+        const isFirstUser = contact.id === 1;
         if (config.proxy_hd_keys && !isFirstUser) {
             xpubres = yield proxyXpub();
             // set the username to be the xpub
             if (xpubres === null || xpubres === void 0 ? void 0 : xpubres.xpub)
                 username = xpubres === null || xpubres === void 0 ? void 0 : xpubres.xpub;
         }
-        if (clients[username] &&
-            clients[username][host] &&
-            clients[username][host].connected) {
-            return clients[username][host];
+        if (CLIENTS[username] &&
+            CLIENTS[username][host] &&
+            CLIENTS[username][host].connected) {
+            return { client: CLIENTS[username][host], isFresh: false };
         }
-        const cl = yield initializeClient(pubkey, host, onMessage, xpubres);
-        return cl;
+        return yield initializeClient(contact, host, onMessage, xpubres, allOwners);
     });
 }
 function newSubscription(c, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log('=> newSubscription:', c.publicKey);
         const host = getHost();
-        const isFirstUser = c.id === 1;
-        const client = yield lazyClient(c.publicKey, host, onMessage, isFirstUser);
-        specialSubscribe(client, c);
+        const lazy = yield lazyClient(c, host, onMessage);
+        if (!lazy.isFresh) {
+            // if its a cached client (HD proxy mode, 2nd virtual owner)
+            yield specialSubscribe(lazy.client, c);
+        }
     });
 }
 exports.newSubscription = newSubscription;
@@ -183,15 +200,15 @@ function specialSubscribe(cl, c) {
         cl.subscribe(`${c.publicKey}/#`);
     }
 }
-function publish(topic, msg, ownerPubkey, cb, isFirstUser) {
+function publish(topic, msg, owner, cb, isFirstUser) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (ownerPubkey.length !== 66) {
+        if (owner.publicKey.length !== 66) {
             return logger_1.sphinxLogger.warning('invalid pubkey, not 66 len');
         }
         const host = getHost();
-        const client = yield lazyClient(ownerPubkey, host, () => { }, isFirstUser);
-        if (client)
-            client.publish(topic, msg, optz, function (err) {
+        const lazy = yield lazyClient(owner, host);
+        if (lazy === null || lazy === void 0 ? void 0 : lazy.client)
+            lazy.client.publish(topic, msg, optz, function (err) {
                 if (err)
                     logger_1.sphinxLogger.error(`error publishing ${err}`, logger_1.logging.Tribes);
                 else if (cb)
@@ -225,7 +242,7 @@ exports.publish = publish;
 // }
 function printTribesClients() {
     const ret = {};
-    Object.entries(clients).forEach((entry) => {
+    Object.entries(CLIENTS).forEach((entry) => {
         const pk = entry[0];
         const obj = entry[1];
         ret[pk] = {};
@@ -236,15 +253,16 @@ function printTribesClients() {
     return JSON.stringify(ret);
 }
 exports.printTribesClients = printTribesClients;
-function addExtraHost(pubkey, host, onMessage) {
+function addExtraHost(contact, host, onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        const pubkey = contact.publicKey;
         // console.log("ADD EXTRA HOST", printTribesClients(), host);
         if (getHost() === host)
             return; // not for default host
-        if (clients[pubkey] && clients[pubkey][host])
+        if (CLIENTS[pubkey] && CLIENTS[pubkey][host])
             return; // already exists
-        const client = yield lazyClient(pubkey, host, onMessage);
-        client.subscribe(`${pubkey}/#`, optz);
+        yield lazyClient(contact, host, onMessage);
+        // client.subscribe(`${pubkey}/#`, optz)
     });
 }
 exports.addExtraHost = addExtraHost;
