@@ -47,6 +47,7 @@ jobs:
             'deleteMessages',
             'boostFail',
             'sphinxAuth',
+            'swarmInvite',
           ]
         node: [16]
     steps:
