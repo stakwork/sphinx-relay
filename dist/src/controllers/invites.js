@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createInvite = exports.payInvite = exports.finishInvite = void 0;
+exports.getInvite = exports.createInvite = exports.payInvite = exports.finishInvite = void 0;
 const models_1 = require("../models");
 const crypto = require("crypto");
 const jsonUtils = require("../utils/json");
@@ -143,6 +143,23 @@ const createInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.createInvite = createInvite;
+const getInvite = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const tenant = req.owner.id;
+    const invite_string = req.params['invite_string'];
+    try {
+        const invite = (yield models_1.models.Invite.findOne({
+            where: { inviteString: invite_string, tenant },
+        }));
+        return (0, res_1.success)(res, { invite: jsonUtils.inviteToJson(invite) });
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(`Error getting Invite: ${error}`);
+        return (0, res_1.failure)(res, error);
+    }
+});
+exports.getInvite = getInvite;
 function createInviteSwarm(params, tenant, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {

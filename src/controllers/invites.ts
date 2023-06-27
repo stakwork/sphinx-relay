@@ -10,7 +10,7 @@ import * as crypto from 'crypto'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
-import { failure } from '../utils/res'
+import { failure, success } from '../utils/res'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { Response } from 'express'
@@ -170,6 +170,26 @@ export const createInvite = async (
     createInviteSwarm(params, tenant, res)
   } else {
     createInviteInHub(params, onSuccess, onFailure)
+  }
+}
+
+export const getInvite = async (
+  req: Req,
+  res: Response
+): Promise<void | Response> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+
+  const invite_string = req.params['invite_string']
+
+  try {
+    const invite: Invite = (await models.Invite.findOne({
+      where: { inviteString: invite_string, tenant },
+    })) as Invite
+    return success(res, { invite: jsonUtils.inviteToJson(invite) })
+  } catch (error) {
+    sphinxLogger.error(`Error getting Invite: ${error}`)
+    return failure(res, error)
   }
 }
 

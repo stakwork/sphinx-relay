@@ -81,6 +81,7 @@ export async function set(app) {
 
   app.post('/invites', invites.createInvite)
   app.post('/invites/:invite_string/pay', invites.payInvite)
+  app.get('/invites/:invite_string/pay', invites.getInvite)
   app.post('/invites/finish', invites.finishInvite)
 
   app.post('/contacts/tokens', contacts.generateToken)
