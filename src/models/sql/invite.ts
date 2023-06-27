@@ -36,6 +36,9 @@ export default class Invite extends Model<Invite> {
 
   @Column
   tenant: number
+
+  @Column(DataType.TEXT)
+  connectionString: string
 }
 
 export interface InviteRecord extends Invite {

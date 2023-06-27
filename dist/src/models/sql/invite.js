@@ -57,6 +57,10 @@ __decorate([
     sequelize_typescript_1.Column,
     __metadata("design:type", Number)
 ], Invite.prototype, "tenant", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
+    __metadata("design:type", String)
+], Invite.prototype, "connectionString", void 0);
 Invite = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_invites', underscored: true })
 ], Invite);
