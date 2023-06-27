@@ -1,5 +1,5 @@
 import test from 'ava'
-import { createInvite, payInvite } from '../utils/invites'
+import { createInvite, payInvite, getInvite } from '../utils/invites'
 import nodes from '../nodes'
 import { sleep } from '../utils/helpers'
 
@@ -25,11 +25,21 @@ export async function swarmInvite(t, index1, index2, index3) {
   const invite = await createInvite(t, node2)
   t.true(invite.success, 'Invite should be created')
 
-  await sleep(70000)
   const paidInvite = await payInvite(
     t,
     node2,
     invite.contact.invite.invite_string
   )
   t.true(paidInvite.success, 'Invite should have been paid for')
+
+  await sleep(70000)
+  const finishedInvite = await getInvite(
+    t,
+    node2,
+    paidInvite.response.invite.invite_string
+  )
+  t.truthy(
+    finishedInvite.response.invite.connection_string,
+    'Connection string should exist'
+  )
 }
