@@ -237,7 +237,6 @@ function finishSwarmInvite(invite) {
                 status: constants_1.default.invite_statuses.ready,
                 connectionString: connection_string,
             });
-            console.log(dbInvite.dataValues);
             socket.sendJson({
                 type: 'invite',
                 response: jsonUtils.inviteToJson(dbInvite),
