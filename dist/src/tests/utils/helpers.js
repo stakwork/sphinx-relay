@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeJwtArgs = exports.getTimestamp = exports.sleep = exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
+exports.updateChannelPolicy = exports.makeJwtArgs = exports.getTimestamp = exports.sleep = exports.memeProtocol = exports.getToken = exports.arraysEqual = exports.iterate = exports.asyncForEach = exports.randomText = exports.makeRelayRequest = exports.makeArgs = void 0;
 const http = require("ava-http");
 const rsa = require("../../crypto/rsa");
 const moment = require("moment");
@@ -143,4 +143,15 @@ function makeJwtArgs(jwt, body) {
     };
 }
 exports.makeJwtArgs = makeJwtArgs;
+function updateChannelPolicy(t, node, base_fee) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const v = {
+            base_fee,
+        };
+        const r = yield http.post(node.external_ip + '/update_channel_policy', (0, exports.makeArgs)(node, v));
+        t.true(r.success, 'channel policy was updated successfully');
+        return r;
+    });
+}
+exports.updateChannelPolicy = updateChannelPolicy;
 //# sourceMappingURL=helpers.js.map

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getLightningInfo = exports.getLogsSince = exports.checkRouteByContactOrChat = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
+exports.updateChannelPolicy = exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getLightningInfo = exports.getLogsSince = exports.checkRouteByContactOrChat = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
 const Lightning = require("../grpc/lightning");
 const res_1 = require("../utils/res");
 const readLastLines = require("read-last-lines");
@@ -284,4 +284,17 @@ function clearForTesting(req, res) {
     });
 }
 exports.clearForTesting = clearForTesting;
+const updateChannelPolicy = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    try {
+        const { base_fee } = req.body;
+        yield Lightning.updateChannelPolicies(base_fee);
+        return (0, res_1.success)(res, 'updated successfully');
+    }
+    catch (error) {
+        return (0, res_1.failure)(res, error);
+    }
+});
+exports.updateChannelPolicy = updateChannelPolicy;
 //# sourceMappingURL=details.js.map
