@@ -89,7 +89,7 @@ export function init() {
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
           if (!(chat && chat.id))
             return sphinxLogger.error('=> motherbot no chat')
-          const existing = await checkBotExist()
+          const existing = await checkBotExist(chat, botName)
           if (existing) {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')
