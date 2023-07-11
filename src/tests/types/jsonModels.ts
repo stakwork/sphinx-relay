@@ -50,6 +50,7 @@ export interface Message {
   person?: string
   cached?: boolean
   error_message?: string
+  thread_uuid?: string
 }
 
 export interface Chat {
