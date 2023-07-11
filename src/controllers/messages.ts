@@ -529,6 +529,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     hasForwardedSats,
     person,
     cached,
+    thread_uuid,
   } = await helpers.parseReceiveParams(payload)
 
   if (!owner || !sender || !chat) {
@@ -567,6 +568,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
 
@@ -621,6 +623,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     force_push,
     hasForwardedSats,
     cached,
+    thread_uuid,
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
@@ -671,6 +674,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
   if (!cached) {
@@ -881,6 +885,7 @@ export const receiveVoip = async (payload: Payload): Promise<void> => {
     hasForwardedSats,
     person,
     remote_content,
+    thread_uuid,
   } = await helpers.parseReceiveParams(payload)
 
   if (!owner || !sender || !chat) {
@@ -916,6 +921,7 @@ export const receiveVoip = async (payload: Payload): Promise<void> => {
     msg.person = person
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (parent_id) msg.parentId = parent_id
   const message: Message = (await models.Message.create(msg)) as Message
 
