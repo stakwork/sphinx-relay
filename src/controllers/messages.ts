@@ -372,6 +372,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     parent_id,
     pay,
     call,
+    thread_uuid,
   } = req.body
 
   let msgtype = constants.message_types.message
@@ -454,6 +455,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   // "pay" someone who sent a msg is not a reply
   if (reply_uuid && !pay) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (recipientAlias) msg.recipientAlias = recipientAlias
   if (recipientPic) msg.recipientPic = recipientPic
   // console.log(msg)
@@ -475,6 +477,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     }
   }
   if (parent_id) msgToSend.parentId = parent_id
+  if (thread_uuid) msgToSend.thread_uuid = thread_uuid
   if (recipientAlias) msgToSend.recipientAlias = recipientAlias
   if (recipientPic) msgToSend.recipientPic = recipientPic
 
