@@ -108,12 +108,14 @@ function tribe3Msgs(t, node1, node2, node3) {
         t.true(channelTribe.channels.length == 2, 'the amount of channels in this new tribe should be 2');
         //NODE3 SENDS A TEXT MESSAGE IN TRIBE
         const text4 = (0, helpers_1.randomText)();
-        const options = { parent_id: 1 };
+        const options = { parent_id: 1, thread_uuid: 'thread_uuid' };
         let tribeMessage4 = yield (0, msg_1.sendTribeMessage)(t, node3, tribe, text4, options);
         const recivedMessageFromNode1 = yield (0, get_1.getCheckNewMsgs)(t, node1, tribeMessage4.uuid);
         const recivedMessageFromNode2 = yield (0, get_1.getCheckNewMsgs)(t, node1, tribeMessage4.uuid);
         t.true(recivedMessageFromNode1.parent_id == options.parent_id, 'Node 1 gets message channel id');
         t.true(recivedMessageFromNode2.parent_id == options.parent_id, 'node 2 gets message channel id');
+        t.true(recivedMessageFromNode1.thread_uuid == options.thread_uuid, 'Node 1 gets message thread uuid');
+        t.true(recivedMessageFromNode2.thread_uuid == options.thread_uuid, 'node 2 gets message thread uuid');
         //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT
         const n1check3 = yield (0, msg_1.checkMessageDecryption)(t, node1, tribeMessage4.uuid, text4);
         t.true(n1check3, 'node1 should have read and decrypted node3 message');

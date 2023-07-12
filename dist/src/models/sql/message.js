@@ -173,6 +173,10 @@ __decorate([
     (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
     __metadata("design:type", String)
 ], Message.prototype, "errorMessage", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)(sequelize_typescript_1.DataType.TEXT),
+    __metadata("design:type", String)
+], Message.prototype, "thread_uuid", void 0);
 Message = __decorate([
     (0, sequelize_typescript_1.Table)({ tableName: 'sphinx_messages', underscored: true })
 ], Message);
