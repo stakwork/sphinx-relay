@@ -1302,6 +1302,31 @@ export async function getInvoiceHandler(
   })
 }
 
+export async function updateChannelPolicies(base_fee: number) {
+  sphinxLogger.info('update channel policy', logging.Lightning)
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning()
+    if (isLND(lightning)) {
+      await lightning.UpdateChannelPolicy(
+        {
+          global: true,
+          base_fee_msat: convertToMsat(base_fee),
+          time_lock_delta: 18,
+        },
+        (err, response) => {
+          if (err) {
+            sphinxLogger.error(err, logging.Lightning)
+            reject(err)
+          } else {
+            resolve(response)
+            sphinxLogger.info('Channel policy updated successfully')
+          }
+        }
+      )
+    }
+  })
+}
+
 function convertMsatToSat(amount: string) {
   return Number(amount) / 1000
 }

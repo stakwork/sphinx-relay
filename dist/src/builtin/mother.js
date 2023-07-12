@@ -93,13 +93,7 @@ function init() {
                     const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                     if (!(chat && chat.id))
                         return logger_1.sphinxLogger.error('=> motherbot no chat');
-                    const existing = yield models_1.models.ChatBot.findOne({
-                        where: {
-                            chatId: chat.id,
-                            botPrefix: '/' + botName,
-                            tenant: chat.tenant,
-                        },
-                    });
+                    const existing = yield checkBotExist(chat, botName);
                     if (existing) {
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('MotherBot')
@@ -131,6 +125,17 @@ function init() {
                     message.channel.send({ embed });
                 }
                 else {
+                    const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
+                    if (!(chat && chat.id))
+                        return logger_1.sphinxLogger.error('=> motherbot no chat');
+                    // check if bot already exist in tribe
+                    const existing = yield checkBotExist(chat, botName);
+                    if (existing) {
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('MotherBot')
+                            .setDescription(botName + ' already installed');
+                        return message.channel.send({ embed });
+                    }
                     // bot from tribes registry
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
@@ -252,6 +257,24 @@ function getBotByName(name) {
         }
         catch (e) {
             return null;
+        }
+    });
+}
+function checkBotExist(chat, botName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const bot = yield models_1.models.ChatBot.findOne({
+                where: {
+                    chatId: chat.id,
+                    botPrefix: '/' + botName,
+                    tenant: chat.tenant,
+                },
+            });
+            return bot;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`Error checking bot in tribe: ${error}`);
+            throw error;
         }
     });
 }
