@@ -1,12 +1,12 @@
+import * as short from 'short-uuid'
 import * as network from '../../network'
 import { models, Message } from '../../models'
-import * as short from 'short-uuid'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { sphinxLogger } from '../../utils/logger'
-import { Action, validateAction } from './index'
 import { errMsgString } from '../../utils/errMsgString'
+import { Action, validateAction } from './index'
 
 export default async function pay(a: Action): Promise<void> {
   const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a

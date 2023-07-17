@@ -1,9 +1,8 @@
 import * as moment from 'moment'
-import * as zbase32 from './zbase32'
-import * as LND from '../grpc/lightning'
 import * as mqtt from 'mqtt'
 import { IClientSubscribeOptions } from 'mqtt'
 import fetch from 'node-fetch'
+import * as LND from '../grpc/lightning'
 import {
   Contact,
   models,
@@ -13,14 +12,15 @@ import {
   isPostgres,
   ContactRecord,
 } from '../models'
-import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
-import { loadConfig } from './config'
-import { getProxyXpub, isProxy } from './proxy'
-import { logging, sphinxLogger } from './logger'
 import type { Tribe } from '../models/ts/tribe'
 import { sleep, asyncForEach } from '../helpers'
 export { declare_bot, delete_bot }
 import { txIndexFromChannelId } from '../grpc/interfaces'
+import * as zbase32 from './zbase32'
+import { logging, sphinxLogger } from './logger'
+import { getProxyXpub, isProxy } from './proxy'
+import { loadConfig } from './config'
+import { makeBotsJSON, declare_bot, delete_bot } from './tribeBots'
 
 const config = loadConfig()
 

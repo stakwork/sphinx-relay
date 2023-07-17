@@ -1,7 +1,7 @@
 import { asyncForEach } from '../helpers'
 import { sequelize, models, Chat } from '../models'
-import { logging, sphinxLogger } from './logger'
 import constants from '../constants'
+import { logging, sphinxLogger } from './logger'
 
 async function migrateMuted() {
   try {

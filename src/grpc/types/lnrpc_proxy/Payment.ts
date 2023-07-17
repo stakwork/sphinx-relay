@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   HTLCAttempt as _lnrpc_proxy_HTLCAttempt,
   HTLCAttempt__Output as _lnrpc_proxy_HTLCAttempt__Output,
@@ -8,7 +9,6 @@ import type {
   PaymentFailureReason as _lnrpc_proxy_PaymentFailureReason,
   PaymentFailureReason__Output as _lnrpc_proxy_PaymentFailureReason__Output,
 } from '../lnrpc_proxy/PaymentFailureReason'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/rpc_proxy.proto
 

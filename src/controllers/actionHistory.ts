@@ -1,6 +1,6 @@
+import { Response } from 'express'
 import { models } from '../models'
 import { Req } from '../types'
-import { Response } from 'express'
 import { success, failure } from '../utils/res'
 import { asyncForEach } from '../helpers'
 import constants from '../constants'

@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Initiator as _lnrpc_Initiator,
   Initiator__Output as _lnrpc_Initiator__Output,
@@ -8,7 +9,6 @@ import type {
   Resolution as _lnrpc_Resolution,
   Resolution__Output as _lnrpc_Resolution__Output,
 } from '../lnrpc/Resolution'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 

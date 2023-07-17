@@ -1,8 +1,8 @@
-import { models } from '../models'
 import * as path from 'path'
+import * as multer from 'multer'
+import { models } from '../models'
 import { loadConfig } from '../utils/config'
 import { Req } from '../types'
-import * as multer from 'multer'
 
 const config = loadConfig()
 

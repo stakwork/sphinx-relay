@@ -1,12 +1,12 @@
-import { models, Invite, Contact } from '../models'
 import * as crypto from 'crypto'
+import { Response } from 'express'
+import { models, Invite, Contact } from '../models'
 import * as jsonUtils from '../utils/json'
 import { finishInviteInHub, createInviteInHub, payInviteInvoice } from '../hub'
 // import * as proxy from '../utils/proxy'
 import { failure } from '../utils/res'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
-import { Response } from 'express'
 
 export const finishInvite = async (
   req: Req,

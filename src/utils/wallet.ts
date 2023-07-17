@@ -1,4 +1,5 @@
 import { loadProto } from '../grpc/proto'
+/* eslint-disable import/no-unresolved */
 import { WalletKitClient } from '../grpc/types/walletrpc/WalletKit'
 import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'

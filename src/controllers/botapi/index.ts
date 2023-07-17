@@ -1,3 +1,5 @@
+/* eslint-disable import/no-unresolved */
+import { WebhookEvent } from '@octokit/webhooks-types'
 import * as network from '../../network'
 import {
   Bot,
@@ -12,16 +14,15 @@ import {
 import { success, failure, unauthorized } from '../../utils/res'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
-import broadcast from './broadcast'
-import pay from './pay'
-import direct_message from './dm'
 import { sphinxLogger, logging } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
 import { Req, Res } from '../../types'
-import { WebhookEvent } from '@octokit/webhooks-types'
 import { processGithook, WebhookEventName } from '../../utils/githook'
+import direct_message from './dm'
+import pay from './pay'
+import broadcast from './broadcast'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random

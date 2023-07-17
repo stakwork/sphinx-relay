@@ -1,13 +1,13 @@
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs'
-import * as express from 'express'
-import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
-import { sphinxLogger, logging } from './logger'
+import * as express from 'express'
 import * as qs from 'qs'
 import axios from 'axios'
 import * as forge from 'node-forge'
+import * as rsa from '../crypto/rsa'
 const apiUrl = 'https://api.zerossl.com'
 import { loadConfig } from '../utils/config'
+import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()
 

@@ -1,3 +1,5 @@
+import * as short from 'short-uuid'
+import { Op } from 'sequelize'
 import { Message, models } from '../models'
 import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
@@ -7,15 +9,13 @@ import { failure, success } from '../utils/res'
 import { tokenFromTerms } from '../utils/ldat'
 import * as network from '../network'
 import { Payload } from '../network'
-import * as short from 'short-uuid'
 import constants from '../constants'
-import { Op } from 'sequelize'
-import { anonymousKeysend } from './feed'
 import { sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
-import { sendConfirmation } from './confirmations'
 import { errMsgString } from '../utils/errMsgString'
 import { onReceiveReversal } from '../utils/reversal'
+import { anonymousKeysend } from './feed'
+import { sendConfirmation } from './confirmations'
 
 export const sendPayment = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')

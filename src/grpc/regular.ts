@@ -1,9 +1,9 @@
+import * as bolt11 from '@boltz/bolt11'
 import { models, Contact, Chat, Message } from '../models'
 import * as socket from '../utils/socket'
 import { sendNotification, sendInvoice } from '../hub'
 import * as jsonUtils from '../utils/json'
 import constants from '../constants'
-import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
 
 const oktolog = true

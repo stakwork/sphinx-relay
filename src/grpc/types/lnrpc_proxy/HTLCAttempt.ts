@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Route as _lnrpc_proxy_Route,
   Route__Output as _lnrpc_proxy_Route__Output,
@@ -8,7 +9,6 @@ import type {
   Failure as _lnrpc_proxy_Failure,
   Failure__Output as _lnrpc_proxy_Failure__Output,
 } from '../lnrpc_proxy/Failure'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/rpc_proxy.proto
 
