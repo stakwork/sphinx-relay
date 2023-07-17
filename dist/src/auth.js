@@ -22,6 +22,7 @@ const scopes_1 = require("./scopes");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
 const cert_1 = require("./utils/cert");
+const helpers_1 = require("./helpers");
 const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 function unlocker(req, res) {
@@ -62,7 +63,7 @@ function unlocker(req, res) {
         if (hexMac) {
             (0, macaroon_1.setInMemoryMacaroon)(hexMac);
             (0, res_1.success)(res, 'success!');
-            yield sleep(100);
+            yield (0, helpers_1.sleep)(100);
             return true;
         }
         else {
@@ -285,10 +286,5 @@ function base64ToHex(str) {
 }
 exports.base64ToHex = base64ToHex;
 const atob = (a) => Buffer.from(a, 'base64').toString('binary');
-function sleep(ms) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    });
-}
 const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
 //# sourceMappingURL=auth.js.map

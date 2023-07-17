@@ -22,6 +22,7 @@ const send_1 = require("./send");
 // import { Op } from 'sequelize'
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const helpers_1 = require("../helpers");
 const msgtypes = constants_1.default.message_types;
 function modifyPayloadAndSaveMediaKey(payload, chat, sender, owner) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -172,11 +173,6 @@ function sendFinalMemeIfFirstPurchaser(payload, chat, sender, owner) {
     });
 }
 exports.sendFinalMemeIfFirstPurchaser = sendFinalMemeIfFirstPurchaser;
-function sleep(ms) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    });
-}
 function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, owner, injectedAmount) {
     return __awaiter(this, void 0, void 0, function* () {
         const mt = payload.message && payload.message.mediaToken;
@@ -237,7 +233,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         const encKey = rsa.encrypt(chat.groupKey, newKey.slice());
         const date = new Date();
         date.setMilliseconds(0);
-        yield sleep(1);
+        yield (0, helpers_1.sleep)(1);
         yield models_1.models.MediaKey.create({
             muid: json.muid,
             chatId: chat.id,
