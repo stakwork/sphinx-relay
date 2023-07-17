@@ -19,6 +19,7 @@ import { sphinxLogger } from '../utils/logger'
 import { sendMessage } from './send'
 // import { Op } from 'sequelize'
 import { MessageContent, Msg, Payload } from './interfaces'
+import { sleep } from '../helpers'
 
 const msgtypes = constants.message_types
 
@@ -219,10 +220,6 @@ export async function sendFinalMemeIfFirstPurchaser(
   } catch (e) {
     sphinxLogger.error('failed to sendFinalMemeIfFirstPurchaser')
   }
-}
-
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export async function downloadAndUploadAndSaveReturningTermsAndKey(

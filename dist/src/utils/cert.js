@@ -20,16 +20,8 @@ const axios_1 = require("axios");
 const forge = require("node-forge");
 const apiUrl = 'https://api.zerossl.com';
 const config_1 = require("../utils/config");
+const helpers_1 = require("../helpers");
 const config = (0, config_1.loadConfig)();
-/**
-Sleep for a given number of milliseconds
-
-@param {number} ms - The number of milliseconds to sleep for
-@return {Promise} A promise that will be resolved after the given number of milliseconds
-*/
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 /**
 Generates a Certificate Signing Request (CSR) with the given keys and endpoint.
 
@@ -113,7 +105,7 @@ function validateCert(port, data, endpoint, apiKey) {
                 break;
             }
             logger_1.sphinxLogger.info(`checking certificate again...`, logger_1.logging.SSL);
-            yield sleep(2000);
+            yield (0, helpers_1.sleep)(2000);
         }
         yield server.close(() => {
             logger_1.sphinxLogger.info(`validation server stopped.`, logger_1.logging.SSL);

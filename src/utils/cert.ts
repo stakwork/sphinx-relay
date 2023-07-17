@@ -8,18 +8,9 @@ import * as rsa from '../crypto/rsa'
 const apiUrl = 'https://api.zerossl.com'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger, logging } from './logger'
+import { sleep } from '../helpers'
 
 const config = loadConfig()
-
-/**
-Sleep for a given number of milliseconds
-
-@param {number} ms - The number of milliseconds to sleep for
-@return {Promise} A promise that will be resolved after the given number of milliseconds
-*/
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 /**
 Generates a Certificate Signing Request (CSR) with the given keys and endpoint.
