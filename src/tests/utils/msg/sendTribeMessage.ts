@@ -12,6 +12,7 @@ import { getTribeIdFromUUID } from '../get'
 interface SendMessageOptions {
   amount?: number
   parent_id?: number
+  thread_uuid?: string
 }
 
 export async function sendTribeMessage(
@@ -41,6 +42,7 @@ export async function sendTribeMessage(
     remote_text_map: { chat: remoteText },
     amount: (options && options.amount) || 0,
     parent_id: (options && options.parent_id) || 0,
+    thread_uuid: (options && options.thread_uuid) || '',
     reply_uuid: '',
     boost: false,
   }
