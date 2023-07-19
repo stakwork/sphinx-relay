@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   ChannelPoint as _lnrpc_ChannelPoint,
   ChannelPoint__Output as _lnrpc_ChannelPoint__Output,
@@ -9,6 +8,7 @@ import type {
   KeyDescriptor as _lnrpc_KeyDescriptor,
   KeyDescriptor__Output as _lnrpc_KeyDescriptor__Output,
 } from '../lnrpc/KeyDescriptor'
+import type { Long } from '@grpc/proto-loader'
 
 export interface ChanPointShim {
   amt?: number | string | Long
