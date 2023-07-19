@@ -17,4 +17,4 @@ export type Initiator =
   | 'INITIATOR_BOTH'
   | 3
 
-export type Initiator__Output = typeof Initiator[keyof typeof Initiator]
+export type Initiator__Output = (typeof Initiator)[keyof typeof Initiator]

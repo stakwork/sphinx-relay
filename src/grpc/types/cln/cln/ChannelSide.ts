@@ -7,4 +7,4 @@ export const ChannelSide = {
 
 export type ChannelSide = 'IN' | 0 | 'OUT' | 1
 
-export type ChannelSide__Output = typeof ChannelSide[keyof typeof ChannelSide]
+export type ChannelSide__Output = (typeof ChannelSide)[keyof typeof ChannelSide]

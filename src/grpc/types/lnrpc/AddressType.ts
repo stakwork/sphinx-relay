@@ -23,4 +23,4 @@ export type AddressType =
   | 'UNUSED_TAPROOT_PUBKEY'
   | 5
 
-export type AddressType__Output = typeof AddressType[keyof typeof AddressType]
+export type AddressType__Output = (typeof AddressType)[keyof typeof AddressType]

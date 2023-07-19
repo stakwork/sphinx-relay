@@ -9,4 +9,4 @@ export const InvoiceHTLCState = {
 export type InvoiceHTLCState = 'ACCEPTED' | 0 | 'SETTLED' | 1 | 'CANCELED' | 2
 
 export type InvoiceHTLCState__Output =
-  typeof InvoiceHTLCState[keyof typeof InvoiceHTLCState]
+  (typeof InvoiceHTLCState)[keyof typeof InvoiceHTLCState]

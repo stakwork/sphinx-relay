@@ -23,7 +23,7 @@ export type _cln_ConnectAddress_ConnectAddressType =
   | 4
 
 export type _cln_ConnectAddress_ConnectAddressType__Output =
-  typeof _cln_ConnectAddress_ConnectAddressType[keyof typeof _cln_ConnectAddress_ConnectAddressType]
+  (typeof _cln_ConnectAddress_ConnectAddressType)[keyof typeof _cln_ConnectAddress_ConnectAddressType]
 
 export interface ConnectAddress {
   item_type?: _cln_ConnectAddress_ConnectAddressType

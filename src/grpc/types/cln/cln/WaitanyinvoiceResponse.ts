@@ -20,7 +20,7 @@ export type _cln_WaitanyinvoiceResponse_WaitanyinvoiceStatus =
   | 1
 
 export type _cln_WaitanyinvoiceResponse_WaitanyinvoiceStatus__Output =
-  typeof _cln_WaitanyinvoiceResponse_WaitanyinvoiceStatus[keyof typeof _cln_WaitanyinvoiceResponse_WaitanyinvoiceStatus]
+  (typeof _cln_WaitanyinvoiceResponse_WaitanyinvoiceStatus)[keyof typeof _cln_WaitanyinvoiceResponse_WaitanyinvoiceStatus]
 
 export interface WaitanyinvoiceResponse {
   label?: string

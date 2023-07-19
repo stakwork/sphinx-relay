@@ -27,7 +27,7 @@ export type _lnrpc_proxy_HTLCAttempt_HTLCStatus =
   | 2
 
 export type _lnrpc_proxy_HTLCAttempt_HTLCStatus__Output =
-  typeof _lnrpc_proxy_HTLCAttempt_HTLCStatus[keyof typeof _lnrpc_proxy_HTLCAttempt_HTLCStatus]
+  (typeof _lnrpc_proxy_HTLCAttempt_HTLCStatus)[keyof typeof _lnrpc_proxy_HTLCAttempt_HTLCStatus]
 
 export interface HTLCAttempt {
   status?: _lnrpc_proxy_HTLCAttempt_HTLCStatus

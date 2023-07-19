@@ -16,7 +16,7 @@ export const _cln_SendpayResponse_SendpayStatus = {
 export type _cln_SendpayResponse_SendpayStatus = 'PENDING' | 0 | 'COMPLETE' | 1
 
 export type _cln_SendpayResponse_SendpayStatus__Output =
-  typeof _cln_SendpayResponse_SendpayStatus[keyof typeof _cln_SendpayResponse_SendpayStatus]
+  (typeof _cln_SendpayResponse_SendpayStatus)[keyof typeof _cln_SendpayResponse_SendpayStatus]
 
 export interface SendpayResponse {
   id?: number | string | Long

@@ -16,10 +16,10 @@ import {
 } from '../models'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
+import { sleep } from '../helpers'
 import { sendMessage } from './send'
 // import { Op } from 'sequelize'
 import { MessageContent, Msg, Payload } from './interfaces'
-import { sleep } from '../helpers'
 
 const msgtypes = constants.message_types
 

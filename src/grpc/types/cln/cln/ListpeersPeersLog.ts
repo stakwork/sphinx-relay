@@ -29,7 +29,7 @@ export type _cln_ListpeersPeersLog_ListpeersPeersLogType =
   | 6
 
 export type _cln_ListpeersPeersLog_ListpeersPeersLogType__Output =
-  typeof _cln_ListpeersPeersLog_ListpeersPeersLogType[keyof typeof _cln_ListpeersPeersLog_ListpeersPeersLogType]
+  (typeof _cln_ListpeersPeersLog_ListpeersPeersLogType)[keyof typeof _cln_ListpeersPeersLog_ListpeersPeersLogType]
 
 export interface ListpeersPeersLog {
   item_type?: _cln_ListpeersPeersLog_ListpeersPeersLogType

@@ -23,7 +23,7 @@ export type _cln_GetinfoBinding_GetinfoBindingType =
   | 4
 
 export type _cln_GetinfoBinding_GetinfoBindingType__Output =
-  typeof _cln_GetinfoBinding_GetinfoBindingType[keyof typeof _cln_GetinfoBinding_GetinfoBindingType]
+  (typeof _cln_GetinfoBinding_GetinfoBindingType)[keyof typeof _cln_GetinfoBinding_GetinfoBindingType]
 
 export interface GetinfoBinding {
   item_type?: _cln_GetinfoBinding_GetinfoBindingType

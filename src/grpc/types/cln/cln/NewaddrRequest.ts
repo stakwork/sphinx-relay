@@ -10,7 +10,7 @@ export const _cln_NewaddrRequest_NewaddrAddresstype = {
 export type _cln_NewaddrRequest_NewaddrAddresstype = 'BECH32' | 0 | 'ALL' | 2
 
 export type _cln_NewaddrRequest_NewaddrAddresstype__Output =
-  typeof _cln_NewaddrRequest_NewaddrAddresstype[keyof typeof _cln_NewaddrRequest_NewaddrAddresstype]
+  (typeof _cln_NewaddrRequest_NewaddrAddresstype)[keyof typeof _cln_NewaddrRequest_NewaddrAddresstype]
 
 export interface NewaddrRequest {
   addresstype?: _cln_NewaddrRequest_NewaddrAddresstype

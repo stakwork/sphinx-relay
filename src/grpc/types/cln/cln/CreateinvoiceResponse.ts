@@ -23,7 +23,7 @@ export type _cln_CreateinvoiceResponse_CreateinvoiceStatus =
   | 2
 
 export type _cln_CreateinvoiceResponse_CreateinvoiceStatus__Output =
-  typeof _cln_CreateinvoiceResponse_CreateinvoiceStatus[keyof typeof _cln_CreateinvoiceResponse_CreateinvoiceStatus]
+  (typeof _cln_CreateinvoiceResponse_CreateinvoiceStatus)[keyof typeof _cln_CreateinvoiceResponse_CreateinvoiceStatus]
 
 export interface CreateinvoiceResponse {
   label?: string

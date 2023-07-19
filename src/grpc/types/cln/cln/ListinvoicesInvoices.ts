@@ -23,7 +23,7 @@ export type _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus =
   | 2
 
 export type _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus__Output =
-  typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus[keyof typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus]
+  (typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus)[keyof typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus]
 
 export interface ListinvoicesInvoices {
   label?: string

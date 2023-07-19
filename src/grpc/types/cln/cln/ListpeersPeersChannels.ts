@@ -71,7 +71,7 @@ export type _cln_ListpeersPeersChannels_ListpeersPeersChannelsState =
   | 10
 
 export type _cln_ListpeersPeersChannels_ListpeersPeersChannelsState__Output =
-  typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState[keyof typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState]
+  (typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState)[keyof typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState]
 
 export interface ListpeersPeersChannels {
   state?: _cln_ListpeersPeersChannels_ListpeersPeersChannelsState

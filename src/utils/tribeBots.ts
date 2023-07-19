@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import { models, ChatBotRecord } from '../models'
-import { getHost , genSignedTimestamp } from './tribes'
+import { getHost, genSignedTimestamp } from './tribes'
 import { loadConfig } from './config'
 import { sphinxLogger, logging } from './logger'
 

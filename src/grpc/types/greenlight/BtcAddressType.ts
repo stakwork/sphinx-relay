@@ -8,4 +8,4 @@ export const BtcAddressType = {
 export type BtcAddressType = 'BECH32' | 0 | 'P2SH_SEGWIT' | 1
 
 export type BtcAddressType__Output =
-  typeof BtcAddressType[keyof typeof BtcAddressType]
+  (typeof BtcAddressType)[keyof typeof BtcAddressType]

@@ -7,8 +7,8 @@ import * as forge from 'node-forge'
 import * as rsa from '../crypto/rsa'
 const apiUrl = 'https://api.zerossl.com'
 import { loadConfig } from '../utils/config'
-import { sphinxLogger, logging } from './logger'
 import { sleep } from '../helpers'
+import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()
 

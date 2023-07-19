@@ -14,7 +14,7 @@ export const _cln_KeysendResponse_KeysendStatus = {
 export type _cln_KeysendResponse_KeysendStatus = 'COMPLETE' | 0
 
 export type _cln_KeysendResponse_KeysendStatus__Output =
-  typeof _cln_KeysendResponse_KeysendStatus[keyof typeof _cln_KeysendResponse_KeysendStatus]
+  (typeof _cln_KeysendResponse_KeysendStatus)[keyof typeof _cln_KeysendResponse_KeysendStatus]
 
 export interface KeysendResponse {
   payment_preimage?: Buffer | Uint8Array | string

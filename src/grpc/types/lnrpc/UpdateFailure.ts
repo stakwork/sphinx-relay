@@ -21,4 +21,4 @@ export type UpdateFailure =
   | 4
 
 export type UpdateFailure__Output =
-  typeof UpdateFailure[keyof typeof UpdateFailure]
+  (typeof UpdateFailure)[keyof typeof UpdateFailure]
