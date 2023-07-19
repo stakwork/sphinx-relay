@@ -10,15 +10,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateChannelPolicy = exports.clearForTesting = exports.getNodeInfo = exports.getLocalRemoteBalance = exports.getBalance = exports.getChannels = exports.getLightningInfo = exports.getLogsSince = exports.checkRouteByContactOrChat = exports.checkRoute = exports.getAppVersions = exports.getRelayVersion = void 0;
+const readLastLines = require("read-last-lines");
+const sequelize_1 = require("sequelize");
 const Lightning = require("../grpc/lightning");
 const res_1 = require("../utils/res");
-const readLastLines = require("read-last-lines");
 const nodeinfo_1 = require("../utils/nodeinfo");
 const constants_1 = require("../constants");
 const models_1 = require("../models");
 const config_1 = require("../utils/config");
 const hub_1 = require("../hub");
-const sequelize_1 = require("sequelize");
 const logger_1 = require("../utils/logger");
 const config = (0, config_1.loadConfig)();
 const VERSION = 2;

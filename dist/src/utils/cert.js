@@ -11,16 +11,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAndDecryptTransportToken = exports.getTransportKey = exports.generateTransportTokenKeys = exports.getCertificate = void 0;
 const fs_1 = require("fs");
-const express = require("express");
-const rsa = require("../crypto/rsa");
 const fs = require("fs");
-const logger_1 = require("./logger");
+const express = require("express");
 const qs = require("qs");
 const axios_1 = require("axios");
 const forge = require("node-forge");
+const rsa = require("../crypto/rsa");
 const apiUrl = 'https://api.zerossl.com';
 const config_1 = require("../utils/config");
 const helpers_1 = require("../helpers");
+const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 /**
 Generates a Certificate Signing Request (CSR) with the given keys and endpoint.

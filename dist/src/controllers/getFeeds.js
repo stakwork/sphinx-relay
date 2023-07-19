@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFeeds = void 0;
+const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
 const res_1 = require("../utils/res");
 const feedsHelper = require("../utils/feeds");
 const config_1 = require("../utils/config");
-const node_fetch_1 = require("node-fetch");
 function getFeeds(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!req.owner)

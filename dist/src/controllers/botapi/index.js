@@ -15,14 +15,14 @@ const models_1 = require("../../models");
 const res_1 = require("../../utils/res");
 const constants_1 = require("../../constants");
 const tribes_1 = require("../../utils/tribes");
-const broadcast_1 = require("./broadcast");
-const pay_1 = require("./pay");
-const dm_1 = require("./dm");
 const logger_1 = require("../../utils/logger");
 const hmac = require("../../crypto/hmac");
 const git_1 = require("../../builtin/git");
 const helpers_1 = require("../../helpers");
 const githook_1 = require("../../utils/githook");
+const dm_1 = require("./dm");
+const pay_1 = require("./pay");
+const broadcast_1 = require("./broadcast");
 function processWebhook(req, res) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {

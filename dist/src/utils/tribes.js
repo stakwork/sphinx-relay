@@ -11,19 +11,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateRemoteTribeServer = exports.verifyTribePreviewUrl = exports.getCacheMsg = exports.getHost = exports.verifySignedTimestamp = exports.genSignedTimestamp = exports.deleteChannel = exports.createChannel = exports.putstats = exports.putActivity = exports.get_tribe_data = exports.delete_tribe = exports.edit = exports.declare = exports.getTribeOwnersChatByUUID = exports.addExtraHost = exports.printTribesClients = exports.publish = exports.newSubscription = exports.connect = exports.delete_bot = exports.declare_bot = void 0;
 const moment = require("moment");
-const zbase32 = require("./zbase32");
-const LND = require("../grpc/lightning");
 const mqtt = require("mqtt");
 const node_fetch_1 = require("node-fetch");
+const LND = require("../grpc/lightning");
 const models_1 = require("../models");
+const helpers_1 = require("../helpers");
+const interfaces_1 = require("../grpc/interfaces");
+const zbase32 = require("./zbase32");
+const logger_1 = require("./logger");
+const proxy_1 = require("./proxy");
+const config_1 = require("./config");
 const tribeBots_1 = require("./tribeBots");
 Object.defineProperty(exports, "declare_bot", { enumerable: true, get: function () { return tribeBots_1.declare_bot; } });
 Object.defineProperty(exports, "delete_bot", { enumerable: true, get: function () { return tribeBots_1.delete_bot; } });
-const config_1 = require("./config");
-const proxy_1 = require("./proxy");
-const logger_1 = require("./logger");
-const helpers_1 = require("../helpers");
-const interfaces_1 = require("../grpc/interfaces");
 const config = (0, config_1.loadConfig)();
 // MAIN CLIENTS STATE (caching already connected clients)
 // {pubkey: {host: Client} }

@@ -10,13 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reconnectToLightning = exports.subscribeInvoices = void 0;
-const lightning_1 = require("./lightning");
 const network = require("../network");
 const unlock_1 = require("../utils/unlock");
-const regular_1 = require("./regular");
-const interfaces = require("./interfaces");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
+const regular_1 = require("./regular");
+const interfaces = require("./interfaces");
+const lightning_1 = require("./lightning");
 const ERR_CODE_UNAVAILABLE = 14;
 const ERR_CODE_STREAM_REMOVED = 2;
 const ERR_CODE_UNIMPLEMENTED = 12; // locked

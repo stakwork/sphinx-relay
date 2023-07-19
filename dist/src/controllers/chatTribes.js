@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addPendingContactIdsToChat = exports.createTribeChatParams = exports.replayChatHistory = exports.receiveTribeDelete = exports.receiveMemberReject = exports.receiveMemberApprove = exports.approveOrRejectMember = exports.editTribe = exports.pinToTribe = exports.receiveMemberRequest = exports.deleteChannel = exports.createChannel = exports.doJoinTribe = exports.joinTribe = void 0;
+const sequelize_1 = require("sequelize");
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -20,7 +21,6 @@ const socket = require("../utils/socket");
 const tribes = require("../utils/tribes");
 const hub_1 = require("../hub");
 const msg_1 = require("../utils/msg");
-const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 /**

@@ -9,14 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const index_1 = require("./index");
-const logger_1 = require("../../utils/logger");
-const models_1 = require("../../models");
 const md5 = require("md5");
 const short = require("short-uuid");
+const logger_1 = require("../../utils/logger");
+const models_1 = require("../../models");
 const constants_1 = require("../../constants");
 const network = require("../../network");
 const rsa = require("../../crypto/rsa");
+const index_1 = require("./index");
 function dm(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, content, pubkey } = a;

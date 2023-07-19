@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.txIndexFromChannelId = exports.greenlightSignMessagePayload = exports.connectPeerResponse = exports.connectPeerRequest = exports.subscribeResponse = exports.InvoiceState = exports.subscribeCommand = exports.keysendResponse = exports.keysendRequest = exports.listPeersResponse = exports.listPeersRequest = exports.listChannelsRequest = exports.listChannelsCommand = exports.listChannelsResponse = exports.addInvoiceResponse = exports.addInvoiceCommand = exports.addInvoiceRequest = exports.getInfoResponse = void 0;
-const config_1 = require("../utils/config");
 const crypto = require("crypto");
-const lightning_1 = require("./lightning");
 const long = require("long");
+const config_1 = require("../utils/config");
+const lightning_1 = require("./lightning");
 const config = (0, config_1.loadConfig)();
 function isProxyRelay() {
     return config.proxy_lnd_port &&

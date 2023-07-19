@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.urlBase64FromHex = exports.testLDAT = exports.urlBase64FromBytes = exports.urlBase64FromAscii = exports.urlBase64 = exports.tokenFromTerms = exports.parseLDAT = exports.startLDAT = void 0;
-const zbase32 = require("./zbase32");
 const Lightning = require("../grpc/lightning");
+const models_1 = require("../models");
+const zbase32 = require("./zbase32");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
-const models_1 = require("../models");
 const config = (0, config_1.loadConfig)();
 /*
 Lightning Data Access Token
