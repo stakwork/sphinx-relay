@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   HTLCAttempt as _lnrpc_HTLCAttempt,
   HTLCAttempt__Output as _lnrpc_HTLCAttempt__Output,
@@ -8,7 +9,6 @@ import type {
   PaymentFailureReason as _lnrpc_PaymentFailureReason,
   PaymentFailureReason__Output as _lnrpc_PaymentFailureReason__Output,
 } from '../lnrpc/PaymentFailureReason'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 

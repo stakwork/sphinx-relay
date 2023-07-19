@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+import { Response } from 'express'
 import {
   models,
   Chat,
@@ -16,12 +18,10 @@ import * as socket from '../utils/socket'
 import * as tribes from '../utils/tribes'
 import { sendNotification } from '../hub'
 import { personalizeMessage, decryptMessage } from '../utils/msg'
-import { Op } from 'sequelize'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import type { Tribe } from '../models/ts/tribe'
 import { Req, Res } from '../types'
-import { Response } from 'express'
 
 /**
  * @function joinTribe

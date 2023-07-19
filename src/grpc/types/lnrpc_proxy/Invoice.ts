@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   RouteHint as _lnrpc_proxy_RouteHint,
   RouteHint__Output as _lnrpc_proxy_RouteHint__Output,
@@ -12,7 +13,6 @@ import type {
   Feature as _lnrpc_proxy_Feature,
   Feature__Output as _lnrpc_proxy_Feature__Output,
 } from '../lnrpc_proxy/Feature'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/rpc_proxy.proto
 

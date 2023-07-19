@@ -1,10 +1,10 @@
-import { loadLightning } from './lightning'
 import * as network from '../network'
 import { tryToUnlockLND } from '../utils/unlock'
-import { receiveNonKeysend } from './regular'
-import * as interfaces from './interfaces'
 import { isProxy, getProxyRootPubkey } from '../utils/proxy'
 import { sphinxLogger, logging } from '../utils/logger'
+import { receiveNonKeysend } from './regular'
+import * as interfaces from './interfaces'
+import { loadLightning } from './lightning'
 
 const ERR_CODE_UNAVAILABLE = 14
 const ERR_CODE_STREAM_REMOVED = 2

@@ -1,6 +1,6 @@
-import * as meme from '../../utils/meme'
 import * as FormData from 'form-data'
 import fetch from 'node-fetch'
+import * as meme from '../../utils/meme'
 import * as people from '../../utils/people'
 import {
   models,

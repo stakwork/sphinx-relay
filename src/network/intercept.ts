@@ -1,11 +1,11 @@
-import { BotMsg } from './interfaces'
+import * as SphinxBot from 'sphinx-bot'
 import { models, Bot, Chat, ChatRecord, Message } from '../models'
 
 import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
-import * as SphinxBot from 'sphinx-bot'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
+import { BotMsg } from './interfaces'
 
 /*
 default show or not

@@ -1,15 +1,16 @@
 import * as fs from 'fs'
+import * as crypto from 'crypto'
 import * as grpc from '@grpc/grpc-js'
+import { loadConfig } from '../utils/config'
+import { sphinxLogger } from '../utils/logger'
 import { loadProto } from './proto'
+/* eslint-disable import/no-unresolved */
 import { NodeClient } from './types/greenlight/Node'
 import type { SchedulerClient } from './types/scheduler/Scheduler'
 import libhsmd from './libhsmd'
-import { loadConfig } from '../utils/config'
-import * as crypto from 'crypto'
 import * as interfaces from './interfaces'
 import { loadLightning } from './lightning'
 import * as Lightning from './lightning'
-import { sphinxLogger } from '../utils/logger'
 
 let GID: GreenlightIdentity
 

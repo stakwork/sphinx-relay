@@ -1,10 +1,10 @@
-import { tokenFromTerms } from './ldat'
 import * as rsa from '../crypto/rsa'
 import constants from '../constants'
 import { Msg, MessageContent, ChatContent } from '../network/interfaces'
 import * as models from '../models'
 import { ChatMemberRecord } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'
+import { tokenFromTerms } from './ldat'
 
 function addInRemoteText(full: Partial<Msg>, contactId, isTribe: boolean): Msg {
   const m = full && full.message

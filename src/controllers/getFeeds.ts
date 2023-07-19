@@ -1,10 +1,10 @@
+import { Response } from 'express'
+import fetch from 'node-fetch'
 import { ActionHistoryRecord, models } from '../models'
 import { Req } from '../types'
-import { Response } from 'express'
 import { success, failure } from '../utils/res'
 import * as feedsHelper from '../utils/feeds'
 import { loadConfig } from '../utils/config'
-import fetch from 'node-fetch'
 
 export async function getFeeds(
   req: Req,

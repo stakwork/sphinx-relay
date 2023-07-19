@@ -1,3 +1,6 @@
+import * as crypto from 'crypto'
+import { Op } from 'sequelize'
+import * as moment from 'moment'
 import {
   Contact,
   ContactRecord,
@@ -8,20 +11,17 @@ import {
   ChatMember,
   models,
 } from '../models'
-import * as crypto from 'crypto'
 import * as socket from '../utils/socket'
 import * as helpers from '../helpers'
 import * as jsonUtils from '../utils/json'
 import { success, failure } from '../utils/res'
 import password from '../utils/password'
-import { Op } from 'sequelize'
 import constants from '../constants'
 import * as tribes from '../utils/tribes'
 import * as network from '../network'
 import { Payload } from '../network'
 import { isProxy, generateNewExternalUser } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
-import * as moment from 'moment'
 import * as rsa from '../crypto/rsa'
 import { getAndDecryptTransportToken, getTransportKey } from '../utils/cert'
 import { Req, Res } from '../types'
@@ -728,6 +728,7 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
 
   try {
     const dateToReturn = decodeURI(req.query.date as string)
+    /* eslint-disable import/namespace */
     const local = moment.utc(dateToReturn).local().toDate()
     const where: { tenant: number; updatedAt: { [Op.gte]: Date } } = {
       updatedAt: { [Op.gte]: local },

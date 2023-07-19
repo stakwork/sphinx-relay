@@ -17,13 +17,13 @@ import {
 } from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
-import { typesToForward } from './receive'
-import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
+import { Msg, MessageContent, ChatMember } from './interfaces'
+import * as intercept from './intercept'
+import { typesToForward } from './receive'
 
 const config = loadConfig()
 

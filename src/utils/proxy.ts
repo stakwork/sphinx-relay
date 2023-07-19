@@ -1,14 +1,15 @@
 import * as fs from 'fs'
 import * as grpc from '@grpc/grpc-js'
+import fetch from 'node-fetch'
+import { Op } from 'sequelize'
 import { loadProto } from '../grpc/proto'
+/* eslint-disable import/no-unresolved */
 import { LightningClient as ProxyLightningClient } from '../grpc/types/lnrpc_proxy/Lightning'
-import { loadConfig } from './config'
 import * as Lightning from '../grpc/lightning'
 import { models, ContactRecord } from '../models'
-import fetch from 'node-fetch'
-import { logging, sphinxLogger } from './logger'
 import { sleep } from '../helpers'
-import { Op } from 'sequelize'
+import { logging, sphinxLogger } from './logger'
+import { loadConfig } from './config'
 
 // var protoLoader = require('@grpc/proto-loader')
 const config = loadConfig()

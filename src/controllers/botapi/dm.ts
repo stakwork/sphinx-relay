@@ -1,11 +1,11 @@
-import { Action, validateAction } from './index'
-import { sphinxLogger } from '../../utils/logger'
-import { models, ChatRecord, ContactRecord } from '../../models'
 import * as md5 from 'md5'
 import * as short from 'short-uuid'
+import { sphinxLogger } from '../../utils/logger'
+import { models, ChatRecord, ContactRecord } from '../../models'
 import constants from '../../constants'
 import * as network from '../../network'
 import * as rsa from '../../crypto/rsa'
+import { Action, validateAction } from './index'
 
 export default async function dm(a: Action): Promise<void> {
   const { amount, content, pubkey } = a

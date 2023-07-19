@@ -1,8 +1,8 @@
-import * as Lightning from '../grpc/lightning'
 import * as publicIp from 'public-ip'
-import * as gitinfo from './gitinfo'
+import * as Lightning from '../grpc/lightning'
 import { models, MessageRecord } from '../models'
 import * as interfaces from '../grpc/interfaces'
+import * as gitinfo from './gitinfo'
 import { loadConfig } from './config'
 import { sphinxLogger } from './logger'
 
