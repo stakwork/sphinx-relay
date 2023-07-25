@@ -48,6 +48,7 @@ jobs:
             'boostFail',
             'sphinxAuth',
             'fees',
+            'externalBotApi',
           ]
         node: [16]
     steps:
