@@ -24,7 +24,7 @@ import * as grpc from './src/grpc/subscribe'
 import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
-import { leadershipBoardInterval } from './src/leadershipboard'
+import { leadershipBoardInterval } from './src/utils/leadershipboard'
 
 // force UTC time
 process.env.TZ = 'UTC'
