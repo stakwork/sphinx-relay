@@ -49,6 +49,7 @@ jobs:
             'sphinxAuth',
             'fees',
             'externalBotApi',
+            'externalHostedBot',
           ]
         node: [16]
     steps:
