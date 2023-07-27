@@ -69,7 +69,8 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone https://github.com/stakwork/sphinx-stack.git stack
+          git clone -b feat/bot-test https://github.com/stakwork/sphinx-stack.git stack
+          git submodule update --init
       - name: give permissions
         working-directory: ./stack
         run: |
@@ -78,13 +79,14 @@ jobs:
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
           chmod 777 -R ./cln;
+          echo '[]' > ./relay/botEnvVars.json;
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/cln-proxy.yml --project-dir ./stack up -d;
+            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/cln-proxy.yml -f ./alts/bots.yml --project-dir ./stack up -d;
             sleep 240;
             docker ps
             docker logs meme.sphinx
