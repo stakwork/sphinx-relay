@@ -70,7 +70,6 @@ jobs:
       - name: Checkout stack
         run: |
           git clone -b feat/bot-test https://github.com/stakwork/sphinx-stack.git stack
-          git submodule update --init
       - name: give permissions
         working-directory: ./stack
         run: |
@@ -80,6 +79,7 @@ jobs:
           chmod 777 -R ./proxy;
           chmod 777 -R ./cln;
           echo '[]' > ./relay/botEnvVars.json;
+          git submodule update --init;
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
