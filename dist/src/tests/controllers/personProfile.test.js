@@ -48,9 +48,8 @@ function personProfile(t, node1, node2, node3) {
         const poll = yield http.get('http://' + config_1.config.tribeHost + `/poll/${challenge}`);
         yield (0, helpers_1.sleep)(1000);
         const persontest = yield http.get('http://' + config_1.config.tribeHost + '/person/' + poll.pubkey);
-        //POST PROFILE TO RELAY
         const priceToMeet = 13;
-        const postProfile = yield http.post(node1.external_ip + '/profile', (0, helpers_1.makeJwtArgs)(poll.jwt, {
+        const person = {
             pubkey: node1.pubkey,
             host: internalTribeHost,
             id: persontest.id,
@@ -60,8 +59,15 @@ function personProfile(t, node1, node2, node3) {
             tags: [],
             price_to_meet: priceToMeet,
             extras: { twitter: 'mytwitter' },
-        }));
+        };
+        //POST PROFILE TO RELAY
+        const postProfile = yield http.post(node1.external_ip + '/profile', (0, helpers_1.makeJwtArgs)(poll.jwt, person));
         t.true(postProfile.success, 'post to profile should succeed');
+        const personCreated = yield http.get('http://' + config_1.config.tribeHost + '/person/' + node1.pubkey);
+        t.true(priceToMeet === personCreated.price_to_meet, 'Should have the same price to meet');
+        t.true(person.pubkey === personCreated.owner_pubkey, 'Should have the same public key');
+        t.true(person.owner_alias === personCreated.owner_alias, 'Alias should be equal');
+        t.true(person.description === personCreated.description, 'Description should be equal');
         //NODE2 CREATES A TRIBE
         let tribe = yield (0, save_1.createTribe)(t, node2);
         t.truthy(tribe, 'tribe should have been created by node2');
