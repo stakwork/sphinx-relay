@@ -1,7 +1,7 @@
-import { loadConfig } from '../utils/config'
 import * as crypto from 'crypto'
-import { LND_KEYSEND_KEY } from './lightning'
 import * as long from 'long'
+import { loadConfig } from '../utils/config'
+import { LND_KEYSEND_KEY } from './lightning'
 import type { SendRequest } from './types/lnrpc_proxy/SendRequest'
 import type { GetinfoResponse__Output } from './types/cln/cln/GetinfoResponse'
 

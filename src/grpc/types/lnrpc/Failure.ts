@@ -98,7 +98,7 @@ export type _lnrpc_Failure_FailureCode =
   | 999
 
 export type _lnrpc_Failure_FailureCode__Output =
-  typeof _lnrpc_Failure_FailureCode[keyof typeof _lnrpc_Failure_FailureCode]
+  (typeof _lnrpc_Failure_FailureCode)[keyof typeof _lnrpc_Failure_FailureCode]
 
 export interface Failure {
   code?: _lnrpc_Failure_FailureCode

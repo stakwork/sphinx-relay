@@ -26,7 +26,7 @@ export type _cln_GetinfoAddress_GetinfoAddressType =
   | 5
 
 export type _cln_GetinfoAddress_GetinfoAddressType__Output =
-  typeof _cln_GetinfoAddress_GetinfoAddressType[keyof typeof _cln_GetinfoAddress_GetinfoAddressType]
+  (typeof _cln_GetinfoAddress_GetinfoAddressType)[keyof typeof _cln_GetinfoAddress_GetinfoAddressType]
 
 export interface GetinfoAddress {
   item_type?: _cln_GetinfoAddress_GetinfoAddressType

@@ -38,7 +38,7 @@ export type _lnrpc_Invoice_InvoiceState =
   | 3
 
 export type _lnrpc_Invoice_InvoiceState__Output =
-  typeof _lnrpc_Invoice_InvoiceState[keyof typeof _lnrpc_Invoice_InvoiceState]
+  (typeof _lnrpc_Invoice_InvoiceState)[keyof typeof _lnrpc_Invoice_InvoiceState]
 
 export interface Invoice {
   memo?: string

@@ -1,3 +1,4 @@
+import * as md5 from 'md5'
 import {
   Chat,
   ChatRecord,
@@ -14,20 +15,19 @@ import * as network from '../network'
 import { Payload, ChatMember as ChatMemberNetwork } from '../network'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
-import * as md5 from 'md5'
 import * as tribes from '../utils/tribes'
 import * as timers from '../utils/timers'
-import {
-  replayChatHistory,
-  createTribeChatParams,
-  addPendingContactIdsToChat,
-} from './chatTribes'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { asyncForEach } from '../helpers'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
+import {
+  replayChatHistory,
+  createTribeChatParams,
+  addPendingContactIdsToChat,
+} from './chatTribes'
 
 const config = loadConfig()
 

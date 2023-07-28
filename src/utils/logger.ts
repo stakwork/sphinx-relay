@@ -1,8 +1,8 @@
 import * as expressWinston from 'express-winston'
 import * as winston from 'winston'
 import * as moment from 'moment'
-import { loadConfig } from './config'
 import * as blgr from 'blgr'
+import { loadConfig } from './config'
 
 const config = loadConfig()
 

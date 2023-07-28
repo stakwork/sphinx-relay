@@ -56,4 +56,4 @@ export type FeatureBit =
   | 'MPP_OPT'
   | 17
 
-export type FeatureBit__Output = typeof FeatureBit[keyof typeof FeatureBit]
+export type FeatureBit__Output = (typeof FeatureBit)[keyof typeof FeatureBit]

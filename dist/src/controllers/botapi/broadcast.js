@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const short = require("short-uuid");
 const network = require("../../network");
 const models_1 = require("../../models");
-const short = require("short-uuid");
 const rsa = require("../../crypto/rsa");
 const jsonUtils = require("../../utils/json");
 const socket = require("../../utils/socket");

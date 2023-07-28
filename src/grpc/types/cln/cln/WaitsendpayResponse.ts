@@ -15,7 +15,7 @@ export const _cln_WaitsendpayResponse_WaitsendpayStatus = {
 export type _cln_WaitsendpayResponse_WaitsendpayStatus = 'COMPLETE' | 0
 
 export type _cln_WaitsendpayResponse_WaitsendpayStatus__Output =
-  typeof _cln_WaitsendpayResponse_WaitsendpayStatus[keyof typeof _cln_WaitsendpayResponse_WaitsendpayStatus]
+  (typeof _cln_WaitsendpayResponse_WaitsendpayStatus)[keyof typeof _cln_WaitsendpayResponse_WaitsendpayStatus]
 
 export interface WaitsendpayResponse {
   id?: number | string | Long

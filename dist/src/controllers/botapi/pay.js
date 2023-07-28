@@ -9,15 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const short = require("short-uuid");
 const network = require("../../network");
 const models_1 = require("../../models");
-const short = require("short-uuid");
 const jsonUtils = require("../../utils/json");
 const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
 const logger_1 = require("../../utils/logger");
-const index_1 = require("./index");
 const errMsgString_1 = require("../../utils/errMsgString");
+const index_1 = require("./index");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
         const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a;

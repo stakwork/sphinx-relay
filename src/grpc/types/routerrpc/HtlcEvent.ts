@@ -46,7 +46,7 @@ export type _routerrpc_HtlcEvent_EventType =
   | 3
 
 export type _routerrpc_HtlcEvent_EventType__Output =
-  typeof _routerrpc_HtlcEvent_EventType[keyof typeof _routerrpc_HtlcEvent_EventType]
+  (typeof _routerrpc_HtlcEvent_EventType)[keyof typeof _routerrpc_HtlcEvent_EventType]
 
 export interface HtlcEvent {
   incoming_channel_id?: number | string | Long

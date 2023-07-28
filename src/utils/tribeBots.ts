@@ -1,8 +1,7 @@
-import { models, ChatBotRecord } from '../models'
-import { getHost } from './tribes'
 import fetch from 'node-fetch'
+import { models, ChatBotRecord } from '../models'
+import { getHost, genSignedTimestamp } from './tribes'
 import { loadConfig } from './config'
-import { genSignedTimestamp } from './tribes'
 import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()

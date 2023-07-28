@@ -10,7 +10,7 @@ export const _lnrpc_PeerEvent_EventType = {
 export type _lnrpc_PeerEvent_EventType = 'PEER_ONLINE' | 0 | 'PEER_OFFLINE' | 1
 
 export type _lnrpc_PeerEvent_EventType__Output =
-  typeof _lnrpc_PeerEvent_EventType[keyof typeof _lnrpc_PeerEvent_EventType]
+  (typeof _lnrpc_PeerEvent_EventType)[keyof typeof _lnrpc_PeerEvent_EventType]
 
 export interface PeerEvent {
   pub_key?: string

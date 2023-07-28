@@ -18,7 +18,7 @@ export type _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirectio
   'IN' | 0 | 'OUT' | 1
 
 export type _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection__Output =
-  typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection[keyof typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection]
+  (typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection)[keyof typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection]
 
 export interface ListpeersPeersChannelsHtlcs {
   direction?: _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection

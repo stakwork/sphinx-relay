@@ -10,20 +10,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.getHmacKey = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
-const models_1 = require("../models");
 const crypto = require("crypto");
+const sequelize_1 = require("sequelize");
+const moment = require("moment");
+const models_1 = require("../models");
 const socket = require("../utils/socket");
 const helpers = require("../helpers");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
-const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
 const tribes = require("../utils/tribes");
 const network = require("../network");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
-const moment = require("moment");
 const rsa = require("../crypto/rsa");
 const cert_1 = require("../utils/cert");
 const chatTribes_1 = require("./chatTribes");
@@ -639,6 +639,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const tenant = req.owner.id;
     try {
         const dateToReturn = decodeURI(req.query.date);
+        /* eslint-disable import/namespace */
         const local = moment.utc(dateToReturn).local().toDate();
         const where = {
             updatedAt: { [sequelize_1.Op.gte]: local },

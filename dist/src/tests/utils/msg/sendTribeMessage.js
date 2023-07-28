@@ -33,6 +33,7 @@ function sendTribeMessage(t, node1, tribe, text, options) {
             remote_text_map: { chat: remoteText },
             amount: (options && options.amount) || 0,
             parent_id: (options && options.parent_id) || 0,
+            thread_uuid: (options && options.thread_uuid) || '',
             reply_uuid: '',
             boost: false,
         };

@@ -21,4 +21,4 @@ export type CommitmentType =
   | 4
 
 export type CommitmentType__Output =
-  typeof CommitmentType[keyof typeof CommitmentType]
+  (typeof CommitmentType)[keyof typeof CommitmentType]

@@ -1,13 +1,13 @@
+import * as short from 'short-uuid'
 import * as network from '../../network'
 import { models, Message, ChatRecord } from '../../models'
-import * as short from 'short-uuid'
 import * as rsa from '../../crypto/rsa'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { sphinxLogger } from '../../utils/logger'
-import { Action, validateAction } from './index'
 import { ChatPlusMembers } from '../../network/send'
+import { Action, validateAction } from './index'
 
 export default async function broadcast(a: Action): Promise<void> {
   const {

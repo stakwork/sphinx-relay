@@ -1,10 +1,10 @@
-import { loadConfig } from './config'
-import { genSignedTimestamp } from './tribes'
 import fetch from 'node-fetch'
-import { sphinxLogger, logging } from './logger'
 import { Lsat } from 'lsat-js'
 import * as Lightning from '../grpc/lightning'
 import { SendPaymentResponse } from '../grpc/interfaces'
+import { sphinxLogger, logging } from './logger'
+import { genSignedTimestamp } from './tribes'
+import { loadConfig } from './config'
 
 interface UpdateTribeBadge {
   tribeId: string

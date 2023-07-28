@@ -21,8 +21,8 @@ import { typesToForward, receiveCoTenantMessage } from './receive'
 import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
+import { Msg, MessageContent, ChatMember } from './interfaces'
 import { errMsgString } from '../utils/errMsgString'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
 
@@ -347,7 +347,7 @@ export function signAndSend(
         await tribes.publish(
           mqttTopic,
           data,
-          ownerPubkey,
+          owner as Contact,
           () => {
             if (!replayingHistory) {
               if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)

@@ -10,17 +10,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.genChannel = exports.connectPeer = exports.checkPeered = exports.getQR = exports.getIP = void 0;
-const publicIp = require("public-ip");
-const localip = require("ip");
-const password_1 = require("./password");
-const Lightning = require("../grpc/lightning");
-const nodeinfo_1 = require("./nodeinfo");
-const config_1 = require("./config");
-const queries_1 = require("../controllers/queries");
-const res_1 = require("./res");
-const logger_1 = require("./logger");
 const fs = require("fs");
 const net = require("net");
+const publicIp = require("public-ip");
+const localip = require("ip");
+const Lightning = require("../grpc/lightning");
+const queries_1 = require("../controllers/queries");
+const password_1 = require("./password");
+const nodeinfo_1 = require("./nodeinfo");
+const config_1 = require("./config");
+const res_1 = require("./res");
+const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 const IS_GREENLIGHT = config.lightning_provider === 'GREENLIGHT';
 function getIP() {

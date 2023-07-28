@@ -1,25 +1,16 @@
 import { existsSync, readFileSync, writeFile, mkdirSync } from 'fs'
-import * as express from 'express'
-import * as rsa from '../crypto/rsa'
 import * as fs from 'fs'
-import { sphinxLogger, logging } from './logger'
+import * as express from 'express'
 import * as qs from 'qs'
 import axios from 'axios'
 import * as forge from 'node-forge'
+import * as rsa from '../crypto/rsa'
 const apiUrl = 'https://api.zerossl.com'
 import { loadConfig } from '../utils/config'
+import { sleep } from '../helpers'
+import { sphinxLogger, logging } from './logger'
 
 const config = loadConfig()
-
-/**
-Sleep for a given number of milliseconds
-
-@param {number} ms - The number of milliseconds to sleep for
-@return {Promise} A promise that will be resolved after the given number of milliseconds
-*/
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 /**
 Generates a Certificate Signing Request (CSR) with the given keys and endpoint.

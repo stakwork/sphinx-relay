@@ -1,9 +1,9 @@
 import { Lsat as LsatB } from 'lsat-js'
+import { Response, Request } from 'express'
 import { models, Lsat as LsatT } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
-import { Response, Request } from 'express'
 import constants from '../constants'
 
 export interface LsatRequestBody {

@@ -20,7 +20,7 @@ export type _cln_SendonionResponse_SendonionStatus =
   | 1
 
 export type _cln_SendonionResponse_SendonionStatus__Output =
-  typeof _cln_SendonionResponse_SendonionStatus[keyof typeof _cln_SendonionResponse_SendonionStatus]
+  (typeof _cln_SendonionResponse_SendonionStatus)[keyof typeof _cln_SendonionResponse_SendonionStatus]
 
 export interface SendonionResponse {
   id?: number | string | Long

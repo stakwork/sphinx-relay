@@ -10,12 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.reissueBadgeOnLiquid = exports.determineBadgeHost = exports.updateBadgeInTribe = exports.transferBadge = exports.createBadge = exports.claimOnLiquid = exports.deleteTicketByAdmin = exports.deletePerson = exports.createOrEditPerson = void 0;
-const config_1 = require("./config");
-const tribes_1 = require("./tribes");
 const node_fetch_1 = require("node-fetch");
-const logger_1 = require("./logger");
 const lsat_js_1 = require("lsat-js");
 const Lightning = require("../grpc/lightning");
+const logger_1 = require("./logger");
+const tribes_1 = require("./tribes");
+const config_1 = require("./config");
 const config = (0, config_1.loadConfig)();
 function createOrEditPerson({ host, owner_alias, owner_pubkey, owner_route_hint, owner_contact_key, description, img, tags, price_to_meet, extras, new_ticket_time, uuid, }, id) {
     return __awaiter(this, void 0, void 0, function* () {

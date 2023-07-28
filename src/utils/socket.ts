@@ -1,5 +1,5 @@
-import { models, ContactRecord } from '../models'
 import * as crypto from 'crypto'
+import { models, ContactRecord } from '../models'
 import { sphinxLogger } from '../utils/logger'
 import { getTransportKey } from '../utils/cert'
 import * as rsa from '../crypto/rsa'

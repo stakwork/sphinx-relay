@@ -18,4 +18,4 @@ export type SignMethod =
   | 'SIGN_METHOD_TAPROOT_SCRIPT_SPEND'
   | 3
 
-export type SignMethod__Output = typeof SignMethod[keyof typeof SignMethod]
+export type SignMethod__Output = (typeof SignMethod)[keyof typeof SignMethod]

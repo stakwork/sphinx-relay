@@ -22,6 +22,7 @@ export interface MessageContent {
   recipientAlias?: string
   recipientPic?: string
   person?: string
+  thread_uuid?: string
 }
 
 export type ChatMembers = { [k: string]: ChatMember }

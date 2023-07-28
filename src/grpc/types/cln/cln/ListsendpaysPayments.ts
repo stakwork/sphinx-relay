@@ -23,7 +23,7 @@ export type _cln_ListsendpaysPayments_ListsendpaysPaymentsStatus =
   | 2
 
 export type _cln_ListsendpaysPayments_ListsendpaysPaymentsStatus__Output =
-  typeof _cln_ListsendpaysPayments_ListsendpaysPaymentsStatus[keyof typeof _cln_ListsendpaysPayments_ListsendpaysPaymentsStatus]
+  (typeof _cln_ListsendpaysPayments_ListsendpaysPaymentsStatus)[keyof typeof _cln_ListsendpaysPayments_ListsendpaysPaymentsStatus]
 
 export interface ListsendpaysPayments {
   id?: number | string | Long

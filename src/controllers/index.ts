@@ -1,5 +1,13 @@
+import rateLimit from 'express-rate-limit'
 import { models, Message } from '../models'
 import { proxyAdminMiddleware } from '../auth'
+import * as gitinfo from '../utils/gitinfo'
+import * as timers from '../utils/timers'
+import * as builtInBots from '../builtin'
+import constants from '../constants'
+import { failure } from '../utils/res'
+import { Req } from '../types'
+import { initializeCronJobsForCallRecordings } from '../builtin/utill/callRecording'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -15,22 +23,14 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './botapi'
 import * as queries from './queries'
-import * as gitinfo from '../utils/gitinfo'
-import * as timers from '../utils/timers'
-import * as builtInBots from '../builtin'
 import * as admin from './admin'
-import constants from '../constants'
 import * as feed from './feed'
-import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
-import { Req } from '../types'
 import * as action from './actionHistory'
 import * as feeds from './getFeeds'
 import * as contentFeedStatus from './contentFeedStatus'
-import { initializeCronJobsForCallRecordings } from '../builtin/utill/callRecording'
-import rateLimit from 'express-rate-limit'
 
 const limiter = rateLimit({
   windowMs: 1000, // 15 minutes
@@ -243,6 +243,7 @@ export async function set(app) {
   app.post('/payment', payments.sendPayment)
 
   app.post('/subscriptions', subcriptions.createSubscription)
+  app.post('/update_channel_policy', details.updateChannelPolicy)
 
   // following routes are only for proxy admin user (isAdmin=true)
   app.use(proxyAdminMiddleware)

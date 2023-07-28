@@ -1,9 +1,10 @@
+import * as crypto from 'crypto'
 import fetch from 'node-fetch'
+import * as FormData from 'form-data'
+import * as RNCryptor from 'jscryptor-3'
 import { LdatTerms, parseLDAT } from '../utils/ldat'
 import * as rsa from '../crypto/rsa'
-import * as crypto from 'crypto'
 import * as meme from '../utils/meme'
-import * as FormData from 'form-data'
 import {
   models,
   Chat,
@@ -13,11 +14,11 @@ import {
   Message,
   MediaKey,
 } from '../models'
-import * as RNCryptor from 'jscryptor-3'
-import { sendMessage } from './send'
-// import { Op } from 'sequelize'
 import constants from '../constants'
 import { sphinxLogger } from '../utils/logger'
+import { sleep } from '../helpers'
+import { sendMessage } from './send'
+// import { Op } from 'sequelize'
 import { MessageContent, Msg, Payload } from './interfaces'
 
 const msgtypes = constants.message_types
@@ -219,10 +220,6 @@ export async function sendFinalMemeIfFirstPurchaser(
   } catch (e) {
     sphinxLogger.error('failed to sendFinalMemeIfFirstPurchaser')
   }
-}
-
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export async function downloadAndUploadAndSaveReturningTermsAndKey(

@@ -27,4 +27,4 @@ export type PaymentState =
   | 6
 
 export type PaymentState__Output =
-  typeof PaymentState[keyof typeof PaymentState]
+  (typeof PaymentState)[keyof typeof PaymentState]

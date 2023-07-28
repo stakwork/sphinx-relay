@@ -39,4 +39,4 @@ export type ChannelState =
   | 10
 
 export type ChannelState__Output =
-  typeof ChannelState[keyof typeof ChannelState]
+  (typeof ChannelState)[keyof typeof ChannelState]

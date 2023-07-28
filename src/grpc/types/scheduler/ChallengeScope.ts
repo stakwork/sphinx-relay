@@ -8,4 +8,4 @@ export const ChallengeScope = {
 export type ChallengeScope = 'REGISTER' | 0 | 'RECOVER' | 1
 
 export type ChallengeScope__Output =
-  typeof ChallengeScope[keyof typeof ChallengeScope]
+  (typeof ChallengeScope)[keyof typeof ChallengeScope]

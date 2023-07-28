@@ -11,6 +11,7 @@ import * as hmac from './crypto/hmac'
 import { Req, Res } from './types'
 import * as fs from 'fs'
 import { getAndDecryptTransportToken } from './utils/cert'
+import { sleep } from './helpers'
 import moment = require('moment')
 
 const config = loadConfig()
@@ -291,9 +292,5 @@ export function base64ToHex(str) {
 }
 
 const atob = (a) => Buffer.from(a, 'base64').toString('binary')
-
-async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/

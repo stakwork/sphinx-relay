@@ -15,7 +15,7 @@ export const _cln_ConnectResponse_ConnectDirection = {
 export type _cln_ConnectResponse_ConnectDirection = 'IN' | 0 | 'OUT' | 1
 
 export type _cln_ConnectResponse_ConnectDirection__Output =
-  typeof _cln_ConnectResponse_ConnectDirection[keyof typeof _cln_ConnectResponse_ConnectDirection]
+  (typeof _cln_ConnectResponse_ConnectDirection)[keyof typeof _cln_ConnectResponse_ConnectDirection]
 
 export interface ConnectResponse {
   id?: Buffer | Uint8Array | string

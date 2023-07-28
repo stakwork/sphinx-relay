@@ -12,14 +12,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProxyXpub = exports.getProxyRootPubkey = exports.loadProxyLightning = exports.loadProxyCredentials = exports.getProxyTotalBalance = exports.generateNewExternalUser = exports.generateNewUser = exports.generateNewUsers = exports.genUsersInterval = exports.isProxy = void 0;
 const fs = require("fs");
 const grpc = require("@grpc/grpc-js");
+const node_fetch_1 = require("node-fetch");
+const sequelize_1 = require("sequelize");
 const proto_1 = require("../grpc/proto");
-const config_1 = require("./config");
 const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
-const node_fetch_1 = require("node-fetch");
-const logger_1 = require("./logger");
 const helpers_1 = require("../helpers");
-const sequelize_1 = require("sequelize");
+const logger_1 = require("./logger");
+const config_1 = require("./config");
 // var protoLoader = require('@grpc/proto-loader')
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';

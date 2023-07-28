@@ -22,7 +22,7 @@ export type _cln_PayResponse_PayStatus =
   | 2
 
 export type _cln_PayResponse_PayStatus__Output =
-  typeof _cln_PayResponse_PayStatus[keyof typeof _cln_PayResponse_PayStatus]
+  (typeof _cln_PayResponse_PayStatus)[keyof typeof _cln_PayResponse_PayStatus]
 
 export interface PayResponse {
   payment_preimage?: Buffer | Uint8Array | string

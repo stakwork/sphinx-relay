@@ -17,7 +17,7 @@ export type _cln_CloseResponse_CloseType =
   | 2
 
 export type _cln_CloseResponse_CloseType__Output =
-  typeof _cln_CloseResponse_CloseType[keyof typeof _cln_CloseResponse_CloseType]
+  (typeof _cln_CloseResponse_CloseType)[keyof typeof _cln_CloseResponse_CloseType]
 
 export interface CloseResponse {
   item_type?: _cln_CloseResponse_CloseType

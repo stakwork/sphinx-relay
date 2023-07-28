@@ -11,15 +11,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.streamHsmRequests = exports.recover = exports.register = exports.sign_challenge = exports.get_challenge = exports.schedule = exports.startGreenlightInit = exports.get_greenlight_grpc_uri = exports.keepalive = exports.initGreenlight = void 0;
 const fs = require("fs");
+const crypto = require("crypto");
 const grpc = require("@grpc/grpc-js");
+const config_1 = require("../utils/config");
+const logger_1 = require("../utils/logger");
 const proto_1 = require("./proto");
 const libhsmd_1 = require("./libhsmd");
-const config_1 = require("../utils/config");
-const crypto = require("crypto");
 const interfaces = require("./interfaces");
 const lightning_1 = require("./lightning");
 const Lightning = require("./lightning");
-const logger_1 = require("../utils/logger");
 let GID;
 const config = (0, config_1.loadConfig)();
 function initGreenlight() {

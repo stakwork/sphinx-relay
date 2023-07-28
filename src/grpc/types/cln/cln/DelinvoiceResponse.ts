@@ -23,7 +23,7 @@ export type _cln_DelinvoiceResponse_DelinvoiceStatus =
   | 2
 
 export type _cln_DelinvoiceResponse_DelinvoiceStatus__Output =
-  typeof _cln_DelinvoiceResponse_DelinvoiceStatus[keyof typeof _cln_DelinvoiceResponse_DelinvoiceStatus]
+  (typeof _cln_DelinvoiceResponse_DelinvoiceStatus)[keyof typeof _cln_DelinvoiceResponse_DelinvoiceStatus]
 
 export interface DelinvoiceResponse {
   label?: string

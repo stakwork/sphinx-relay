@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.recordLeadershipScore = exports.encryptTribeBroadcast = exports.decryptMessage = exports.personalizeMessage = exports.fillmsg = void 0;
-const ldat_1 = require("./ldat");
 const rsa = require("../crypto/rsa");
 const constants_1 = require("../constants");
 const models = require("../models");
 const logger_1 = require("../utils/logger");
+const ldat_1 = require("./ldat");
 function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.content))

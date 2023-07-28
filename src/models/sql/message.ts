@@ -125,6 +125,9 @@ export default class Message extends Model<Message> {
 
   @Column(DataType.TEXT)
   errorMessage: string // for error message when sending messages by keysend
+
+  @Column(DataType.TEXT)
+  thread_uuid: string // for which thread the message belongs to
 }
 
 /*

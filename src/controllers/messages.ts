@@ -1,3 +1,7 @@
+import { Op, FindOptions } from 'sequelize'
+import { indexBy } from 'underscore'
+import * as short from 'short-uuid'
+import { CronJob } from 'cron'
 import {
   models,
   Message,
@@ -6,8 +10,6 @@ import {
   MessageRecord,
   ChatRecord,
 } from '../models'
-import { Op, FindOptions } from 'sequelize'
-import { indexBy } from 'underscore'
 import {
   sendNotification,
   resetNotifyTribeCount,
@@ -18,19 +20,17 @@ import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
 import { failure, success } from '../utils/res'
 import * as timers from '../utils/timers'
-import { sendConfirmation } from './confirmations'
 import * as network from '../network'
 import { Payload } from '../network'
 import type { SendMessageParams } from '../network'
-import * as short from 'short-uuid'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { Req, Res } from '../types'
 import { ChatPlusMembers } from '../network/send'
 import { getCacheMsg } from '../utils/tribes'
-import { CronJob } from 'cron'
 import { loadConfig } from '../utils/config'
 import { onReceiveReversal } from '../utils/reversal'
+import { sendConfirmation } from './confirmations'
 
 interface ExtentedMessage extends Message {
   chat_id?: number
@@ -372,6 +372,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     parent_id,
     pay,
     call,
+    thread_uuid,
   } = req.body
 
   let msgtype = constants.message_types.message
@@ -454,6 +455,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   // "pay" someone who sent a msg is not a reply
   if (reply_uuid && !pay) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (recipientAlias) msg.recipientAlias = recipientAlias
   if (recipientPic) msg.recipientPic = recipientPic
   // console.log(msg)
@@ -475,6 +477,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     }
   }
   if (parent_id) msgToSend.parentId = parent_id
+  if (thread_uuid) msgToSend.thread_uuid = thread_uuid
   if (recipientAlias) msgToSend.recipientAlias = recipientAlias
   if (recipientPic) msgToSend.recipientPic = recipientPic
 
@@ -526,6 +529,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     hasForwardedSats,
     person,
     cached,
+    thread_uuid,
   } = await helpers.parseReceiveParams(payload)
 
   if (!owner || !sender || !chat) {
@@ -564,6 +568,7 @@ export const receiveMessage = async (payload: Payload): Promise<void> => {
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
 
@@ -618,6 +623,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     force_push,
     hasForwardedSats,
     cached,
+    thread_uuid,
   } = await helpers.parseReceiveParams(payload)
 
   sphinxLogger.info(
@@ -668,6 +674,7 @@ export const receiveBoost = async (payload: Payload): Promise<void> => {
     if (remote_content) msg.remoteMessageContent = remote_content
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (parent_id) msg.parentId = parent_id
   let message: Message | null = null
   if (!cached) {
@@ -878,6 +885,7 @@ export const receiveVoip = async (payload: Payload): Promise<void> => {
     hasForwardedSats,
     person,
     remote_content,
+    thread_uuid,
   } = await helpers.parseReceiveParams(payload)
 
   if (!owner || !sender || !chat) {
@@ -913,6 +921,7 @@ export const receiveVoip = async (payload: Payload): Promise<void> => {
     msg.person = person
   }
   if (reply_uuid) msg.replyUuid = reply_uuid
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (parent_id) msg.parentId = parent_id
   const message: Message = (await models.Message.create(msg)) as Message
 

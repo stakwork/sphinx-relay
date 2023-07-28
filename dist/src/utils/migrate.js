@@ -11,8 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const helpers_1 = require("../helpers");
 const models_1 = require("../models");
-const logger_1 = require("./logger");
 const constants_1 = require("../constants");
+const logger_1 = require("./logger");
 function migrateMuted() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -376,6 +376,7 @@ function migrate() {
         addTableColumn('sphinx_chats', 'preview', 'TEXT');
         addTableColumn('sphinx_contacts', 'prune', 'INTEGER');
         addTableColumn('sphinx_messages', 'error_message', 'TEXT');
+        addTableColumn('sphinx_messages', 'thread_uuid', 'TEXT');
     });
 }
 exports.default = migrate;

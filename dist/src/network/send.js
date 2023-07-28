@@ -256,7 +256,7 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory, coTenantDest) {
                     yield (0, receive_1.receiveCoTenantMessage)(coTenantDest, data);
                 }
                 else if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data, ownerPubkey, () => {
+                    yield tribes.publish(mqttTopic, data, owner, () => {
                         if (!replayingHistory) {
                             if (mqttTopic)
                                 checkIfAutoConfirm(opts.data, ownerID);

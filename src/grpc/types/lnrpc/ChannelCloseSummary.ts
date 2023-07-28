@@ -36,7 +36,7 @@ export type _lnrpc_ChannelCloseSummary_ClosureType =
   | 5
 
 export type _lnrpc_ChannelCloseSummary_ClosureType__Output =
-  typeof _lnrpc_ChannelCloseSummary_ClosureType[keyof typeof _lnrpc_ChannelCloseSummary_ClosureType]
+  (typeof _lnrpc_ChannelCloseSummary_ClosureType)[keyof typeof _lnrpc_ChannelCloseSummary_ClosureType]
 
 export interface ChannelCloseSummary {
   channel_point?: string
