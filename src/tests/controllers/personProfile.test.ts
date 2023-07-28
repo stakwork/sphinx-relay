@@ -77,23 +77,47 @@ async function personProfile(t, node1, node2, node3) {
     'http://' + config.tribeHost + '/person/' + poll.pubkey
   )
 
-  //POST PROFILE TO RELAY
   const priceToMeet = 13
+  const person = {
+    pubkey: node1.pubkey,
+    host: internalTribeHost,
+    id: persontest.id,
+    owner_alias: node1.alias,
+    description: 'this description',
+    img: poll.photo_url,
+    tags: [],
+    price_to_meet: priceToMeet,
+    extras: { twitter: 'mytwitter' },
+  }
+
+  //POST PROFILE TO RELAY
   const postProfile = await http.post(
     node1.external_ip + '/profile',
-    makeJwtArgs(poll.jwt, {
-      pubkey: node1.pubkey,
-      host: internalTribeHost,
-      id: persontest.id,
-      owner_alias: node1.alias,
-      description: 'this description',
-      img: poll.photo_url,
-      tags: [],
-      price_to_meet: priceToMeet,
-      extras: { twitter: 'mytwitter' },
-    })
+    makeJwtArgs(poll.jwt, person)
   )
+
   t.true(postProfile.success, 'post to profile should succeed')
+
+  const personCreated = await http.get(
+    'http://' + config.tribeHost + '/person/' + node1.pubkey
+  )
+
+  t.true(
+    priceToMeet === personCreated.price_to_meet,
+    'Should have the same price to meet'
+  )
+  t.true(
+    person.pubkey === personCreated.owner_pubkey,
+    'Should have the same public key'
+  )
+  t.true(
+    person.owner_alias === personCreated.owner_alias,
+    'Alias should be equal'
+  )
+  t.true(
+    person.description === personCreated.description,
+    'Description should be equal'
+  )
 
   //NODE2 CREATES A TRIBE
   let tribe = await createTribe(t, node2)
