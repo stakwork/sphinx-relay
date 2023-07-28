@@ -69,7 +69,7 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone -b feat/bot-test https://github.com/stakwork/sphinx-stack.git stack
+          git clone https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
