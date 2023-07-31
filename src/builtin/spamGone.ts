@@ -44,6 +44,26 @@ export function init() {
           return
         case 'remove':
           await removePubkeyFromSpam(arr, botPrefix, botName, tribe, message)
+        default:
+          const embed = new Sphinx.MessageEmbed()
+            .setAuthor(botName)
+            .setTitle('Bot Commands:')
+            .addFields([
+              {
+                name: 'Add Pubkey to Spam_Gone list',
+                value: '/spam_gone add ${pubkey}',
+              },
+              {
+                name: 'Remove Pubkey from Spam_Gone list',
+                value: '/spam_gone remove ${pubkey}',
+              },
+              {
+                name: 'List all Pubkey on Spam_Gone list',
+                value: '/spam_gone list',
+              },
+            ])
+          message.channel.send({ embed })
+          return
       }
     } catch (error) {}
   })
