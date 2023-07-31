@@ -17,14 +17,14 @@ import {
 } from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
-import { typesToForward, receiveCoTenantMessage } from './receive'
-import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { loadConfig } from '../utils/config'
-import { Msg, MessageContent, ChatMember } from './interfaces'
 import { errMsgString } from '../utils/errMsgString'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
+import { Msg, MessageContent, ChatMember } from './interfaces'
+import * as intercept from './intercept'
+import { typesToForward, receiveCoTenantMessage } from './receive'
 
 const config = loadConfig()
 
