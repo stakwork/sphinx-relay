@@ -19,7 +19,7 @@ const helpers_1 = require("../helpers");
 const get_1 = require("../get");
 const helpers_2 = require("../helpers");
 const config_1 = require("../../config");
-function sendImage(t, node1, node2, image, tribe, price) {
+function sendImage(t, node1, node2, image, tribe, price, thread_uuid) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS AN IMAGE TO NODE2
         var token = yield (0, helpers_2.getToken)(t, node1);
@@ -78,6 +78,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
             text: '',
             amount: 0,
             price: 0 || price,
+            thread_uuid,
         };
         //send message from node1 to node2
         const img = yield http.post(node1.external_ip + '/attachment', (0, helpers_2.makeArgs)(node1, i));
@@ -161,7 +162,7 @@ function sendImage(t, node1, node2, image, tribe, price) {
         // console.log('image', image)
         // console.log('dec.toStringbase64', dec.toString('base64'))
         t.true(dec.toString('base64') === image, 'image should match!');
-        return true;
+        return imgMsg;
     });
 }
 exports.sendImage = sendImage;

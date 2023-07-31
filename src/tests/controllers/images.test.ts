@@ -54,6 +54,22 @@ async function imageTest(
   const paidImageSent2 = await sendImage(t, node2, node1, image2, null, price2)
   t.true(paidImageSent2, 'paid image should have been sent')
 
+  //NODE2 SENDS AN IMAGE TO NODE1
+  const paidImageSent3 = await sendImage(
+    t,
+    node2,
+    node1,
+    image2,
+    null,
+    undefined,
+    'thread_uuid'
+  )
+  t.true(paidImageSent3, 'paid image should have been sent')
+  t.true(
+    paidImageSent3.thread_uuid == 'thread_uuid',
+    'paid image should have been sent'
+  )
+
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
   const allContacts = await getContacts(t, node1)
   let deletion
