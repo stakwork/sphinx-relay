@@ -16,13 +16,13 @@ const helpers_1 = require("../helpers");
 const msg_1 = require("../utils/msg");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
-const receive_1 = require("./receive");
-const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
 const proxy_1 = require("../utils/proxy");
+const intercept = require("./intercept");
+const receive_1 = require("./receive");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
