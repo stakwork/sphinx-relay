@@ -25,6 +25,7 @@ const builtinBots = [
   'kick',
   'sentiment',
   'jarvis',
+  'spam_gone',
 ]
 
 // else just message type
@@ -51,6 +52,7 @@ const builtInHiddenCmd = {
   kick: ['hide', 'add', 'remove'],
   sentiment: ['threshold', 'timer', 'url'],
   jarvis: ['link', 'hide'],
+  spam_gone: ['add', 'list', 'remove'],
 }
 
 const builtInBotNames = {
@@ -62,6 +64,7 @@ const builtInBotNames = {
   kick: 'KickBot',
   sentiment: 'SentimentBot',
   jarvis: 'JarvisBot',
+  spam_gone: 'SpamGoneBot',
 }
 
 export function init() {
