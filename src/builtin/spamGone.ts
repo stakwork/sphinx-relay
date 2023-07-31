@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models } from '../models'
-import { addPubkeyToSpam } from './utill/spamGone'
+import { addPubkeyToSpam, listAllPubkeys } from './utill/spamGone'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -34,6 +34,9 @@ export function init() {
       switch (cmd) {
         case 'add':
           await addPubkeyToSpam(arr, botPrefix, botName, tribe, message)
+          return
+        case 'list':
+          await listAllPubkeys(arr, botPrefix, botName, tribe, message)
           return
       }
     } catch (error) {}

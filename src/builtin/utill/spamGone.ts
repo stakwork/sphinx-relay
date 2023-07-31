@@ -75,5 +75,66 @@ export async function addPubkeyToSpam(
       msgObject,
       cmd
     )
+    return
+  }
+}
+
+export async function listAllPubkeys(
+  arrMsg: string[],
+  botPrefix: string,
+  botName: string,
+  tribe: ChatRecord,
+  msgObject: Sphinx.Message
+) {
+  const cmd = arrMsg[1]
+  try {
+    if (arrMsg.length !== 2) {
+      await botResponse(
+        botName,
+        'Invalid commad to add to Spam List',
+        botPrefix,
+        tribe.id,
+        msgObject,
+        cmd
+      )
+      return
+    }
+    const bot: ChatBotRecord = await findBot({ botPrefix, tribe })
+    let meta: SpamGoneMeta = JSON.parse(bot.meta || `{}`)
+    if (!meta.pubkeys || meta.pubkeys.length < 1) {
+      await botResponse(
+        botName,
+        'No pubkey added to the Spam_Gone list yet',
+        botPrefix,
+        tribe.id,
+        msgObject,
+        cmd
+      )
+      return
+    }
+    let pubkeyMessage = '<p>Public keys on Spam_Gone:</p>'
+    for (let i = 0; i < meta.pubkeys.length; i++) {
+      pubkeyMessage = `${pubkeyMessage}<p>${i + 1}. ${meta.pubkeys[i]}</p>`
+    }
+    await botResponse(
+      botName,
+      pubkeyMessage,
+      botPrefix,
+      tribe.id,
+      msgObject,
+      cmd
+    )
+    return
+  } catch (error) {
+    sphinxLogger.error(`Error listing to spam_gone bot: ${error}`, logging.Bots)
+    await botResponse(
+      botName,
+      error.message || 'Error occured while fetching spma_gone list',
+      botPrefix,
+      tribe.id,
+      msgObject,
+      cmd
+    )
+    return
   }
 }
