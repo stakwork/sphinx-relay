@@ -4,7 +4,7 @@ import { iterate } from '../utils/helpers'
 import { greenSquare, pinkSquare } from '../utils/base64images'
 import { NodeConfig } from '../types'
 import { addContact } from '../utils/save/addContact'
-import { getContacts } from '../utils/get'
+import { getContacts, getCheckNewMsgs } from '../utils/get'
 import { deleteContact } from '../utils/del/deleteContact'
 import { sendImage } from '../utils/msg/sendImage'
 
@@ -65,8 +65,13 @@ async function imageTest(
     'thread_uuid'
   )
   t.true(!!paidImageSent3, 'paid image should have been sent')
+  const paidImageSent3TribeUuid = await getCheckNewMsgs(
+    t,
+    node1,
+    paidImageSent3.uuid
+  )
   t.true(
-    paidImageSent3.thread_uuid == 'thread_uuid',
+    paidImageSent3TribeUuid.thread_uuid == 'thread_uuid',
     'paid image should have been sent'
   )
 

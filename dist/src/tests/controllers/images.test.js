@@ -49,7 +49,8 @@ function imageTest(t, node1, node2) {
         //NODE2 SENDS AN IMAGE TO NODE1
         const paidImageSent3 = yield (0, sendImage_1.sendImage)(t, node2, node1, image2, null, undefined, 'thread_uuid');
         t.true(!!paidImageSent3, 'paid image should have been sent');
-        t.true(paidImageSent3.thread_uuid == 'thread_uuid', 'paid image should have been sent');
+        const paidImageSent3TribeUuid = yield (0, get_1.getCheckNewMsgs)(t, node1, paidImageSent3.uuid);
+        t.true(paidImageSent3TribeUuid.thread_uuid == 'thread_uuid', 'paid image should have been sent');
         //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
         const allContacts = yield (0, get_1.getContacts)(t, node1);
         let deletion;
