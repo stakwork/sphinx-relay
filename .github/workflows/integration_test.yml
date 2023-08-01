@@ -49,6 +49,7 @@ jobs:
             'sphinxAuth',
             'fees',
             'externalBotApi',
+            'externalHostedBot',
           ]
         node: [16]
     steps:
@@ -77,13 +78,15 @@ jobs:
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
           chmod 777 -R ./cln;
+          echo '[]' > ./relay/botEnvVars.json;
+          git submodule update --init;
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml --project-dir ./stack up -d;
+            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml -f ./stack/alts/bots.yml --project-dir ./stack up -d;
             sleep 240;
             docker ps
             docker logs meme.sphinx

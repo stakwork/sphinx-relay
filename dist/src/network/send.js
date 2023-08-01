@@ -20,6 +20,7 @@ const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
+const proxy_1 = require("../utils/proxy");
 const intercept = require("./intercept");
 const receive_1 = require("./receive");
 const config = (0, config_1.loadConfig)();
@@ -170,10 +171,19 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     continue; // skip (for tribe owner broadcasting, not back to the sender)
                 }
                 let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+                let coTenantDest = '';
+                if ((0, proxy_1.isProxy)() && isTribeOwner) {
+                    const rootPubkey = yield (0, proxy_1.getProxyRootPubkey)();
+                    const arr = contact.routeHint.split(':');
+                    if ((arr && arr[0] === rootPubkey) || rootPubkey === destkey) {
+                        coTenantDest = `${destkey}`;
+                    }
+                }
                 // sending a payment to one subscriber, buying a pic from OG poster
                 // or boost to og poster
                 if (isTribeOwner && amount && realSatsContactId === contactId) {
                     mqttTopic = ''; // FORCE KEYSEND!!!
+                    coTenantDest = ''; // FORCE KEYSEND!!!
                     yield (0, msg_1.recordLeadershipScore)(tenant, amount, chat.id, contactId, type);
                 }
                 const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
@@ -188,7 +198,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     amt: Math.max(amount || 0, constants_1.default.min_sat_amount),
                     route_hint: contact.routeHint || '',
                 };
-                const r = yield signAndSend(opts, sender, mqttTopic);
+                const r = yield signAndSend(opts, sender, mqttTopic, undefined, coTenantDest);
                 yes = r;
             }
             catch (error) {
@@ -222,7 +232,7 @@ exports.sendMessage = sendMessage;
  * @param {boolean} [replayingHistory] - A flag indicating whether the message is being replayed from history.
  * @returns {Promise<boolean>} A promise that resolves with a boolean indicating the success or failure of the operation.
  */
-function signAndSend(opts, owner, mqttTopic, replayingHistory) {
+function signAndSend(opts, owner, mqttTopic, replayingHistory, coTenantDest) {
     const ownerPubkey = owner.publicKey;
     const ownerID = owner.id;
     return new Promise(function (resolve, reject) {
@@ -242,7 +252,10 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
                   This is because the tribe owner is acting as the gate to get
                   the message through to the rest of the members, but sending
                   to the other members in the chat should not cost sats      */
-                if (mqttTopic) {
+                if (coTenantDest) {
+                    yield (0, receive_1.receiveCoTenantMessage)(coTenantDest, data);
+                }
+                else if (mqttTopic) {
                     yield tribes.publish(mqttTopic, data, owner, () => {
                         if (!replayingHistory) {
                             if (mqttTopic)

@@ -21,9 +21,10 @@ import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
+import { getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import * as intercept from './intercept'
-import { typesToForward } from './receive'
+import { typesToForward, receiveCoTenantMessage } from './receive'
 
 const config = loadConfig()
 
@@ -236,11 +237,21 @@ export async function sendMessage({
       }
 
       let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
+      let coTenantDest = ''
+
+      if (isProxy() && isTribeOwner) {
+        const rootPubkey = await getProxyRootPubkey()
+        const arr = contact.routeHint.split(':')
+        if ((arr && arr[0] === rootPubkey) || rootPubkey === destkey) {
+          coTenantDest = `${destkey}`
+        }
+      }
 
       // sending a payment to one subscriber, buying a pic from OG poster
       // or boost to og poster
       if (isTribeOwner && amount && realSatsContactId === contactId) {
         mqttTopic = '' // FORCE KEYSEND!!!
+        coTenantDest = '' // FORCE KEYSEND!!!
         await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
       }
 
@@ -259,7 +270,13 @@ export async function sendMessage({
         amt: Math.max(amount || 0, constants.min_sat_amount),
         route_hint: contact.routeHint || '',
       }
-      const r = await signAndSend(opts, sender, mqttTopic)
+      const r = await signAndSend(
+        opts,
+        sender,
+        mqttTopic,
+        undefined,
+        coTenantDest
+      )
       yes = r
     } catch (error) {
       sphinxLogger.error(`KEYSEND ERROR ${error}`)
@@ -300,7 +317,8 @@ export function signAndSend(
   opts: SignAndSendOpts,
   owner: { [k: string]: any },
   mqttTopic?: string,
-  replayingHistory?: boolean
+  replayingHistory?: boolean,
+  coTenantDest?: string
 ): Promise<boolean> {
   const ownerPubkey = owner.publicKey
   const ownerID = owner.id
@@ -322,7 +340,10 @@ export function signAndSend(
         This is because the tribe owner is acting as the gate to get
         the message through to the rest of the members, but sending
         to the other members in the chat should not cost sats      */
-      if (mqttTopic) {
+
+      if (coTenantDest) {
+        await receiveCoTenantMessage(coTenantDest, data)
+      } else if (mqttTopic) {
         await tribes.publish(
           mqttTopic,
           data,
