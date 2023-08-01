@@ -1,5 +1,6 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   SendpayRoute as _cln_SendpayRoute,
   SendpayRoute__Output as _cln_SendpayRoute__Output,
@@ -8,7 +9,6 @@ import type {
   Amount as _cln_Amount,
   Amount__Output as _cln_Amount__Output,
 } from '../cln/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 export interface SendpayRequest {
   route?: _cln_SendpayRoute[]
