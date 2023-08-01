@@ -4,7 +4,7 @@ import { iterate } from '../utils/helpers'
 import { greenSquare, pinkSquare } from '../utils/base64images'
 import { NodeConfig } from '../types'
 import { addContact } from '../utils/save/addContact'
-import { getContacts } from '../utils/get'
+import { getContacts, getCheckNewMsgs } from '../utils/get'
 import { deleteContact } from '../utils/del/deleteContact'
 import { sendImage } from '../utils/msg/sendImage'
 
@@ -37,22 +37,43 @@ async function imageTest(
   //NODE1 SEND IMAGE TO NODE2
   const image = greenSquare
   const imageSent = await sendImage(t, node1, node2, image)
-  t.true(imageSent, 'image should have been sent')
+  t.true(!!imageSent, 'image should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const image2 = pinkSquare
   const imageSent2 = await sendImage(t, node2, node1, image2)
-  t.true(imageSent2, 'image should have been sent')
+  t.true(!!imageSent2, 'image should have been sent')
 
   //NODE1 SEND IMAGE TO NODE2
   const price = 11
   const paidImageSent = await sendImage(t, node1, node2, image, null, price)
-  t.true(paidImageSent, 'paid image should have been sent')
+  t.true(!!paidImageSent, 'paid image should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const price2 = 12
   const paidImageSent2 = await sendImage(t, node2, node1, image2, null, price2)
-  t.true(paidImageSent2, 'paid image should have been sent')
+  t.true(!!paidImageSent2, 'paid image should have been sent')
+
+  //NODE2 SENDS AN IMAGE TO NODE1
+  const paidImageSent3 = await sendImage(
+    t,
+    node2,
+    node1,
+    image2,
+    null,
+    undefined,
+    'thread_uuid'
+  )
+  t.true(!!paidImageSent3, 'paid image should have been sent')
+  const paidImageSent3TribeUuid = await getCheckNewMsgs(
+    t,
+    node1,
+    paidImageSent3.uuid
+  )
+  t.true(
+    paidImageSent3TribeUuid.thread_uuid == 'thread_uuid',
+    'paid image should have been sent'
+  )
 
   //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
   const allContacts = await getContacts(t, node1)

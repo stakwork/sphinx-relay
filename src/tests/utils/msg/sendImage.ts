@@ -26,7 +26,8 @@ export async function sendImage(
   node2: NodeConfig,
   image: string,
   tribe?: Chat | null,
-  price?: Number
+  price?: Number,
+  thread_uuid?: string
 ) {
   //NODE1 SENDS AN IMAGE TO NODE2
 
@@ -95,6 +96,7 @@ export async function sendImage(
     text: '',
     amount: 0,
     price: 0 || price,
+    thread_uuid,
   }
 
   //send message from node1 to node2
@@ -207,5 +209,5 @@ export async function sendImage(
   // console.log('dec.toStringbase64', dec.toString('base64'))
   t.true(dec.toString('base64') === image, 'image should match!')
 
-  return true
+  return imgMsg
 }
