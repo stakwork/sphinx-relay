@@ -713,7 +713,7 @@ function checkSpamList(chat, contact) {
             let meta = JSON.parse(bot.meta || `{}`);
             if (meta.pubkeys && meta.pubkeys.length > 0) {
                 for (let i = 0; i < meta.pubkeys.length; i++) {
-                    if (meta.pubkeys[i] === contact.publicKey) {
+                    if (meta.pubkeys[i].pubkey === contact.publicKey) {
                         return true;
                     }
                 }

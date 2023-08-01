@@ -19,5 +19,8 @@ export interface Badge {
 export type Res = express.Response
 
 export interface SpamGoneMeta {
-  pubkeys: string[]
+  pubkeys: {
+    pubkey: string
+    alias: string
+  }[]
 }

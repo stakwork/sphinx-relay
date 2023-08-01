@@ -1,4 +1,4 @@
-import { ChatBotRecord, ChatRecord } from '../../models'
+import { ChatBotRecord, ChatRecord, ContactRecord, models } from '../../models'
 import { botResponse, findBot } from './index'
 import * as Sphinx from 'sphinx-bot'
 import { sphinxLogger, logging } from '../../utils/logger'
@@ -30,7 +30,7 @@ export async function addPubkeyToSpam(
     let meta: SpamGoneMeta = JSON.parse(bot.meta || `{}`)
     if (meta.pubkeys && meta.pubkeys.length > 0) {
       for (let i = 0; i < meta.pubkeys.length; i++) {
-        if (meta.pubkeys[i] === pubkey) {
+        if (meta.pubkeys[i].pubkey === pubkey) {
           exist = true
           break
         }
@@ -48,9 +48,23 @@ export async function addPubkeyToSpam(
       )
       return
     }
+    const contact = (await models.Contact.findOne({
+      where: { publicKey: pubkey, tenant: tribe.tenant },
+    })) as ContactRecord
+    if (!contact) {
+      await botResponse(
+        botName,
+        'You cannot add this user to your spam list, because they are not on your contact list',
+        botPrefix,
+        tribe.id,
+        msgObject,
+        cmd
+      )
+      return
+    }
     const pubkeys =
       meta.pubkeys && meta.pubkeys.length > 0 ? [...meta.pubkeys] : []
-    pubkeys.push(pubkey)
+    pubkeys.push({ pubkey, alias: contact.alias })
     meta.pubkeys = [...pubkeys]
     await bot.update({ meta: JSON.stringify(meta) })
     await botResponse(
@@ -111,7 +125,9 @@ export async function listAllPubkeys(
     }
     let pubkeyMessage = '<p>Public keys on Spam_Gone:</p>'
     for (let i = 0; i < meta.pubkeys.length; i++) {
-      pubkeyMessage = `${pubkeyMessage}<p>${i + 1}. ${meta.pubkeys[i]}</p>`
+      pubkeyMessage = `${pubkeyMessage}<p>${i + 1}. ${meta.pubkeys[i].alias} (${
+        meta.pubkeys[i].pubkey
+      })</p>`
     }
     await botResponse(
       botName,
@@ -163,7 +179,7 @@ export async function removePubkeyFromSpam(
     let exist = false
     if (meta.pubkeys && meta.pubkeys.length > 0) {
       for (let i = 0; i < meta.pubkeys.length; i++) {
-        if (meta.pubkeys[i] === pubkey) {
+        if (meta.pubkeys[i].pubkey === pubkey) {
           exist = true
           pubkeyIndex = i
           break

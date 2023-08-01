@@ -44,6 +44,7 @@ export function init() {
           return
         case 'remove':
           await removePubkeyFromSpam(arr, botPrefix, botName, tribe, message)
+          return
         default:
           const embed = new Sphinx.MessageEmbed()
             .setAuthor(botName)
