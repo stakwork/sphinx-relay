@@ -17,6 +17,7 @@ import {
   ChatMember,
   ChatMemberRecord,
   MessageRecord,
+  ChatBotRecord,
 } from '../models'
 import { decryptMessage, encryptTribeBroadcast } from '../utils/msg'
 import * as timers from '../utils/timers'
@@ -34,6 +35,8 @@ import {
 } from './modify'
 import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import { Payload, AdminPayload } from './interfaces'
+import { findBot } from '../builtin/utill'
+import { SpamGoneMeta } from '../types'
 
 const config = loadConfig()
 /*
@@ -144,6 +147,19 @@ async function onReceive(payload: Payload, dest: string) {
         where: { publicKey: payload.sender.pub_key, tenant },
       })) as Contact
 
+      let isSpam = false
+      //Check if message is spam
+      if (payload.type === constants.message_types.message) {
+        isSpam = await checkSpamList(chat, senderContact)
+        if (isSpam) {
+          //to be changes to a new message type spam
+          // payload.type = constants.message_types.delete
+
+          //This is temporary, till the app has spam message type updated
+          payload.message.content = ''
+        }
+      }
+
       // if (!senderContact) return console.log('=> no sender contact')
 
       const senderContactId = senderContact && senderContact.id
@@ -159,7 +175,7 @@ async function onReceive(payload: Payload, dest: string) {
         if (payload.message.amount < chat.pricePerMessage) {
           doAction = false
         }
-        if (chat.escrowAmount && senderContactId) {
+        if (chat.escrowAmount && senderContactId && !isSpam) {
           timers.addTimer({
             // pay them back
             amount: chat.escrowAmount,
@@ -249,7 +265,7 @@ async function onReceive(payload: Payload, dest: string) {
               chatId: chat.id,
             },
           })) as ChatMemberRecord
-          if (sender) {
+          if (sender && !isSpam) {
             await sender.update({ totalMessages: sender.totalMessages + 1 })
             if (payload.type === msgtypes.message) {
               const allMsg = (await models.Message.findAll({
@@ -722,5 +738,32 @@ function weave(p) {
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
+  }
+}
+
+async function checkSpamList(
+  chat: ChatRecord,
+  contact: Contact
+): Promise<boolean> {
+  try {
+    const bot: ChatBotRecord = await findBot({
+      botPrefix: '/spam_gone',
+      tribe: chat,
+    })
+    if (!bot) {
+      return false
+    }
+    let meta: SpamGoneMeta = JSON.parse(bot.meta || `{}`)
+
+    if (meta.pubkeys && meta.pubkeys.length > 0) {
+      for (let i = 0; i < meta.pubkeys.length; i++) {
+        if (meta.pubkeys[i] === contact.publicKey) {
+          return true
+        }
+      }
+    }
+    return false
+  } catch (error) {
+    return false
   }
 }

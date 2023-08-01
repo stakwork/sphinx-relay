@@ -2,10 +2,7 @@ import { ChatBotRecord, ChatRecord } from '../../models'
 import { botResponse, findBot } from './index'
 import * as Sphinx from 'sphinx-bot'
 import { sphinxLogger, logging } from '../../utils/logger'
-
-interface SpamGoneMeta {
-  pubkeys: string[]
-}
+import { SpamGoneMeta } from '../../types'
 
 export async function addPubkeyToSpam(
   arrMsg: string[],
