@@ -10,7 +10,6 @@ RUN apt install -y make python3-minimal
 RUN which python3
 RUN apt install -y g++ gcc libmcrypt-dev
 RUN apt-get -y install git
-RUN npm install -g yarn
 
 RUN yarn install
 
