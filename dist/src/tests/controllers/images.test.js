@@ -33,22 +33,22 @@ function imageTest(t, node1, node2) {
         //NODE1 SEND IMAGE TO NODE2
         const image = base64images_1.greenSquare;
         const imageSent = yield (0, sendImage_1.sendImage)(t, node1, node2, image);
-        t.true(imageSent, 'image should have been sent');
+        t.true(!!imageSent, 'image should have been sent');
         //NODE2 SENDS AN IMAGE TO NODE1
         const image2 = base64images_1.pinkSquare;
         const imageSent2 = yield (0, sendImage_1.sendImage)(t, node2, node1, image2);
-        t.true(imageSent2, 'image should have been sent');
+        t.true(!!imageSent2, 'image should have been sent');
         //NODE1 SEND IMAGE TO NODE2
         const price = 11;
         const paidImageSent = yield (0, sendImage_1.sendImage)(t, node1, node2, image, null, price);
-        t.true(paidImageSent, 'paid image should have been sent');
+        t.true(!!paidImageSent, 'paid image should have been sent');
         //NODE2 SENDS AN IMAGE TO NODE1
         const price2 = 12;
         const paidImageSent2 = yield (0, sendImage_1.sendImage)(t, node2, node1, image2, null, price2);
-        t.true(paidImageSent2, 'paid image should have been sent');
+        t.true(!!paidImageSent2, 'paid image should have been sent');
         //NODE2 SENDS AN IMAGE TO NODE1
         const paidImageSent3 = yield (0, sendImage_1.sendImage)(t, node2, node1, image2, null, undefined, 'thread_uuid');
-        t.true(paidImageSent3, 'paid image should have been sent');
+        t.true(!!paidImageSent3, 'paid image should have been sent');
         t.true(paidImageSent3.thread_uuid == 'thread_uuid', 'paid image should have been sent');
         //NODE1 AND NODE2 DELETE EACH OTHER AS CONTACTS
         const allContacts = yield (0, get_1.getContacts)(t, node1);

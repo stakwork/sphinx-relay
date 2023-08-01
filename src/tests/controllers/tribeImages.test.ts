@@ -33,12 +33,12 @@ export async function tribeImages(t, node1, node2) {
   //NODE1 SEND IMAGE TO NODE2
   const image = greenSquare
   const imageSent = await sendImage(t, node1, node2, image, tribe)
-  t.true(imageSent, 'message should have been sent')
+  t.true(!!imageSent, 'message should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const image2 = pinkSquare
   const imageSent2 = await sendImage(t, node2, node1, image2, tribe)
-  t.true(imageSent2, 'message should have been sent')
+  t.true(!!imageSent2, 'message should have been sent')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

@@ -37,22 +37,22 @@ async function imageTest(
   //NODE1 SEND IMAGE TO NODE2
   const image = greenSquare
   const imageSent = await sendImage(t, node1, node2, image)
-  t.true(imageSent, 'image should have been sent')
+  t.true(!!imageSent, 'image should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const image2 = pinkSquare
   const imageSent2 = await sendImage(t, node2, node1, image2)
-  t.true(imageSent2, 'image should have been sent')
+  t.true(!!imageSent2, 'image should have been sent')
 
   //NODE1 SEND IMAGE TO NODE2
   const price = 11
   const paidImageSent = await sendImage(t, node1, node2, image, null, price)
-  t.true(paidImageSent, 'paid image should have been sent')
+  t.true(!!paidImageSent, 'paid image should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const price2 = 12
   const paidImageSent2 = await sendImage(t, node2, node1, image2, null, price2)
-  t.true(paidImageSent2, 'paid image should have been sent')
+  t.true(!!paidImageSent2, 'paid image should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const paidImageSent3 = await sendImage(
@@ -64,7 +64,7 @@ async function imageTest(
     undefined,
     'thread_uuid'
   )
-  t.true(paidImageSent3, 'paid image should have been sent')
+  t.true(!!paidImageSent3, 'paid image should have been sent')
   t.true(
     paidImageSent3.thread_uuid == 'thread_uuid',
     'paid image should have been sent'
