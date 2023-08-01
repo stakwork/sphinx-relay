@@ -10,8 +10,9 @@ RUN apt install -y make python3-minimal
 RUN which python3
 RUN apt install -y g++ gcc libmcrypt-dev
 RUN apt-get -y install git
+RUN npm install -g yarn
 
-RUN npm install
+RUN yarn install
 
 RUN cp /relay/config/app.json /relay/dist/config/app.json
 RUN cp /relay/config/config.json /relay/dist/config/config.json
