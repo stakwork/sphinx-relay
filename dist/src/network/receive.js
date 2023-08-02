@@ -28,9 +28,9 @@ const jsonUtils = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
 const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
+const utill_1 = require("../builtin/utill");
 const modify_1 = require("./modify");
 const send_1 = require("./send");
-const utill_1 = require("../builtin/utill");
 const config = (0, config_1.loadConfig)();
 /*
 delete type:
@@ -726,7 +726,7 @@ function checkSpamList(chat, contact) {
             if (!bot) {
                 return false;
             }
-            let meta = JSON.parse(bot.meta || `{}`);
+            const meta = JSON.parse(bot.meta || `{}`);
             if (meta.pubkeys && meta.pubkeys.length > 0) {
                 for (let i = 0; i < meta.pubkeys.length; i++) {
                     if (meta.pubkeys[i].pubkey === contact.publicKey) {
