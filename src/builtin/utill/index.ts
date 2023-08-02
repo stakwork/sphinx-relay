@@ -1,6 +1,6 @@
 import * as Sphinx from 'sphinx-bot'
 import { determineOwnerOnly } from '../../controllers/botapi/hideAndUnhideCommand'
-import { ChatBotRecord, models } from '../../models'
+import { ChatBotRecord, ChatRecord, models } from '../../models'
 
 export async function botResponse(
   botName: string,
@@ -17,7 +17,13 @@ export async function botResponse(
   botMessage.channel.send({ embed })
 }
 
-export async function findBot({ botPrefix, tribe }): Promise<ChatBotRecord> {
+export async function findBot({
+  botPrefix,
+  tribe,
+}: {
+  botPrefix: string
+  tribe: ChatRecord
+}): Promise<ChatBotRecord> {
   try {
     const bot = (await models.ChatBot.findOne({
       where: { chatId: tribe.id, botPrefix, tenant: tribe.tenant },

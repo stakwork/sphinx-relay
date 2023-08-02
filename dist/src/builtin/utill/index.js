@@ -23,7 +23,7 @@ function botResponse(botName, message, botPrefix, tribeId, botMessage, command) 
     });
 }
 exports.botResponse = botResponse;
-function findBot({ botPrefix, tribe }) {
+function findBot({ botPrefix, tribe, }) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const bot = (yield models_1.models.ChatBot.findOne({

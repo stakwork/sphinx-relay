@@ -30,6 +30,7 @@ const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
 const modify_1 = require("./modify");
 const send_1 = require("./send");
+const utill_1 = require("../builtin/utill");
 const config = (0, config_1.loadConfig)();
 /*
 delete type:
@@ -130,6 +131,17 @@ function onReceive(payload, dest) {
                 const senderContact = (yield models_1.models.Contact.findOne({
                     where: { publicKey: payload.sender.pub_key, tenant },
                 }));
+                let isSpam = false;
+                //Check if message is spam
+                if (payload.type === constants_1.default.message_types.message) {
+                    isSpam = yield checkSpamList(chat, senderContact);
+                    if (isSpam) {
+                        //to be changes to a new message type spam
+                        // payload.type = constants.message_types.delete
+                        //This is temporary, till the app has spam message type updated
+                        payload.message.content = '';
+                    }
+                }
                 // if (!senderContact) return console.log('=> no sender contact')
                 const senderContactId = senderContact && senderContact.id;
                 forwardedFromContactId = senderContactId;
@@ -145,7 +157,7 @@ function onReceive(payload, dest) {
                     if (payload.message.amount < chat.pricePerMessage) {
                         doAction = false;
                     }
-                    if (chat.escrowAmount && senderContactId) {
+                    if (chat.escrowAmount && senderContactId && !isSpam) {
                         timers.addTimer({
                             // pay them back
                             amount: chat.escrowAmount,
@@ -230,7 +242,7 @@ function onReceive(payload, dest) {
                                 chatId: chat.id,
                             },
                         }));
-                        if (sender) {
+                        if (sender && !isSpam) {
                             yield sender.update({ totalMessages: sender.totalMessages + 1 });
                             if (payload.type === msgtypes.message) {
                                 const allMsg = (yield models_1.models.Message.findAll({
@@ -701,6 +713,31 @@ function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {
             yield callback(array[index], index, array);
+        }
+    });
+}
+function checkSpamList(chat, contact) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const bot = yield (0, utill_1.findBot)({
+                botPrefix: '/spam_gone',
+                tribe: chat,
+            });
+            if (!bot) {
+                return false;
+            }
+            let meta = JSON.parse(bot.meta || `{}`);
+            if (meta.pubkeys && meta.pubkeys.length > 0) {
+                for (let i = 0; i < meta.pubkeys.length; i++) {
+                    if (meta.pubkeys[i].pubkey === contact.publicKey) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        catch (error) {
+            return false;
         }
     });
 }
