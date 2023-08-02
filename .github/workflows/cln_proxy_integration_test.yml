@@ -50,6 +50,7 @@ jobs:
             'fees',
             'externalBotApi',
             'externalHostedBot',
+            'spamGoneBot',
           ]
         node: [16]
     steps:
