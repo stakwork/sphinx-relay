@@ -333,7 +333,7 @@ export async function deleteMessage(req: Req, res: Res): Promise<void> {
   const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey
 
   if (isTribeOwner) {
-    timers.removeTimerByMsgId(id)
+    timers.removeTimerByMsgId(uuid)
   }
   network.sendMessage({
     chat: chat,
