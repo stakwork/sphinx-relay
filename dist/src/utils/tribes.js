@@ -79,6 +79,7 @@ function initializeClient(contact, host, onMessage, xpubres, allOwners) {
                         let username = contact.publicKey;
                         if (xpubres && xpubres.xpub)
                             username = xpubres.xpub;
+                        logger_1.sphinxLogger.info(`connect with token: ${pwd}`, logger_1.logging.Tribes);
                         const cl = mqtt.connect(url, {
                             username: username,
                             password: pwd,

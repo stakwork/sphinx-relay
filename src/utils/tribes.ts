@@ -97,6 +97,7 @@ async function initializeClient(
         const url = mqttURL(host)
         let username = contact.publicKey
         if (xpubres && xpubres.xpub) username = xpubres.xpub
+        sphinxLogger.info(`connect with token: ${pwd}`, logging.Tribes)
         const cl = mqtt.connect(url, {
           username: username,
           password: pwd,
