@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   ChannelFeeReport as _lnrpc_ChannelFeeReport,
   ChannelFeeReport__Output as _lnrpc_ChannelFeeReport__Output,
 } from '../lnrpc/ChannelFeeReport'
+import type { Long } from '@grpc/proto-loader'
 
 export interface FeeReportResponse {
   channel_fees?: _lnrpc_ChannelFeeReport[]

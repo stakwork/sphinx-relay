@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   InvoiceHTLCState as _lnrpc_InvoiceHTLCState,
   InvoiceHTLCState__Output as _lnrpc_InvoiceHTLCState__Output,
 } from '../lnrpc/InvoiceHTLCState'
+import type { Long } from '@grpc/proto-loader'
 
 export interface AMPInvoiceState {
   state?: _lnrpc_InvoiceHTLCState
