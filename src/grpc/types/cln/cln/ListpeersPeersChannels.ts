@@ -1,6 +1,5 @@
 // Original file: proto/cln/node.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   ListpeersPeersChannelsFeerate as _cln_ListpeersPeersChannelsFeerate,
   ListpeersPeersChannelsFeerate__Output as _cln_ListpeersPeersChannelsFeerate__Output,
@@ -29,6 +28,7 @@ import type {
   ListpeersPeersChannelsAlias as _cln_ListpeersPeersChannelsAlias,
   ListpeersPeersChannelsAlias__Output as _cln_ListpeersPeersChannelsAlias__Output,
 } from '../cln/ListpeersPeersChannelsAlias'
+import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/cln/node.proto
 

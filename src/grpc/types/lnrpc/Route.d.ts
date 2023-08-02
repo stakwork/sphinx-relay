@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   Hop as _lnrpc_Hop,
   Hop__Output as _lnrpc_Hop__Output,
 } from '../lnrpc/Hop'
+import type { Long } from '@grpc/proto-loader'
 
 export interface Route {
   total_time_lock?: number

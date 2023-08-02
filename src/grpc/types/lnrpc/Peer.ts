@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   Feature as _lnrpc_Feature,
   Feature__Output as _lnrpc_Feature__Output,
@@ -9,6 +8,7 @@ import type {
   TimestampedError as _lnrpc_TimestampedError,
   TimestampedError__Output as _lnrpc_TimestampedError__Output,
 } from '../lnrpc/TimestampedError'
+import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 
