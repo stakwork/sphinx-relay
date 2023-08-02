@@ -531,6 +531,21 @@ export async function receiveMqttMessage(
   }
 }
 
+export async function receiveCoTenantMessage(
+  destination: string,
+  message: string
+): Promise<void> {
+  try {
+    // check topic is signed by sender?
+    const payload = await parseAndVerifyPayload(message)
+    if (!payload) return // skip it if not parsed
+    payload.network_type = constants.network_types.co_tenant
+    onReceive(payload, destination)
+  } catch (e) {
+    sphinxLogger.error('failed receiveCoTenantMessage', logging.Network)
+  }
+}
+
 export async function initTribesSubscriptions(): Promise<void> {
   tribes.connect(receiveMqttMessage)
 }

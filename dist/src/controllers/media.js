@@ -59,7 +59,7 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
     // }
     try {
         const { chat_id, contact_id, muid, text, remote_text, remote_text_map, media_key_map, media_type, amount, file_name, ttl, price, // IF AMOUNT>0 THEN do NOT sign or send receipt
-        reply_uuid, parent_id, } = req.body;
+        reply_uuid, parent_id, thread_uuid, } = req.body;
         logger_1.sphinxLogger.info(['[send attachment]', req.body]);
         const owner = req.owner;
         const chat = yield helpers.findOrCreateChat({
@@ -114,6 +114,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
             mm.replyUuid = reply_uuid;
         if (parent_id)
             mm.parentId = parent_id;
+        if (thread_uuid)
+            mm.thread_uuid = thread_uuid;
         const message = (yield models_1.models.Message.create(mm));
         logger_1.sphinxLogger.info(['saved attachment msg from me', message.id]);
         saveMediaKeys(muid, media_key_map, chat.id, message.id, mediaType, tenant);
@@ -135,6 +137,8 @@ const sendAttachmentMessage = (req, res) => __awaiter(void 0, void 0, void 0, fu
             msg.replyUuid = reply_uuid;
         if (parent_id)
             msg.parentId = parent_id;
+        if (thread_uuid)
+            msg.thread_uuid = thread_uuid;
         network.sendMessage({
             chat: chat,
             sender: owner,
@@ -465,7 +469,7 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
     // console.log('received attachment', { payload })
     const date = new Date();
     date.setMilliseconds(0);
-    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, network_type, sender_photo_url, force_push, person, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, mediaToken, mediaKey, mediaType, content, msg_id, chat_type, sender_alias, msg_uuid, reply_uuid, parent_id, thread_uuid, network_type, sender_photo_url, force_push, person, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
     }
@@ -495,6 +499,8 @@ const receiveAttachment = (payload) => __awaiter(void 0, void 0, void 0, functio
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
+    if (thread_uuid)
+        msg.thread_uuid = thread_uuid;
     if (person)
         msg.person = person;
     const isTribe = chat_type === constants_1.default.chat_types.tribe;

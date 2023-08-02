@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
+exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveCoTenantMessage = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
 const sequelize_1 = require("sequelize");
 const bolt11 = require("@boltz/bolt11");
 const lndService = require("../grpc/subscribe");
@@ -481,6 +481,22 @@ function receiveMqttMessage(topic, message) {
     });
 }
 exports.receiveMqttMessage = receiveMqttMessage;
+function receiveCoTenantMessage(destination, message) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // check topic is signed by sender?
+            const payload = yield parseAndVerifyPayload(message);
+            if (!payload)
+                return; // skip it if not parsed
+            payload.network_type = constants_1.default.network_types.co_tenant;
+            onReceive(payload, destination);
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error('failed receiveCoTenantMessage', logger_1.logging.Network);
+        }
+    });
+}
+exports.receiveCoTenantMessage = receiveCoTenantMessage;
 function initTribesSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         tribes.connect(receiveMqttMessage);
