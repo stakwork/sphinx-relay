@@ -28,6 +28,8 @@ import * as jsonUtils from '../utils/json'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger, logging } from '../utils/logger'
+import { findBot } from '../builtin/utill'
+import { SpamGoneMeta } from '../types'
 import {
   modifyPayloadAndSaveMediaKey,
   purchaseFromOriginalSender,
@@ -35,8 +37,6 @@ import {
 } from './modify'
 import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import { Payload, AdminPayload } from './interfaces'
-import { findBot } from '../builtin/utill'
-import { SpamGoneMeta } from '../types'
 
 const config = loadConfig()
 /*
@@ -769,7 +769,7 @@ async function checkSpamList(
     if (!bot) {
       return false
     }
-    let meta: SpamGoneMeta = JSON.parse(bot.meta || `{}`)
+    const meta: SpamGoneMeta = JSON.parse(bot.meta || `{}`)
 
     if (meta.pubkeys && meta.pubkeys.length > 0) {
       for (let i = 0; i < meta.pubkeys.length; i++) {
