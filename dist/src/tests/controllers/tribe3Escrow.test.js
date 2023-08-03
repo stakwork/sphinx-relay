@@ -15,6 +15,7 @@ const save_1 = require("../utils/save");
 const del_1 = require("../utils/del");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
+const get_1 = require("../utils/get");
 /*
 npx ava src/tests/controllers/tribe3Escrow.test.ts --verbose --serial --timeout=2m
 */
@@ -46,6 +47,24 @@ function tribe3Escrow(t, node1, node2, node3) {
         //CHECK THAT NODE2'S DECRYPTED MESSAGE IS SAME AS INPUT
         const n3check = yield (0, msg_1.checkMessageDecryption)(t, node3, escrowMessage.message.uuid, text);
         t.true(n3check, "node3 (non-admin) should have read and decrypted node2's message");
+        const balBefore = yield (0, get_1.getBalance)(t, node2);
+        //Bob sends message in a tribe
+        const text2 = (0, helpers_1.randomText)();
+        const msg = yield (0, msg_1.sendTribeMessage)(t, node2, tribe, text2, {
+            amount: tribe.escrow_amount + tribe.price_per_message,
+        });
+        //Admin tries to get sent message
+        const msg2 = yield (0, get_1.getCheckNewMsgs)(t, node1, msg.uuid);
+        //Get Balance immediately ater a message is sent
+        const balImmediatelyAfter = yield (0, get_1.getBalance)(t, node2);
+        //Delete Message by Admin
+        yield (0, del_1.deleteMessage)(t, node1, msg2.id);
+        yield (0, helpers_1.sleep)(tribe.escrow_millis + 5000);
+        //Get balance after escrow time
+        const balAfterEscrow = yield (0, get_1.getBalance)(t, node2);
+        t.true(balBefore - balImmediatelyAfter ===
+            tribe.escrow_amount + tribe.price_per_message, 'Difference between balance before and after message should be equal to the sum of escrow and price_per_message');
+        t.true(balAfterEscrow === balImmediatelyAfter, 'Balance after escrow should be equal to balance immediately after sending message');
         //NODE2 LEAVES THE TRIBE
         let n2left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(n2left, 'node2 should leave tribe');
