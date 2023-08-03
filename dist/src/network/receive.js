@@ -166,6 +166,7 @@ function onReceive(payload, dest) {
                             msgId: payload.message.id,
                             chatId: chat.id,
                             tenant,
+                            msgUuid: payload.message.uuid,
                         });
                     }
                 }

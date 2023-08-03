@@ -271,7 +271,7 @@ function deleteMessage(req, res) {
         const owner = req.owner;
         const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
         if (isTribeOwner) {
-            timers.removeTimerByMsgId(id);
+            timers.removeTimerByMsgId(uuid);
         }
         network.sendMessage({
             chat: chat,

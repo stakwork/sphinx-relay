@@ -184,6 +184,7 @@ async function onReceive(payload: Payload, dest: string) {
             msgId: payload.message.id,
             chatId: chat.id,
             tenant,
+            msgUuid: payload.message.uuid,
           })
         }
       }
