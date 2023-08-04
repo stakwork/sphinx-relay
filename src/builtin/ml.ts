@@ -7,6 +7,10 @@ const msg_types = Sphinx.MSG_TYPE
 
 let initted = false
 
+export const ML_PREFIX = '/ml'
+
+export const CALLBACKS: { [k: string]: (msg: string) => void } = {}
+
 export function init() {
   if (initted) return
   initted = true
@@ -41,6 +45,7 @@ export function init() {
         method: 'POST',
         body: JSON.stringify({
           message: message.content,
+          webhook: '',
         }),
         headers: {
           Accept: 'application/json',
@@ -57,25 +62,20 @@ export function init() {
         return
       }
 
-      // poll process id
-      let i = 0
-      while (true) {
-        const r2 = await fetch(`${url}/result`)
-        const j2 = await r2.json()
-        if (j2) {
-          // respond
-          const embed = new Sphinx.MessageEmbed()
-            .setAuthor('ML Bot')
-            .setDescription(j2.result)
-            .setOnlyOwner(isAdmin ? true : false)
-          message.channel.send({ embed })
-          break
-        }
-        if (i > 100) {
-          break
-        }
-        i++
+      function cb(msg: string) {
+        const embed = new Sphinx.MessageEmbed()
+          .setAuthor('ML Bot')
+          .setDescription(msg)
+          .setOnlyOwner(isAdmin ? true : false)
+        // .setOnlyUser(message.member.id)
+        message.channel.send({ embed })
       }
+
+      CALLBACKS[j.process_id] = cb
+
+      setTimeout(() => {
+        delete CALLBACKS[j.process_id]
+      }, 5 * 60 * 1000)
     } catch (e) {
       console.error(e)
     }

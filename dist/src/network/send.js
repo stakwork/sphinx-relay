@@ -23,6 +23,7 @@ const errMsgString_1 = require("../utils/errMsgString");
 const proxy_1 = require("../utils/proxy");
 const intercept = require("./intercept");
 const receive_1 = require("./receive");
+const ml_1 = require("../builtin/ml");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
@@ -435,9 +436,11 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
             const splitedContent = content.split(' ');
             for (let i = 0; i < bots.length; i++) {
                 const bot = bots[i];
-                if (bot.botPrefix === splitedContent[0] &&
+                const isHidden = bot.botPrefix === splitedContent[0] &&
                     bot.hiddenCommands &&
-                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
+                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1]);
+                const isPersonal = bot.botPrefix === ml_1.ML_PREFIX;
+                if (isHidden || isPersonal) {
                     yield models_1.models.Message.update({
                         onlyOwner: true,
                     }, { where: { uuid: msg.message.uuid, tenant } });

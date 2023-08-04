@@ -23,6 +23,7 @@ import { processGithook, WebhookEventName } from '../../utils/githook'
 import direct_message from './dm'
 import pay from './pay'
 import broadcast from './broadcast'
+import { CALLBACKS } from '../../builtin/ml'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -46,6 +47,7 @@ export interface Action {
   parent_id?: number
   bot_pic?: string
   only_owner?: boolean
+  only_user?: number
 }
 
 export async function processWebhook(req: Req, res: Res): Promise<void> {
@@ -324,4 +326,21 @@ export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
     where: { id: theChat.tenant },
   })) as ContactRecord
   return { chat: theChat, owner }
+}
+
+export async function processMlCallback(req: Req, res: Res): Promise<void> {
+  const process_id = req.body.process_id
+  if (!process_id) {
+    return failure(res, 'no process_id')
+  }
+  const response = req.body.response
+  if (!response) {
+    return failure(res, 'no response')
+  }
+
+  if (CALLBACKS[process_id]) {
+    CALLBACKS[process_id](response)
+  }
+
+  success(res, { ok: true })
 }
