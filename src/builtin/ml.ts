@@ -70,6 +70,25 @@ export function init() {
               cmd
             )
             return
+          case 'api_key':
+            return
+          default:
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor(ML_BOTNAME)
+              .setTitle('Bot Commands:')
+              .addFields([
+                {
+                  name: `Add URL to ${ML_BOTNAME}`,
+                  value: `${ML_PREFIX} url {URL}`,
+                },
+                {
+                  name: `Add API_KEY to ${ML_BOTNAME}`,
+                  value: `${ML_PREFIX} url {API_KEY}`,
+                },
+              ])
+              .setOnlyOwner(true)
+            message.channel.send({ embed })
+            return
         }
       }
       if (!url || !api_key) {
