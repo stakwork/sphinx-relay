@@ -137,6 +137,7 @@ export function init() {
         },
       })
       const j = await r.json()
+      console.log('ML body j', j)
       if (!j.process_id) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')

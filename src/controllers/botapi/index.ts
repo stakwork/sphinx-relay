@@ -329,6 +329,7 @@ export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
 }
 
 export async function processMlCallback(req: Req, res: Res): Promise<void> {
+  console.log('ML BODY', req.body)
   const process_id = req.body.process_id
   if (!process_id) {
     return failure(res, 'no process_id')

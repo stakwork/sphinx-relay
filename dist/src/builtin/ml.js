@@ -108,6 +108,7 @@ function init() {
                 },
             });
             const j = yield r.json();
+            console.log('ML body j', j);
             if (!j.process_id) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')

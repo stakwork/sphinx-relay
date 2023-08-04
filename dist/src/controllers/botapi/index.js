@@ -287,6 +287,7 @@ function validateAction(a) {
 exports.validateAction = validateAction;
 function processMlCallback(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('ML BODY', req.body);
         const process_id = req.body.process_id;
         if (!process_id) {
             return (0, res_1.failure)(res, 'no process_id');
