@@ -3,6 +3,7 @@ import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models, ChatBotRecord } from '../models'
 import { findBot, botResponse } from './utill'
 import { loadConfig } from '../utils/config'
+import fetch from 'node-fetch'
 
 const config = loadConfig()
 
@@ -157,7 +158,7 @@ export function init() {
         delete CALLBACKS[j.process_id]
       }, 5 * 60 * 1000)
     } catch (e) {
-      console.error(e)
+      console.error('ML CALL FAILED', e)
     }
   })
 }

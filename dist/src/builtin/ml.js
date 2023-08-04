@@ -15,6 +15,7 @@ const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const utill_1 = require("./utill");
 const config_1 = require("../utils/config");
+const node_fetch_1 = require("node-fetch");
 const config = (0, config_1.loadConfig)();
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -95,7 +96,7 @@ function init() {
             if (!host_name.startsWith('http')) {
                 host_name = `https://${host_name}`;
             }
-            const r = yield fetch(`${url}/send-message-llm`, {
+            const r = yield (0, node_fetch_1.default)(`${url}/send-message-llm`, {
                 method: 'POST',
                 body: JSON.stringify({
                     message: message.content,
@@ -127,7 +128,7 @@ function init() {
             }, 5 * 60 * 1000);
         }
         catch (e) {
-            console.error(e);
+            console.error('ML CALL FAILED', e);
         }
     }));
 }
