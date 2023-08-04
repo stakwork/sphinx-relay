@@ -71,6 +71,28 @@ export function init() {
             )
             return
           case 'api_key':
+            const newApiKey = arr[2]
+            if (!newApiKey) {
+              await botResponse(
+                ML_BOTNAME,
+                'Please provide a valid API KEY',
+                ML_PREFIX,
+                tribe.id,
+                message,
+                cmd
+              )
+              return
+            }
+            meta.apiKey = newApiKey
+            await bot.update({ meta: JSON.stringify(meta) })
+            await botResponse(
+              ML_BOTNAME,
+              'API KEY updated successfully',
+              ML_PREFIX,
+              tribe.id,
+              message,
+              cmd
+            )
             return
           default:
             const embed = new Sphinx.MessageEmbed()
