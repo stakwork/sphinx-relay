@@ -139,7 +139,8 @@ export function init() {
       })
       const j = await r.json()
       console.log('ML body j', j)
-      if (!j.process_id) {
+      const process_id = j.body && j.body.process_id
+      if (!process_id) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription('failed to process message')
@@ -148,7 +149,8 @@ export function init() {
         return
       }
 
-      CALLBACKS[j.process_id] = function (msg: string) {
+      console.log('PROCESS ID!!!', process_id)
+      CALLBACKS[process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription(msg)
@@ -157,7 +159,7 @@ export function init() {
       }
 
       setTimeout(() => {
-        delete CALLBACKS[j.process_id]
+        delete CALLBACKS[process_id]
       }, 5 * 60 * 1000)
     } catch (e) {
       console.error('ML CALL FAILED', e)

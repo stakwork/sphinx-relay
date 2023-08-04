@@ -110,7 +110,8 @@ function init() {
             });
             const j = yield r.json();
             console.log('ML body j', j);
-            if (!j.process_id) {
+            const process_id = j.body && j.body.process_id;
+            if (!process_id) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')
                     .setDescription('failed to process message')
@@ -118,7 +119,8 @@ function init() {
                 message.channel.send({ embed });
                 return;
             }
-            exports.CALLBACKS[j.process_id] = function (msg) {
+            console.log('PROCESS ID!!!', process_id);
+            exports.CALLBACKS[process_id] = function (msg) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')
                     .setDescription(msg)
@@ -126,7 +128,7 @@ function init() {
                 message.channel.send({ embed });
             };
             setTimeout(() => {
-                delete exports.CALLBACKS[j.process_id];
+                delete exports.CALLBACKS[process_id];
             }, 5 * 60 * 1000);
         }
         catch (e) {
