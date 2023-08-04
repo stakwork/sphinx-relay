@@ -133,7 +133,8 @@ function no_auth(path) {
     path == '/webhook' ||
     path == '/has_admin' ||
     path == '/initial_admin_pubkey' ||
-    path == '/my_ip'
+    path == '/my_ip' ||
+    path == '/ml'
   )
 }
 

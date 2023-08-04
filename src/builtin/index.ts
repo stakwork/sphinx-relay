@@ -9,7 +9,7 @@ import * as KickBot from './kick'
 import * as SentimentBot from './sentiment'
 import * as JarvisBot from './jarvis'
 import * as SpamGoneBot from './spamGone'
-import * as MLBot from './ml'
+import * as MlBot from './ml'
 import { BotMsg } from '../network/interfaces'
 import * as GitBot from './git'
 import { buildBotPayload } from '../controllers/bots'
@@ -25,7 +25,7 @@ async function init() {
   SentimentBot.init()
   JarvisBot.init()
   SpamGoneBot.init()
-  MLBot.init()
+  MlBot.init()
 }
 
 function builtinBotEmit(msg: BotMsg, botPrefix?: string) {
