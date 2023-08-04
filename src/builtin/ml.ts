@@ -48,7 +48,7 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
-      const r = await fetch(`${url}/conversation`, {
+      const r = await fetch(`${url}/send-message-llm`, {
         method: 'POST',
         body: JSON.stringify({
           message: message.content,
