@@ -100,7 +100,7 @@
     "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
     "socket.io": "^4.4.1",
-    "sphinx-bot": "^0.2.39",
+    "sphinx-bot": "^0.2.40",
     "sqlite3": "5.0.11",
     "tail": "^2.0.3",
     "ts-jest": "^28.0.8",
