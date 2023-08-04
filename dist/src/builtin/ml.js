@@ -135,6 +135,7 @@ function init() {
                     .setDescription(msg)
                     .setOnlyUser(parseInt(message.member.id || '0'));
                 message.channel.send({ embed });
+                delete exports.CALLBACKS[process_id];
             };
             setTimeout(() => {
                 delete exports.CALLBACKS[process_id];
