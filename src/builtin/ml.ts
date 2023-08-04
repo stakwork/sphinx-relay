@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models, ChatBotRecord } from '../models'
-import { findBot } from './utill'
+import { findBot, botResponse } from './utill'
 import { loadConfig } from '../utils/config'
 
 const config = loadConfig()
@@ -11,6 +11,11 @@ const msg_types = Sphinx.MSG_TYPE
 let initted = false
 
 export const ML_PREFIX = '/ml'
+
+export const ML_BOTNAME = `${ML_PREFIX.substring(
+  1,
+  2
+).toUpperCase()}${ML_PREFIX.substring(2)}Bot`
 
 export const CALLBACKS: { [k: string]: (msg: string) => void } = {}
 
@@ -22,24 +27,95 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    // if (message.author?.bot !== botPrefix) return
-
+    if (message.author?.bot !== ML_PREFIX) return
     const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
-
     try {
       const tribe = (await models.Chat.findOne({
         where: { uuid: message.channel.id },
       })) as ChatRecord
 
-      const bot: ChatBotRecord = await findBot({ botPrefix: '/ML', tribe })
+      const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
 
       let meta: MlMeta = JSON.parse(bot.meta || `{}`)
       const url = meta.url
-      if (!url) {
+      const api_key = meta.apiKey
+      const arr = (message.content && message.content.split(' ')) || []
+      if (isAdmin && arr[0] === ML_PREFIX) {
+        const cmd = arr[1]
+
+        switch (cmd) {
+          case 'url':
+            const newUrl = arr[2]
+            if (!newUrl) {
+              await botResponse(
+                ML_BOTNAME,
+                'Please provide a valid URL',
+                ML_PREFIX,
+                tribe.id,
+                message,
+                cmd
+              )
+              return
+            }
+            meta.url = newUrl
+            await bot.update({ meta: JSON.stringify(meta) })
+            await botResponse(
+              ML_BOTNAME,
+              'URL updated successfully',
+              ML_PREFIX,
+              tribe.id,
+              message,
+              cmd
+            )
+            return
+          case 'api_key':
+            const newApiKey = arr[2]
+            if (!newApiKey) {
+              await botResponse(
+                ML_BOTNAME,
+                'Please provide a valid API KEY',
+                ML_PREFIX,
+                tribe.id,
+                message,
+                cmd
+              )
+              return
+            }
+            meta.apiKey = newApiKey
+            await bot.update({ meta: JSON.stringify(meta) })
+            await botResponse(
+              ML_BOTNAME,
+              'API KEY updated successfully',
+              ML_PREFIX,
+              tribe.id,
+              message,
+              cmd
+            )
+            return
+          default:
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor(ML_BOTNAME)
+              .setTitle('Bot Commands:')
+              .addFields([
+                {
+                  name: `Add URL to ${ML_BOTNAME}`,
+                  value: `${ML_PREFIX} url {URL}`,
+                },
+                {
+                  name: `Add API_KEY to ${ML_BOTNAME}`,
+                  value: `${ML_PREFIX} url {API_KEY}`,
+                },
+              ])
+              .setOnlyOwner(true)
+            message.channel.send({ embed })
+            return
+        }
+      }
+      if (!url || !api_key) {
         const embed = new Sphinx.MessageEmbed()
-          .setAuthor('ML Bot')
-          .setDescription('not configured')
-          .setOnlyOwner(isAdmin ? true : false)
+          .setAuthor(ML_BOTNAME)
+          .setDescription('not configured!')
+          .setOnlyUser(parseInt(message.member.id || '0'))
         message.channel.send({ embed })
         return
       }
@@ -64,7 +140,7 @@ export function init() {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription('failed to process message')
-          .setOnlyOwner(isAdmin ? true : false)
+          .setOnlyUser(parseInt(message.member.id || '0'))
         message.channel.send({ embed })
         return
       }
@@ -73,8 +149,7 @@ export function init() {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription(msg)
-          .setOnlyOwner(isAdmin ? true : false)
-        // .setOnlyUser(message.member.id)
+          .setOnlyUser(parseInt(message.member.id || '0'))
         message.channel.send({ embed })
       }
 
