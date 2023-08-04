@@ -28,21 +28,19 @@ export function init() {
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
     if (message.author?.bot !== ML_PREFIX) return
-
     const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
-
     try {
       const tribe = (await models.Chat.findOne({
         where: { uuid: message.channel.id },
       })) as ChatRecord
 
-      const bot: ChatBotRecord = await findBot({ botPrefix: '/ML', tribe })
+      const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
 
       let meta: MlMeta = JSON.parse(bot.meta || `{}`)
       const url = meta.url
       const api_key = meta.apiKey
-      if (isAdmin) {
-        const arr = (message.content && message.content.split(' ')) || []
+      const arr = (message.content && message.content.split(' ')) || []
+      if (isAdmin && arr[0] === ML_PREFIX) {
         const cmd = arr[1]
 
         switch (cmd) {
@@ -116,8 +114,8 @@ export function init() {
       if (!url || !api_key) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor(ML_BOTNAME)
-          .setDescription('not configured')
-          .setOnlyOwner(isAdmin ? true : false)
+          .setDescription('not configured!')
+          .setOnlyUser(parseInt(message.member.id || '0'))
         message.channel.send({ embed })
         return
       }
@@ -142,7 +140,7 @@ export function init() {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription('failed to process message')
-          .setOnlyOwner(isAdmin ? true : false)
+          .setOnlyUser(parseInt(message.member.id || '0'))
         message.channel.send({ embed })
         return
       }
@@ -151,8 +149,7 @@ export function init() {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription(msg)
-          .setOnlyOwner(isAdmin ? true : false)
-        // .setOnlyUser(message.member.id)
+          .setOnlyUser(parseInt(message.member.id || '0'))
         message.channel.send({ embed })
       }
 
