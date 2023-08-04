@@ -125,6 +125,7 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
+      console.log('ml bot hostname', host_name)
       const r = await fetch(`${url}/send-message-llm`, {
         method: 'POST',
         body: JSON.stringify({

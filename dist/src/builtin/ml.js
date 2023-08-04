@@ -96,6 +96,7 @@ function init() {
             if (!host_name.startsWith('http')) {
                 host_name = `https://${host_name}`;
             }
+            console.log('ml bot hostname', host_name);
             const r = yield (0, node_fetch_1.default)(`${url}/send-message-llm`, {
                 method: 'POST',
                 body: JSON.stringify({
