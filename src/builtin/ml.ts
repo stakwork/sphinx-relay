@@ -22,7 +22,7 @@ export function init() {
   client.login('_', finalAction)
 
   client.on(msg_types.MESSAGE, async (message: Sphinx.Message) => {
-    // if (message.author?.bot !== botPrefix) return
+    if (message.author?.bot !== ML_PREFIX) return
 
     const isAdmin = message.member.roles.find((role) => role.name === 'Admin')
 

@@ -22,6 +22,7 @@ const config_1 = require("../utils/config");
 const tribes_1 = require("../utils/tribes");
 const logger_1 = require("../utils/logger");
 const git_1 = require("./git");
+const ml_1 = require("./ml");
 const msg_types = Sphinx.MSG_TYPE;
 const config = (0, config_1.loadConfig)();
 const builtinBots = [
@@ -34,6 +35,7 @@ const builtinBots = [
     'sentiment',
     'jarvis',
     'spam_gone',
+    ml_1.ML_PREFIX.substring(1),
 ];
 // else just message type
 const builtInBotMsgTypes = {
@@ -59,6 +61,7 @@ const builtInHiddenCmd = {
     sentiment: ['threshold', 'timer', 'url'],
     jarvis: ['link', 'hide'],
     spam_gone: ['add', 'list', 'remove'],
+    [`${ml_1.ML_PREFIX.substring(1)}`]: ['url', 'api_key'],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
@@ -70,6 +73,7 @@ const builtInBotNames = {
     sentiment: 'SentimentBot',
     jarvis: 'JarvisBot',
     spam_gone: 'SpamGoneBot',
+    [`${ml_1.ML_PREFIX.substring(1)}`]: `${ml_1.ML_PREFIX.substring(1, 2).toUpperCase()}${ml_1.ML_PREFIX.substring(2)}Bot`,
 };
 function init() {
     const client = new Sphinx.Client();
