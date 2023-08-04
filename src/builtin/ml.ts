@@ -1,7 +1,7 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models, ChatBotRecord } from '../models'
-import { findBot } from './utill'
+import { findBot, botResponse } from './utill'
 import { loadConfig } from '../utils/config'
 
 const config = loadConfig()
@@ -11,6 +11,11 @@ const msg_types = Sphinx.MSG_TYPE
 let initted = false
 
 export const ML_PREFIX = '/ml'
+
+export const ML_BOTNAME = `${ML_PREFIX.substring(
+  1,
+  2
+).toUpperCase()}${ML_PREFIX.substring(2)}Bot`
 
 export const CALLBACKS: { [k: string]: (msg: string) => void } = {}
 
@@ -35,9 +40,41 @@ export function init() {
 
       let meta: MlMeta = JSON.parse(bot.meta || `{}`)
       const url = meta.url
-      if (!url) {
+      const api_key = meta.apiKey
+      if (isAdmin) {
+        const arr = (message.content && message.content.split(' ')) || []
+        const cmd = arr[1]
+
+        switch (cmd) {
+          case 'url':
+            const newUrl = arr[2]
+            if (!newUrl) {
+              await botResponse(
+                ML_BOTNAME,
+                'Please provide a valid URL',
+                ML_PREFIX,
+                tribe.id,
+                message,
+                cmd
+              )
+              return
+            }
+            meta.url = newUrl
+            await bot.update({ meta: JSON.stringify(meta) })
+            await botResponse(
+              ML_BOTNAME,
+              'URL updated successfully',
+              ML_PREFIX,
+              tribe.id,
+              message,
+              cmd
+            )
+            return
+        }
+      }
+      if (!url || !api_key) {
         const embed = new Sphinx.MessageEmbed()
-          .setAuthor('ML Bot')
+          .setAuthor(ML_BOTNAME)
           .setDescription('not configured')
           .setOnlyOwner(isAdmin ? true : false)
         message.channel.send({ embed })

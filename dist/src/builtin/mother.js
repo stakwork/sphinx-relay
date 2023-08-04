@@ -73,7 +73,7 @@ const builtInBotNames = {
     sentiment: 'SentimentBot',
     jarvis: 'JarvisBot',
     spam_gone: 'SpamGoneBot',
-    [`${ml_1.ML_PREFIX.substring(1)}`]: `${ml_1.ML_PREFIX.substring(1, 2).toUpperCase()}${ml_1.ML_PREFIX.substring(2)}Bot`,
+    [`${ml_1.ML_PREFIX.substring(1)}`]: ml_1.ML_BOTNAME,
 };
 function init() {
     const client = new Sphinx.Client();

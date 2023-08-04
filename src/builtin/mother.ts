@@ -11,7 +11,7 @@ import { loadConfig } from '../utils/config'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
 import { GITBOT_UUID, getOrCreateGitBot } from './git'
-import { ML_PREFIX } from './ml'
+import { ML_PREFIX, ML_BOTNAME } from './ml'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -68,10 +68,7 @@ const builtInBotNames = {
   sentiment: 'SentimentBot',
   jarvis: 'JarvisBot',
   spam_gone: 'SpamGoneBot',
-  [`${ML_PREFIX.substring(1)}`]: `${ML_PREFIX.substring(
-    1,
-    2
-  ).toUpperCase()}${ML_PREFIX.substring(2)}Bot`,
+  [`${ML_PREFIX.substring(1)}`]: ML_BOTNAME,
 }
 
 export function init() {
