@@ -118,8 +118,7 @@ function init() {
                 message.channel.send({ embed });
                 return;
             }
-            const body = JSON.parse(j.body);
-            let process_id = body.process_id;
+            let process_id = j.body && j.body.process_id;
             if (!process_id) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')
