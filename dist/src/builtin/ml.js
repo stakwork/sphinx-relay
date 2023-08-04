@@ -110,7 +110,16 @@ function init() {
             });
             const j = yield r.json();
             console.log('ML body j', j);
-            const process_id = j.body && j.body.process_id;
+            if (!j.body) {
+                const embed = new Sphinx.MessageEmbed()
+                    .setAuthor('ML Bot')
+                    .setDescription('failed to process message (no body)')
+                    .setOnlyUser(parseInt(message.member.id || '0'));
+                message.channel.send({ embed });
+                return;
+            }
+            const body = JSON.parse(j.body);
+            let process_id = body.process_id;
             if (!process_id) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')
