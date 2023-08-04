@@ -2,6 +2,9 @@ import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models, ChatBotRecord } from '../models'
 import { findBot } from './utill'
+import { loadConfig } from '../utils/config'
+
+const config = loadConfig()
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -41,11 +44,15 @@ export function init() {
         return
       }
 
+      let host_name = config.host_name
+      if (!host_name.startsWith('http')) {
+        host_name = `https://${host_name}`
+      }
       const r = await fetch(`${url}/conversation`, {
         method: 'POST',
         body: JSON.stringify({
           message: message.content,
-          webhook: '',
+          webhook: `${host_name}/ml`,
         }),
         headers: {
           Accept: 'application/json',
@@ -62,7 +69,7 @@ export function init() {
         return
       }
 
-      function cb(msg: string) {
+      CALLBACKS[j.process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
           .setDescription(msg)
@@ -70,8 +77,6 @@ export function init() {
         // .setOnlyUser(message.member.id)
         message.channel.send({ embed })
       }
-
-      CALLBACKS[j.process_id] = cb
 
       setTimeout(() => {
         delete CALLBACKS[j.process_id]
