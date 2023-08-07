@@ -149,7 +149,7 @@ export async function sendMessage({
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
-      if (msg.sender.role === constants.chat_roles.owner && msg.type === 0) {
+      if (msg.type === 0) {
         const hiddenCmd = await interceptTribeMsgForHiddenCmds(msg, tenant)
         justMe = hiddenCmd ? hiddenCmd : justMe
       }

@@ -93,7 +93,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
-                if (msg.sender.role === constants_1.default.chat_roles.owner && msg.type === 0) {
+                if (msg.type === 0) {
                     const hiddenCmd = yield interceptTribeMsgForHiddenCmds(msg, tenant);
                     justMe = hiddenCmd ? hiddenCmd : justMe;
                 }
