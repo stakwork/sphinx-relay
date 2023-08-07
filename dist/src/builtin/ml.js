@@ -39,6 +39,7 @@ function init() {
             }));
             const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
             let meta = JSON.parse(bot.meta || `{}`);
+            meta.kind = meta.kind || 'text';
             const url = meta.url;
             const api_key = meta.apiKey;
             const arr = (message.content && message.content.split(' ')) || [];
@@ -65,6 +66,16 @@ function init() {
                         yield bot.update({ meta: JSON.stringify(meta) });
                         yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'API KEY updated successfully', exports.ML_PREFIX, tribe.id, message, cmd);
                         return;
+                    case 'kind':
+                        const newKind = arr[2];
+                        if (newKind !== 'text' && newKind !== 'image') {
+                            yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'Please provide a valid kind (text/image)', exports.ML_PREFIX, tribe.id, message, cmd);
+                            return;
+                        }
+                        meta.kind = newKind;
+                        yield bot.update({ meta: JSON.stringify(meta) });
+                        yield (0, utill_1.botResponse)(exports.ML_BOTNAME, `bot kind updated to ${newKind}`, exports.ML_PREFIX, tribe.id, message, cmd);
+                        return;
                     default:
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor(exports.ML_BOTNAME)
@@ -77,6 +88,10 @@ function init() {
                             {
                                 name: `Add API_KEY to ${exports.ML_BOTNAME}`,
                                 value: `${exports.ML_PREFIX} url {API_KEY}`,
+                            },
+                            {
+                                name: `Set content type`,
+                                value: `${exports.ML_PREFIX} kind {text/image}`,
                             },
                         ])
                             .setOnlyOwner(true);
@@ -97,7 +112,7 @@ function init() {
                 host_name = `https://${host_name}`;
             }
             console.log('ml bot hostname', host_name);
-            const r = yield (0, node_fetch_1.default)(`${url}/send-message-llm`, {
+            const r = yield (0, node_fetch_1.default)(url, {
                 method: 'POST',
                 body: JSON.stringify({
                     message: message.content,
@@ -131,8 +146,13 @@ function init() {
             exports.CALLBACKS[process_id] = function (msg) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')
-                    .setDescription(msg)
                     .setOnlyUser(parseInt(message.member.id || '0'));
+                if (meta.kind === 'text') {
+                    embed.setDescription(msg);
+                }
+                if (meta.kind === 'image') {
+                    embed.setImage(msg);
+                }
                 message.channel.send({ embed });
                 delete exports.CALLBACKS[process_id];
             };

@@ -20,10 +20,10 @@ import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
 import { Req, Res } from '../../types'
 import { processGithook, WebhookEventName } from '../../utils/githook'
+import { CALLBACKS } from '../../builtin/ml'
 import direct_message from './dm'
 import pay from './pay'
 import broadcast from './broadcast'
-import { CALLBACKS } from '../../builtin/ml'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random

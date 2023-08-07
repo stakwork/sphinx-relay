@@ -18,6 +18,8 @@ export const ML_BOTNAME = `${ML_PREFIX.substring(
   2
 ).toUpperCase()}${ML_PREFIX.substring(2)}Bot`
 
+type ContentKind = 'text' | 'image'
+
 export const CALLBACKS: { [k: string]: (msg: string) => void } = {}
 
 export function init() {
@@ -38,9 +40,11 @@ export function init() {
       const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
 
       let meta: MlMeta = JSON.parse(bot.meta || `{}`)
+      meta.kind = meta.kind || 'text'
       const url = meta.url
       const api_key = meta.apiKey
       const arr = (message.content && message.content.split(' ')) || []
+
       if (isAdmin && arr[0] === ML_PREFIX) {
         const cmd = arr[1]
 
@@ -93,6 +97,30 @@ export function init() {
               cmd
             )
             return
+          case 'kind':
+            const newKind = arr[2]
+            if (newKind !== 'text' && newKind !== 'image') {
+              await botResponse(
+                ML_BOTNAME,
+                'Please provide a valid kind (text/image)',
+                ML_PREFIX,
+                tribe.id,
+                message,
+                cmd
+              )
+              return
+            }
+            meta.kind = newKind
+            await bot.update({ meta: JSON.stringify(meta) })
+            await botResponse(
+              ML_BOTNAME,
+              `bot kind updated to ${newKind}`,
+              ML_PREFIX,
+              tribe.id,
+              message,
+              cmd
+            )
+            return
           default:
             const embed = new Sphinx.MessageEmbed()
               .setAuthor(ML_BOTNAME)
@@ -105,6 +133,10 @@ export function init() {
                 {
                   name: `Add API_KEY to ${ML_BOTNAME}`,
                   value: `${ML_PREFIX} url {API_KEY}`,
+                },
+                {
+                  name: `Set content type`,
+                  value: `${ML_PREFIX} kind {text/image}`,
                 },
               ])
               .setOnlyOwner(true)
@@ -126,7 +158,7 @@ export function init() {
         host_name = `https://${host_name}`
       }
       console.log('ml bot hostname', host_name)
-      const r = await fetch(`${url}/send-message-llm`, {
+      const r = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({
           message: message.content,
@@ -158,11 +190,17 @@ export function init() {
       }
 
       console.log('PROCESS ID!!!', process_id)
+
       CALLBACKS[process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor('ML Bot')
-          .setDescription(msg)
           .setOnlyUser(parseInt(message.member.id || '0'))
+        if (meta.kind === 'text') {
+          embed.setDescription(msg)
+        }
+        if (meta.kind === 'image') {
+          embed.setImage(msg)
+        }
         message.channel.send({ embed })
         delete CALLBACKS[process_id]
       }
@@ -179,6 +217,7 @@ export function init() {
 export interface MlMeta {
   url: string
   apiKey: string
+  kind: ContentKind
 }
 
 export async function sleep(ms: number): Promise<void> {
