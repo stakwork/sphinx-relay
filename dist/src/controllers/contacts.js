@@ -655,19 +655,14 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             clause.limit = limit;
             clause.offset = offset;
         }
+        console.log('=> getLatestContacts clause', clause);
         const contacts = (yield models_1.models.Contact.findAll(clause));
         console.log('=> getLatestContacts contacts', contacts.length);
-        const invites = (yield models_1.models.Invite.findAll({
-            where,
-        }));
+        const invites = (yield models_1.models.Invite.findAll(clause));
         console.log('=> getLatestContacts invites', invites.length);
-        const chats = (yield models_1.models.Chat.findAll({
-            where,
-        }));
+        const chats = (yield models_1.models.Chat.findAll(clause));
         console.log('=> getLatestContacts chats', chats.length);
-        const subscriptions = (yield models_1.models.Subscription.findAll({
-            where,
-        }));
+        const subscriptions = (yield models_1.models.Subscription.findAll(clause));
         console.log('=> getLatestContacts subs', subscriptions.length);
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
         const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));

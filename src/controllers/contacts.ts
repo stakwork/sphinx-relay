@@ -746,24 +746,23 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
       clause.limit = limit
       clause.offset = offset
     }
+    console.log('=> getLatestContacts clause', clause)
     const contacts: Contact[] = (await models.Contact.findAll(
       clause
     )) as Contact[]
     console.log('=> getLatestContacts contacts', contacts.length)
 
-    const invites: Invite[] = (await models.Invite.findAll({
-      where,
-    })) as Invite[]
+    const invites: Invite[] = (await models.Invite.findAll(clause)) as Invite[]
     console.log('=> getLatestContacts invites', invites.length)
 
-    const chats: ChatRecord[] = (await models.Chat.findAll({
-      where,
-    })) as ChatRecord[]
+    const chats: ChatRecord[] = (await models.Chat.findAll(
+      clause
+    )) as ChatRecord[]
     console.log('=> getLatestContacts chats', chats.length)
 
-    const subscriptions: Subscription[] = (await models.Subscription.findAll({
-      where,
-    })) as Subscription[]
+    const subscriptions: Subscription[] = (await models.Subscription.findAll(
+      clause
+    )) as Subscription[]
     console.log('=> getLatestContacts subs', subscriptions.length)
 
     const contactsResponse = contacts.map((contact) =>
