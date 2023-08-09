@@ -651,7 +651,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
         const clause = { where };
         const limit = req.query.limit && parseInt(req.query.limit);
         const offset = req.query.offset && parseInt(req.query.offset);
-        if (limit && offset) {
+        if ((limit || limit === 0) && (offset || offset === 0)) {
             clause.limit = limit;
             clause.offset = offset;
         }

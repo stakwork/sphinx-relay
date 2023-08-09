@@ -742,7 +742,7 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
     const clause: FindOptions = { where }
     const limit = req.query.limit && parseInt(req.query.limit as string)
     const offset = req.query.offset && parseInt(req.query.offset as string)
-    if (limit && offset) {
+    if ((limit || limit === 0) && (offset || offset === 0)) {
       clause.limit = limit
       clause.offset = offset
     }
