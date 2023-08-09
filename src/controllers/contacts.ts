@@ -725,10 +725,8 @@ function extractAttrs(body): {
 export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-  console.log('=> getLatestContacts')
   try {
     const dateToReturn = decodeURI(req.query.date as string)
-    console.log('=> getLatestContacts dateToReturn', dateToReturn)
     /* eslint-disable import/namespace */
     const local = moment.utc(dateToReturn).local().toDate()
 
@@ -737,8 +735,6 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
       tenant,
     }
 
-    console.log('=> getLatestContacts where', where)
-
     const clause: FindOptions = { where }
     const limit = req.query.limit && parseInt(req.query.limit as string)
     const offset = req.query.offset && parseInt(req.query.offset as string)
@@ -746,24 +742,19 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
       clause.limit = limit
       clause.offset = offset
     }
-    console.log('=> getLatestContacts clause', clause)
     const contacts: Contact[] = (await models.Contact.findAll(
       clause
     )) as Contact[]
-    console.log('=> getLatestContacts contacts', contacts.length)
 
     const invites: Invite[] = (await models.Invite.findAll(clause)) as Invite[]
-    console.log('=> getLatestContacts invites', invites.length)
 
     const chats: ChatRecord[] = (await models.Chat.findAll(
       clause
     )) as ChatRecord[]
-    console.log('=> getLatestContacts chats', chats.length)
 
     const subscriptions: Subscription[] = (await models.Subscription.findAll(
       clause
     )) as Subscription[]
-    console.log('=> getLatestContacts subs', subscriptions.length)
 
     const contactsResponse = contacts.map((contact) =>
       jsonUtils.contactToJson(contact)
@@ -783,7 +774,6 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
         chatId: { [Op.in]: chatIds },
       },
     })) as ChatMember[]
-    console.log('=> getLatestContacts pendingMembers', pendingMembers.length)
 
     const chatsResponse = chats.map((chat) => {
       const theChat = (chat.dataValues as Chat) || chat
@@ -794,16 +784,12 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
       return jsonUtils.chatToJson({ ...theChat, pendingContactIds })
     })
 
-    console.log('=> getLatestContacts chatsResponse', chatsResponse.length)
-
     success(res, {
       contacts: contactsResponse,
       invites: invitesResponse,
       chats: chatsResponse,
       subscriptions: subsResponse,
     })
-
-    console.log('=> getLatestContacts WAS ABLE TO SEND')
   } catch (e) {
     failure(res, e)
   }
