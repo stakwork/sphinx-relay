@@ -692,6 +692,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             chats: chatsResponse,
             subscriptions: subsResponse,
         });
+        console.log('=> getLatestContacts WAS ABLE TO SEND');
     }
     catch (e) {
         (0, res_1.failure)(res, e);

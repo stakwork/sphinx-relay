@@ -794,6 +794,8 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
       chats: chatsResponse,
       subscriptions: subsResponse,
     })
+
+    console.log('=> getLatestContacts WAS ABLE TO SEND')
   } catch (e) {
     failure(res, e)
   }
