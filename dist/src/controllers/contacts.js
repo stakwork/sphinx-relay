@@ -648,9 +648,14 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             tenant,
         };
         console.log('=> getLatestContacts where', where);
-        const contacts = (yield models_1.models.Contact.findAll({
-            where,
-        }));
+        const clause = { where };
+        const limit = req.query.limit && parseInt(req.query.limit);
+        const offset = req.query.offset && parseInt(req.query.offset);
+        if (limit && offset) {
+            clause.limit = limit;
+            clause.offset = offset;
+        }
+        const contacts = (yield models_1.models.Contact.findAll(clause));
         console.log('=> getLatestContacts contacts', contacts.length);
         const invites = (yield models_1.models.Invite.findAll({
             where,

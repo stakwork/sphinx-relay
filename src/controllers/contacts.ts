@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { Op } from 'sequelize'
+import { Op, FindOptions } from 'sequelize'
 import * as moment from 'moment'
 import {
   Contact,
@@ -731,15 +731,24 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
     console.log('=> getLatestContacts dateToReturn', dateToReturn)
     /* eslint-disable import/namespace */
     const local = moment.utc(dateToReturn).local().toDate()
+
     const where: { tenant: number; updatedAt: { [Op.gte]: Date } } = {
       updatedAt: { [Op.gte]: local },
       tenant,
     }
+
     console.log('=> getLatestContacts where', where)
 
-    const contacts: Contact[] = (await models.Contact.findAll({
-      where,
-    })) as Contact[]
+    const clause: FindOptions = { where }
+    const limit = req.query.limit && parseInt(req.query.limit as string)
+    const offset = req.query.offset && parseInt(req.query.offset as string)
+    if (limit && offset) {
+      clause.limit = limit
+      clause.offset = offset
+    }
+    const contacts: Contact[] = (await models.Contact.findAll(
+      clause
+    )) as Contact[]
     console.log('=> getLatestContacts contacts', contacts.length)
 
     const invites: Invite[] = (await models.Invite.findAll({
