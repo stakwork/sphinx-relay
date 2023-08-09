@@ -637,26 +637,33 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
+    console.log('=> getLatestContacts');
     try {
         const dateToReturn = decodeURI(req.query.date);
+        console.log('=> getLatestContacts dateToReturn', dateToReturn);
         /* eslint-disable import/namespace */
         const local = moment.utc(dateToReturn).local().toDate();
         const where = {
             updatedAt: { [sequelize_1.Op.gte]: local },
             tenant,
         };
+        console.log('=> getLatestContacts where', where);
         const contacts = (yield models_1.models.Contact.findAll({
             where,
         }));
+        console.log('=> getLatestContacts contacts', contacts.length);
         const invites = (yield models_1.models.Invite.findAll({
             where,
         }));
+        console.log('=> getLatestContacts invites', invites.length);
         const chats = (yield models_1.models.Chat.findAll({
             where,
         }));
+        console.log('=> getLatestContacts chats', chats.length);
         const subscriptions = (yield models_1.models.Subscription.findAll({
             where,
         }));
+        console.log('=> getLatestContacts subs', subscriptions.length);
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
         const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));
         const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));
@@ -669,6 +676,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
                 chatId: { [sequelize_1.Op.in]: chatIds },
             },
         }));
+        console.log('=> getLatestContacts pendingMembers', pendingMembers.length);
         const chatsResponse = chats.map((chat) => {
             const theChat = chat.dataValues || chat;
             if (!pendingMembers)
@@ -677,6 +685,7 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             const pendingContactIds = membs.map((m) => m.contactId);
             return jsonUtils.chatToJson(Object.assign(Object.assign({}, theChat), { pendingContactIds }));
         });
+        console.log('=> getLatestContacts chatsResponse', chatsResponse.length);
         (0, res_1.success)(res, {
             contacts: contactsResponse,
             invites: invitesResponse,
