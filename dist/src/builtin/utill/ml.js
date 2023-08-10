@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addApiKey = exports.addUrl = void 0;
+exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
 function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -37,4 +37,17 @@ function addApiKey(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newApi
     });
 }
 exports.addApiKey = addApiKey;
+function addKind(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newKind) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (newKind !== 'text' && newKind !== 'image') {
+            yield (0, index_1.botResponse)(botName, 'Please provide a valid kind (text/image)', botPrefix, tribe.id, messageObj, cmd);
+            return;
+        }
+        meta.kind = newKind;
+        yield bot.update({ meta: JSON.stringify(meta) });
+        yield (0, index_1.botResponse)(botName, `bot kind updated to ${newKind}`, botPrefix, tribe.id, messageObj, cmd);
+        return;
+    });
+}
+exports.addKind = addKind;
 //# sourceMappingURL=ml.js.map

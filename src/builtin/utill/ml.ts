@@ -76,3 +76,37 @@ export async function addApiKey(
   )
   return
 }
+
+export async function addKind(
+  bot: ChatBotRecord,
+  meta: MlMeta,
+  botName: string,
+  botPrefix: string,
+  tribe: ChatRecord,
+  cmd: string,
+  messageObj: Sphinx.Message,
+  newKind: string
+) {
+  if (newKind !== 'text' && newKind !== 'image') {
+    await botResponse(
+      botName,
+      'Please provide a valid kind (text/image)',
+      botPrefix,
+      tribe.id,
+      messageObj,
+      cmd
+    )
+    return
+  }
+  meta.kind = newKind
+  await bot.update({ meta: JSON.stringify(meta) })
+  await botResponse(
+    botName,
+    `bot kind updated to ${newKind}`,
+    botPrefix,
+    tribe.id,
+    messageObj,
+    cmd
+  )
+  return
+}

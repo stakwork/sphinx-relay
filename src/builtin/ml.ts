@@ -1,10 +1,10 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { ChatRecord, models, ChatBotRecord } from '../models'
-import { findBot, botResponse } from './utill'
+import { findBot } from './utill'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
-import { MlMeta, addUrl, addApiKey } from './utill/ml'
+import { MlMeta, addUrl, addApiKey, addKind } from './utill/ml'
 
 const config = loadConfig()
 
@@ -76,26 +76,15 @@ export function init() {
             return
           case 'kind':
             const newKind = arr[2]
-            if (newKind !== 'text' && newKind !== 'image') {
-              await botResponse(
-                ML_BOTNAME,
-                'Please provide a valid kind (text/image)',
-                ML_PREFIX,
-                tribe.id,
-                message,
-                cmd
-              )
-              return
-            }
-            meta.kind = newKind
-            await bot.update({ meta: JSON.stringify(meta) })
-            await botResponse(
+            await addKind(
+              bot,
+              meta,
               ML_BOTNAME,
-              `bot kind updated to ${newKind}`,
               ML_PREFIX,
-              tribe.id,
+              tribe,
+              cmd,
               message,
-              cmd
+              newKind
             )
             return
           default:

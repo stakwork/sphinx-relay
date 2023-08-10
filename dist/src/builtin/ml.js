@@ -57,13 +57,7 @@ function init() {
                         return;
                     case 'kind':
                         const newKind = arr[2];
-                        if (newKind !== 'text' && newKind !== 'image') {
-                            yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'Please provide a valid kind (text/image)', exports.ML_PREFIX, tribe.id, message, cmd);
-                            return;
-                        }
-                        meta.kind = newKind;
-                        yield bot.update({ meta: JSON.stringify(meta) });
-                        yield (0, utill_1.botResponse)(exports.ML_BOTNAME, `bot kind updated to ${newKind}`, exports.ML_PREFIX, tribe.id, message, cmd);
+                        yield (0, ml_1.addKind)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newKind);
                         return;
                     default:
                         const embed = new Sphinx.MessageEmbed()
