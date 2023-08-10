@@ -12,6 +12,7 @@ import {
   defaultCommand,
   mlBotResponse,
 } from './utill/ml'
+import { sphinxLogger, logging } from '../utils/logger'
 
 const config = loadConfig()
 
@@ -150,7 +151,7 @@ export function init() {
         delete CALLBACKS[process_id]
       }, 5 * 60 * 1000)
     } catch (e) {
-      console.error('ML CALL FAILED', e)
+      sphinxLogger.error(`ML CALL FAILED: ${e}`, logging.Bots)
     }
   })
 }

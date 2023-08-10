@@ -17,6 +17,7 @@ const utill_1 = require("./utill");
 const config_1 = require("../utils/config");
 const node_fetch_1 = require("node-fetch");
 const ml_1 = require("./utill/ml");
+const logger_1 = require("../utils/logger");
 const config = (0, config_1.loadConfig)();
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -111,7 +112,7 @@ function init() {
             }, 5 * 60 * 1000);
         }
         catch (e) {
-            console.error('ML CALL FAILED', e);
+            logger_1.sphinxLogger.error(`ML CALL FAILED: ${e}`, logger_1.logging.Bots);
         }
     }));
 }
