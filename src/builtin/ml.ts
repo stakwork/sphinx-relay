@@ -4,6 +4,7 @@ import { ChatRecord, models, ChatBotRecord } from '../models'
 import { findBot, botResponse } from './utill'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
+import { MlMeta, addUrl } from './utill/ml'
 
 const config = loadConfig()
 
@@ -17,8 +18,6 @@ export const ML_BOTNAME = `${ML_PREFIX.substring(
   1,
   2
 ).toUpperCase()}${ML_PREFIX.substring(2)}Bot`
-
-type ContentKind = 'text' | 'image'
 
 export const CALLBACKS: { [k: string]: (msg: string) => void } = {}
 
@@ -51,26 +50,15 @@ export function init() {
         switch (cmd) {
           case 'url':
             const newUrl = arr[2]
-            if (!newUrl) {
-              await botResponse(
-                ML_BOTNAME,
-                'Please provide a valid URL',
-                ML_PREFIX,
-                tribe.id,
-                message,
-                cmd
-              )
-              return
-            }
-            meta.url = newUrl
-            await bot.update({ meta: JSON.stringify(meta) })
-            await botResponse(
+            await addUrl(
+              bot,
+              meta,
               ML_BOTNAME,
-              'URL updated successfully',
               ML_PREFIX,
-              tribe.id,
+              tribe,
+              cmd,
               message,
-              cmd
+              newUrl
             )
             return
           case 'api_key':
@@ -212,12 +200,6 @@ export function init() {
       console.error('ML CALL FAILED', e)
     }
   })
-}
-
-export interface MlMeta {
-  url: string
-  apiKey: string
-  kind: ContentKind
 }
 
 export async function sleep(ms: number): Promise<void> {

@@ -16,6 +16,7 @@ const models_1 = require("../models");
 const utill_1 = require("./utill");
 const config_1 = require("../utils/config");
 const node_fetch_1 = require("node-fetch");
+const ml_1 = require("./utill/ml");
 const config = (0, config_1.loadConfig)();
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -48,13 +49,7 @@ function init() {
                 switch (cmd) {
                     case 'url':
                         const newUrl = arr[2];
-                        if (!newUrl) {
-                            yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'Please provide a valid URL', exports.ML_PREFIX, tribe.id, message, cmd);
-                            return;
-                        }
-                        meta.url = newUrl;
-                        yield bot.update({ meta: JSON.stringify(meta) });
-                        yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'URL updated successfully', exports.ML_PREFIX, tribe.id, message, cmd);
+                        yield (0, ml_1.addUrl)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newUrl);
                         return;
                     case 'api_key':
                         const newApiKey = arr[2];
