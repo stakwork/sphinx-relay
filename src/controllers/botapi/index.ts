@@ -329,7 +329,6 @@ export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
 }
 
 export async function processMlCallback(req: Req, res: Res): Promise<void> {
-  console.log('ML BODY', req.body)
   const body = req.body.body
   if (!body) {
     return failure(res, 'no body')
