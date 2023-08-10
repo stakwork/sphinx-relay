@@ -60,25 +60,7 @@ function init() {
                         yield (0, ml_1.addKind)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newKind);
                         return;
                     default:
-                        const embed = new Sphinx.MessageEmbed()
-                            .setAuthor(exports.ML_BOTNAME)
-                            .setTitle('Bot Commands:')
-                            .addFields([
-                            {
-                                name: `Add URL to ${exports.ML_BOTNAME}`,
-                                value: `${exports.ML_PREFIX} url {URL}`,
-                            },
-                            {
-                                name: `Add API_KEY to ${exports.ML_BOTNAME}`,
-                                value: `${exports.ML_PREFIX} url {API_KEY}`,
-                            },
-                            {
-                                name: `Set content type`,
-                                value: `${exports.ML_PREFIX} kind {text/image}`,
-                            },
-                        ])
-                            .setOnlyOwner(true);
-                        message.channel.send({ embed });
+                        (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
                         return;
                 }
             }

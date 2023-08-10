@@ -4,7 +4,7 @@ import { ChatRecord, models, ChatBotRecord } from '../models'
 import { findBot } from './utill'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
-import { MlMeta, addUrl, addApiKey, addKind } from './utill/ml'
+import { MlMeta, addUrl, addApiKey, addKind, defaultCommand } from './utill/ml'
 
 const config = loadConfig()
 
@@ -88,25 +88,7 @@ export function init() {
             )
             return
           default:
-            const embed = new Sphinx.MessageEmbed()
-              .setAuthor(ML_BOTNAME)
-              .setTitle('Bot Commands:')
-              .addFields([
-                {
-                  name: `Add URL to ${ML_BOTNAME}`,
-                  value: `${ML_PREFIX} url {URL}`,
-                },
-                {
-                  name: `Add API_KEY to ${ML_BOTNAME}`,
-                  value: `${ML_PREFIX} url {API_KEY}`,
-                },
-                {
-                  name: `Set content type`,
-                  value: `${ML_PREFIX} kind {text/image}`,
-                },
-              ])
-              .setOnlyOwner(true)
-            message.channel.send({ embed })
+            defaultCommand(ML_BOTNAME, ML_PREFIX, message)
             return
         }
       }

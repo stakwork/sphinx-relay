@@ -9,8 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
+const Sphinx = require("sphinx-bot");
 function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!newUrl) {
@@ -50,4 +51,26 @@ function addKind(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newKind)
     });
 }
 exports.addKind = addKind;
+function defaultCommand(botName, botPrefix, message) {
+    const embed = new Sphinx.MessageEmbed()
+        .setAuthor(botName)
+        .setTitle('Bot Commands:')
+        .addFields([
+        {
+            name: `Add URL to ${botName}`,
+            value: `${botPrefix} url {URL}`,
+        },
+        {
+            name: `Add API_KEY to ${botName}`,
+            value: `${botPrefix} url {API_KEY}`,
+        },
+        {
+            name: `Set content type`,
+            value: `${botPrefix} kind {text/image}`,
+        },
+    ])
+        .setOnlyOwner(true);
+    message.channel.send({ embed });
+}
+exports.defaultCommand = defaultCommand;
 //# sourceMappingURL=ml.js.map

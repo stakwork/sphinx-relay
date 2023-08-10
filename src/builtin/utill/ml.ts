@@ -110,3 +110,29 @@ export async function addKind(
   )
   return
 }
+
+export function defaultCommand(
+  botName: string,
+  botPrefix: string,
+  message: Sphinx.Message
+) {
+  const embed = new Sphinx.MessageEmbed()
+    .setAuthor(botName)
+    .setTitle('Bot Commands:')
+    .addFields([
+      {
+        name: `Add URL to ${botName}`,
+        value: `${botPrefix} url {URL}`,
+      },
+      {
+        name: `Add API_KEY to ${botName}`,
+        value: `${botPrefix} url {API_KEY}`,
+      },
+      {
+        name: `Set content type`,
+        value: `${botPrefix} kind {text/image}`,
+      },
+    ])
+    .setOnlyOwner(true)
+  message.channel.send({ embed })
+}
