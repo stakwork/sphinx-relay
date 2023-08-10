@@ -136,3 +136,11 @@ export function defaultCommand(
     .setOnlyOwner(true)
   message.channel.send({ embed })
 }
+
+export function mlBotResponse(msg: string, message: Sphinx.Message) {
+  const embed = new Sphinx.MessageEmbed()
+    .setAuthor('ML Bot')
+    .setDescription(msg)
+    .setOnlyUser(parseInt(message.member.id || '0'))
+  message.channel.send({ embed })
+}

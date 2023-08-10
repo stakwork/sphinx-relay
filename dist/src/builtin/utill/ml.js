@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+exports.mlBotResponse = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
 const Sphinx = require("sphinx-bot");
 function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
@@ -73,4 +73,12 @@ function defaultCommand(botName, botPrefix, message) {
     message.channel.send({ embed });
 }
 exports.defaultCommand = defaultCommand;
+function mlBotResponse(msg, message) {
+    const embed = new Sphinx.MessageEmbed()
+        .setAuthor('ML Bot')
+        .setDescription(msg)
+        .setOnlyUser(parseInt(message.member.id || '0'));
+    message.channel.send({ embed });
+}
+exports.mlBotResponse = mlBotResponse;
 //# sourceMappingURL=ml.js.map

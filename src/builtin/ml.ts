@@ -4,7 +4,14 @@ import { ChatRecord, models, ChatBotRecord } from '../models'
 import { findBot } from './utill'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
-import { MlMeta, addUrl, addApiKey, addKind, defaultCommand } from './utill/ml'
+import {
+  MlMeta,
+  addUrl,
+  addApiKey,
+  addKind,
+  defaultCommand,
+  mlBotResponse,
+} from './utill/ml'
 
 const config = loadConfig()
 
@@ -93,11 +100,7 @@ export function init() {
         }
       }
       if (!url || !api_key) {
-        const embed = new Sphinx.MessageEmbed()
-          .setAuthor(ML_BOTNAME)
-          .setDescription('not configured!')
-          .setOnlyUser(parseInt(message.member.id || '0'))
-        message.channel.send({ embed })
+        mlBotResponse('not configured!', message)
         return
       }
 
@@ -105,7 +108,7 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
-      console.log('ml bot hostname', host_name)
+
       const r = await fetch(url, {
         method: 'POST',
         body: JSON.stringify({
@@ -118,26 +121,16 @@ export function init() {
         },
       })
       const j = await r.json()
-      console.log('ML body j', j)
+
       if (!j.body) {
-        const embed = new Sphinx.MessageEmbed()
-          .setAuthor('ML Bot')
-          .setDescription('failed to process message (no body)')
-          .setOnlyUser(parseInt(message.member.id || '0'))
-        message.channel.send({ embed })
+        mlBotResponse('failed to process message (no body)', message)
         return
       }
       let process_id = j.body && j.body.process_id
       if (!process_id) {
-        const embed = new Sphinx.MessageEmbed()
-          .setAuthor('ML Bot')
-          .setDescription('failed to process message')
-          .setOnlyUser(parseInt(message.member.id || '0'))
-        message.channel.send({ embed })
+        mlBotResponse('failed to process message', message)
         return
       }
-
-      console.log('PROCESS ID!!!', process_id)
 
       CALLBACKS[process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()

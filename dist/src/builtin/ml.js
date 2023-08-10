@@ -65,18 +65,13 @@ function init() {
                 }
             }
             if (!url || !api_key) {
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor(exports.ML_BOTNAME)
-                    .setDescription('not configured!')
-                    .setOnlyUser(parseInt(message.member.id || '0'));
-                message.channel.send({ embed });
+                (0, ml_1.mlBotResponse)('not configured!', message);
                 return;
             }
             let host_name = config.host_name;
             if (!host_name.startsWith('http')) {
                 host_name = `https://${host_name}`;
             }
-            console.log('ml bot hostname', host_name);
             const r = yield (0, node_fetch_1.default)(url, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -89,25 +84,15 @@ function init() {
                 },
             });
             const j = yield r.json();
-            console.log('ML body j', j);
             if (!j.body) {
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('ML Bot')
-                    .setDescription('failed to process message (no body)')
-                    .setOnlyUser(parseInt(message.member.id || '0'));
-                message.channel.send({ embed });
+                (0, ml_1.mlBotResponse)('failed to process message (no body)', message);
                 return;
             }
             let process_id = j.body && j.body.process_id;
             if (!process_id) {
-                const embed = new Sphinx.MessageEmbed()
-                    .setAuthor('ML Bot')
-                    .setDescription('failed to process message')
-                    .setOnlyUser(parseInt(message.member.id || '0'));
-                message.channel.send({ embed });
+                (0, ml_1.mlBotResponse)('failed to process message', message);
                 return;
             }
-            console.log('PROCESS ID!!!', process_id);
             exports.CALLBACKS[process_id] = function (msg) {
                 const embed = new Sphinx.MessageEmbed()
                     .setAuthor('ML Bot')
