@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addUrl = void 0;
+exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
 function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -24,4 +24,17 @@ function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
     });
 }
 exports.addUrl = addUrl;
+function addApiKey(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newApiKey) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!newApiKey) {
+            yield (0, index_1.botResponse)(botName, 'Please provide a valid API KEY', botPrefix, tribe.id, messageObj, cmd);
+            return;
+        }
+        meta.apiKey = newApiKey;
+        yield bot.update({ meta: JSON.stringify(meta) });
+        yield (0, index_1.botResponse)(botName, 'API KEY updated successfully', botPrefix, tribe.id, messageObj, cmd);
+        return;
+    });
+}
+exports.addApiKey = addApiKey;
 //# sourceMappingURL=ml.js.map

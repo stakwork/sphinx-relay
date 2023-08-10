@@ -53,13 +53,7 @@ function init() {
                         return;
                     case 'api_key':
                         const newApiKey = arr[2];
-                        if (!newApiKey) {
-                            yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'Please provide a valid API KEY', exports.ML_PREFIX, tribe.id, message, cmd);
-                            return;
-                        }
-                        meta.apiKey = newApiKey;
-                        yield bot.update({ meta: JSON.stringify(meta) });
-                        yield (0, utill_1.botResponse)(exports.ML_BOTNAME, 'API KEY updated successfully', exports.ML_PREFIX, tribe.id, message, cmd);
+                        yield (0, ml_1.addApiKey)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newApiKey);
                         return;
                     case 'kind':
                         const newKind = arr[2];

@@ -4,7 +4,7 @@ import { ChatRecord, models, ChatBotRecord } from '../models'
 import { findBot, botResponse } from './utill'
 import { loadConfig } from '../utils/config'
 import fetch from 'node-fetch'
-import { MlMeta, addUrl } from './utill/ml'
+import { MlMeta, addUrl, addApiKey } from './utill/ml'
 
 const config = loadConfig()
 
@@ -63,26 +63,15 @@ export function init() {
             return
           case 'api_key':
             const newApiKey = arr[2]
-            if (!newApiKey) {
-              await botResponse(
-                ML_BOTNAME,
-                'Please provide a valid API KEY',
-                ML_PREFIX,
-                tribe.id,
-                message,
-                cmd
-              )
-              return
-            }
-            meta.apiKey = newApiKey
-            await bot.update({ meta: JSON.stringify(meta) })
-            await botResponse(
+            await addApiKey(
+              bot,
+              meta,
               ML_BOTNAME,
-              'API KEY updated successfully',
               ML_PREFIX,
-              tribe.id,
+              tribe,
+              cmd,
               message,
-              cmd
+              newApiKey
             )
             return
           case 'kind':
