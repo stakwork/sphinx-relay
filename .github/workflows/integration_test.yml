@@ -102,3 +102,7 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+      - name: See Logs
+        run: |
+          docker logs example-bot-sphinx
+          docker logs bet-bot-sphinx

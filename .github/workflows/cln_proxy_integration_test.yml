@@ -104,6 +104,6 @@ jobs:
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
         continue-on-error: true
       - name: See Logs
-        command: |
+        run: |
           docker logs example-bot-sphinx
           docker logs bet-bot-sphinx
