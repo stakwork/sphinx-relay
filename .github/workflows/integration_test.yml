@@ -99,6 +99,10 @@ jobs:
         with:
           source: 'stack/relay/NODES.json'
           target: 'relay/src/tests/configs/nodes.json'
+      - name: Sleep for 2 minutes
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '2m'
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
