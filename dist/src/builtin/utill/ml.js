@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mlBotResponse = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
 const Sphinx = require("sphinx-bot");
+const ml_1 = require("../ml");
 function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!newUrl) {
@@ -75,7 +76,7 @@ function defaultCommand(botName, botPrefix, message) {
 exports.defaultCommand = defaultCommand;
 function mlBotResponse(msg, message) {
     const embed = new Sphinx.MessageEmbed()
-        .setAuthor('ML Bot')
+        .setAuthor(ml_1.ML_BOTNAME)
         .setDescription(msg)
         .setOnlyUser(parseInt(message.member.id || '0'));
     message.channel.send({ embed });

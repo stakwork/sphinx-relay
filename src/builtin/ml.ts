@@ -135,7 +135,7 @@ export function init() {
 
       CALLBACKS[process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()
-          .setAuthor('ML Bot')
+          .setAuthor(ML_BOTNAME)
           .setOnlyUser(parseInt(message.member.id || '0'))
         if (meta.kind === 'text') {
           embed.setDescription(msg)

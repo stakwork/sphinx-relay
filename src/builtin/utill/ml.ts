@@ -1,6 +1,7 @@
 import { ChatBotRecord, ChatRecord } from '../../models'
 import { botResponse } from './index'
 import * as Sphinx from 'sphinx-bot'
+import { ML_BOTNAME } from '../ml'
 
 type ContentKind = 'text' | 'image'
 export interface MlMeta {
@@ -139,7 +140,7 @@ export function defaultCommand(
 
 export function mlBotResponse(msg: string, message: Sphinx.Message) {
   const embed = new Sphinx.MessageEmbed()
-    .setAuthor('ML Bot')
+    .setAuthor(ML_BOTNAME)
     .setDescription(msg)
     .setOnlyUser(parseInt(message.member.id || '0'))
   message.channel.send({ embed })
