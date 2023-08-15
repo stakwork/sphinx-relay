@@ -645,18 +645,17 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
             updatedAt: { [sequelize_1.Op.gte]: local },
             tenant,
         };
-        const contacts = (yield models_1.models.Contact.findAll({
-            where,
-        }));
-        const invites = (yield models_1.models.Invite.findAll({
-            where,
-        }));
-        const chats = (yield models_1.models.Chat.findAll({
-            where,
-        }));
-        const subscriptions = (yield models_1.models.Subscription.findAll({
-            where,
-        }));
+        const clause = { where };
+        const limit = req.query.limit && parseInt(req.query.limit);
+        const offset = req.query.offset && parseInt(req.query.offset);
+        if ((limit || limit === 0) && (offset || offset === 0)) {
+            clause.limit = limit;
+            clause.offset = offset;
+        }
+        const contacts = (yield models_1.models.Contact.findAll(clause));
+        const invites = (yield models_1.models.Invite.findAll(clause));
+        const chats = (yield models_1.models.Chat.findAll(clause));
+        const subscriptions = (yield models_1.models.Subscription.findAll(clause));
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
         const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));
         const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));

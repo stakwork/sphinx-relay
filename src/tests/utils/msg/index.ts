@@ -18,3 +18,4 @@ export {
   sendDirectPayment,
 } from './sendTribeDirectpayment'
 export { getTribeMessages } from './getTribeMessages'
+export { decryptMessage } from './decryptMsg'

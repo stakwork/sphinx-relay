@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateAction = exports.finalAction = exports.processAction = exports.processWebhook = void 0;
+exports.processMlCallback = exports.validateAction = exports.finalAction = exports.processAction = exports.processWebhook = void 0;
 const network = require("../../network");
 const models_1 = require("../../models");
 const res_1 = require("../../utils/res");
@@ -20,6 +20,7 @@ const hmac = require("../../crypto/hmac");
 const git_1 = require("../../builtin/git");
 const helpers_1 = require("../../helpers");
 const githook_1 = require("../../utils/githook");
+const ml_1 = require("../../builtin/ml");
 const dm_1 = require("./dm");
 const pay_1 = require("./pay");
 const broadcast_1 = require("./broadcast");
@@ -284,4 +285,25 @@ function validateAction(a) {
     });
 }
 exports.validateAction = validateAction;
+function processMlCallback(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const body = req.body.body;
+        if (!body) {
+            return (0, res_1.failure)(res, 'no body');
+        }
+        const process_id = body.process_id;
+        if (!process_id) {
+            return (0, res_1.failure)(res, 'no process_id');
+        }
+        const response = body.response;
+        if (!response) {
+            return (0, res_1.failure)(res, 'no response');
+        }
+        if (ml_1.CALLBACKS[process_id]) {
+            ml_1.CALLBACKS[process_id](response);
+        }
+        (0, res_1.success)(res, { ok: true });
+    });
+}
+exports.processMlCallback = processMlCallback;
 //# sourceMappingURL=index.js.map
