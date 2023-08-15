@@ -51,6 +51,7 @@ jobs:
             'externalBotApi',
             'externalHostedBot',
             'spamGoneBot',
+            'mlBot',
           ]
         node: [16]
     steps:
