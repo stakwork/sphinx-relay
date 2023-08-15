@@ -49,7 +49,7 @@ function mlBot(t, index1, index2, index3) {
         t.truthy(botReply, 'MotherBot should reply');
         botAlias = 'MlBot';
         //http://ml-bot-sphinx-server:3500/text
-        const url = 'http://localhost:3500/text';
+        const url = 'http://ml-bot-sphinx-server:3500/text';
         //Alice Set Text URL
         const urlCommand = `/ml url ${url}`;
         yield (0, msg_1.sendTribeMessage)(t, alice, tribe, urlCommand);
@@ -92,7 +92,7 @@ function mlBot(t, index1, index2, index3) {
         yield (0, msg_1.sendTribeMessage)(t, alice, tribe, imageKind);
         const botReply6 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 5);
         t.truthy(botReply6, 'MlBot should reply');
-        const imageUrl = 'http://localhost:3500/image';
+        const imageUrl = 'http://ml-bot-sphinx-server:3500/image';
         //Alice change Tribe kind to image
         const imageUrlMsg = `/ml url ${imageUrl}`;
         yield (0, msg_1.sendTribeMessage)(t, alice, tribe, imageUrlMsg);
