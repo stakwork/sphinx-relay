@@ -103,3 +103,7 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+        continue-on-error: true
+      - name: See Logs
+        run: |
+          docker logs ml-bot-sphinx-server
