@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { Op } from 'sequelize'
+import { Op, FindOptions } from 'sequelize'
 import * as moment from 'moment'
 import {
   Contact,
@@ -725,27 +725,36 @@ function extractAttrs(body): {
 export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-
   try {
     const dateToReturn = decodeURI(req.query.date as string)
     /* eslint-disable import/namespace */
     const local = moment.utc(dateToReturn).local().toDate()
+
     const where: { tenant: number; updatedAt: { [Op.gte]: Date } } = {
       updatedAt: { [Op.gte]: local },
       tenant,
     }
-    const contacts: Contact[] = (await models.Contact.findAll({
-      where,
-    })) as Contact[]
-    const invites: Invite[] = (await models.Invite.findAll({
-      where,
-    })) as Invite[]
-    const chats: ChatRecord[] = (await models.Chat.findAll({
-      where,
-    })) as ChatRecord[]
-    const subscriptions: Subscription[] = (await models.Subscription.findAll({
-      where,
-    })) as Subscription[]
+
+    const clause: FindOptions = { where }
+    const limit = req.query.limit && parseInt(req.query.limit as string)
+    const offset = req.query.offset && parseInt(req.query.offset as string)
+    if ((limit || limit === 0) && (offset || offset === 0)) {
+      clause.limit = limit
+      clause.offset = offset
+    }
+    const contacts: Contact[] = (await models.Contact.findAll(
+      clause
+    )) as Contact[]
+
+    const invites: Invite[] = (await models.Invite.findAll(clause)) as Invite[]
+
+    const chats: ChatRecord[] = (await models.Chat.findAll(
+      clause
+    )) as ChatRecord[]
+
+    const subscriptions: Subscription[] = (await models.Subscription.findAll(
+      clause
+    )) as Subscription[]
 
     const contactsResponse = contacts.map((contact) =>
       jsonUtils.contactToJson(contact)
@@ -765,6 +774,7 @@ export const getLatestContacts = async (req: Req, res: Res): Promise<void> => {
         chatId: { [Op.in]: chatIds },
       },
     })) as ChatMember[]
+
     const chatsResponse = chats.map((chat) => {
       const theChat = (chat.dataValues as Chat) || chat
       if (!pendingMembers) return jsonUtils.chatToJson(theChat)
