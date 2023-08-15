@@ -107,3 +107,4 @@ jobs:
       - name: See Logs
         run: |
           docker logs ml-bot-sphinx-server
+          docker logs alice.sphinx
