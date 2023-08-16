@@ -11,6 +11,7 @@ import {
   addKind,
   defaultCommand,
   mlBotResponse,
+  addModel,
 } from './utill/ml'
 import { sphinxLogger, logging } from '../utils/logger'
 
@@ -46,7 +47,7 @@ export function init() {
 
       const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
 
-      let meta: MlMeta = JSON.parse(bot.meta || `{}`)
+      let meta: MlMeta = JSON.parse(bot.meta || `[]`)
       meta.kind = meta.kind || 'text'
       const url = meta.url
       const api_key = meta.apiKey
@@ -94,6 +95,9 @@ export function init() {
               message,
               newKind
             )
+            return
+          case 'add':
+            await addModel(ML_BOTNAME, ML_PREFIX, tribe, arr, message)
             return
           default:
             defaultCommand(ML_BOTNAME, ML_PREFIX, message)

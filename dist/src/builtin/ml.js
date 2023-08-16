@@ -40,7 +40,7 @@ function init() {
                 where: { uuid: message.channel.id },
             }));
             const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
-            let meta = JSON.parse(bot.meta || `{}`);
+            let meta = JSON.parse(bot.meta || `[]`);
             meta.kind = meta.kind || 'text';
             const url = meta.url;
             const api_key = meta.apiKey;
@@ -59,6 +59,9 @@ function init() {
                     case 'kind':
                         const newKind = arr[2];
                         yield (0, ml_1.addKind)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newKind);
+                        return;
+                    case 'add':
+                        yield (0, ml_1.addModel)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, arr, message);
                         return;
                     default:
                         (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);

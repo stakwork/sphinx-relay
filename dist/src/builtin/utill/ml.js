@@ -9,10 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mlBotResponse = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
 const Sphinx = require("sphinx-bot");
 const ml_1 = require("../ml");
+const logger_1 = require("../../utils/logger");
 function addUrl(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newUrl) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!newUrl) {
@@ -74,6 +75,45 @@ function defaultCommand(botName, botPrefix, message) {
     message.channel.send({ embed });
 }
 exports.defaultCommand = defaultCommand;
+function findMetaByName(name, mlMeta) {
+    for (let i = 0; i < mlMeta.length; i++) {
+        const meta = mlMeta[i];
+        if (meta.name === name) {
+            return meta;
+        }
+    }
+}
+function addModel(botName, botPrefix, tribe, msgArr, messageObject) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const cmd = msgArr[1];
+        const name = msgArr[2];
+        const url = msgArr[3];
+        try {
+            if (!name) {
+                yield (0, index_1.botResponse)(botName, 'Please provide a valid model name', botPrefix, tribe.id, messageObject, cmd);
+                return;
+            }
+            const bot = yield (0, index_1.findBot)({ botPrefix, tribe });
+            let metaArray = JSON.parse(bot.meta || `[]`);
+            const meta = findMetaByName(name, metaArray);
+            if (meta) {
+                yield (0, index_1.botResponse)(botName, 'Model already exist', botPrefix, tribe.id, messageObject, cmd);
+                return;
+            }
+            const newModel = { name, apiKey: '', url: url || '', kind: 'text' };
+            metaArray.push(newModel);
+            yield bot.update({ meta: JSON.stringify(metaArray) });
+            yield (0, index_1.botResponse)(botName, 'New model added successfully', botPrefix, tribe.id, messageObject, cmd);
+            return;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`error while adding model: ${error}`, logger_1.logging.Bots);
+            yield (0, index_1.botResponse)(botName, error.message || 'Error occured while adding a model', botPrefix, tribe.id, messageObject, cmd);
+            return;
+        }
+    });
+}
+exports.addModel = addModel;
 function mlBotResponse(msg, message) {
     const embed = new Sphinx.MessageEmbed()
         .setAuthor(ml_1.ML_BOTNAME)
