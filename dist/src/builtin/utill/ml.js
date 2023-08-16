@@ -115,15 +115,15 @@ function defaultCommand(botName, botPrefix, message) {
         .addFields([
         {
             name: `Add URL to ${botName}`,
-            value: `${botPrefix} url {URL}`,
+            value: `${botPrefix} url {MODEL_NAME} {URL}`,
         },
         {
             name: `Add API_KEY to ${botName}`,
-            value: `${botPrefix} url {API_KEY}`,
+            value: `${botPrefix} api_key {MODEL_NAME} {API_KEY}`,
         },
         {
             name: `Set content type`,
-            value: `${botPrefix} kind {text/image}`,
+            value: `${botPrefix} kind {MODEL_NAME} {text/image}`,
         },
     ])
         .setOnlyOwner(true);
