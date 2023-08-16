@@ -61,17 +61,7 @@ export function init() {
             await addUrl(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'api_key':
-            const newApiKey = arr[2]
-            await addApiKey(
-              bot,
-              meta,
-              ML_BOTNAME,
-              ML_PREFIX,
-              tribe,
-              cmd,
-              message,
-              newApiKey
-            )
+            await addApiKey(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'kind':
             const newKind = arr[2]

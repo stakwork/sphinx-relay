@@ -33,7 +33,7 @@ function addUrl(botName, botPrefix, tribe, messageObj, msgArr) {
             }
             metaObj[name] = Object.assign(Object.assign({}, meta), { url });
             yield bot.update({ meta: JSON.stringify(metaObj) });
-            yield (0, index_1.botResponse)(botName, 'URL updated successfully', botPrefix, tribe.id, messageObj, cmd);
+            yield (0, index_1.botResponse)(botName, `${name.toUpperCase()} URL updated successfully`, botPrefix, tribe.id, messageObj, cmd);
             return;
         }
         catch (error) {
@@ -44,16 +44,33 @@ function addUrl(botName, botPrefix, tribe, messageObj, msgArr) {
     });
 }
 exports.addUrl = addUrl;
-function addApiKey(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newApiKey) {
+function addApiKey(botName, botPrefix, tribe, messageObj, msgArr) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!newApiKey) {
-            yield (0, index_1.botResponse)(botName, 'Please provide a valid API KEY', botPrefix, tribe.id, messageObj, cmd);
+        const cmd = msgArr[1];
+        const name = msgArr[2];
+        const apiKey = msgArr[3];
+        try {
+            if (!name || !apiKey) {
+                yield (0, index_1.botResponse)(botName, `Please provide a valid model ${name ? 'api_key' : 'name'}`, botPrefix, tribe.id, messageObj, cmd);
+                return;
+            }
+            const bot = yield (0, index_1.findBot)({ botPrefix, tribe });
+            let metaObj = JSON.parse(bot.meta || `{}`);
+            const meta = metaObj[name];
+            if (!meta) {
+                yield (0, index_1.botResponse)(botName, 'Model does not exist', botPrefix, tribe.id, messageObj, cmd);
+                return;
+            }
+            metaObj[name] = Object.assign(Object.assign({}, meta), { apiKey });
+            yield bot.update({ meta: JSON.stringify(metaObj) });
+            yield (0, index_1.botResponse)(botName, `${name.toUpperCase()} API KEY updated successfully`, botPrefix, tribe.id, messageObj, cmd);
             return;
         }
-        meta.apiKey = newApiKey;
-        yield bot.update({ meta: JSON.stringify(meta) });
-        yield (0, index_1.botResponse)(botName, 'API KEY updated successfully', botPrefix, tribe.id, messageObj, cmd);
-        return;
+        catch (error) {
+            logger_1.sphinxLogger.error(`Error trying to update API KEY: ${error}`, logger_1.logging.Bots);
+            yield (0, index_1.botResponse)(botName, error.message || `Error trying to updare ${name.toUpperCase()} API KEY`, botPrefix, tribe.id, messageObj, cmd);
+            return;
+        }
     });
 }
 exports.addApiKey = addApiKey;

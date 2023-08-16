@@ -52,8 +52,7 @@ function init() {
                         yield (0, ml_1.addUrl)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'api_key':
-                        const newApiKey = arr[2];
-                        yield (0, ml_1.addApiKey)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newApiKey);
+                        yield (0, ml_1.addApiKey)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'kind':
                         const newKind = arr[2];
