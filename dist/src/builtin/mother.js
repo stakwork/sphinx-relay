@@ -54,6 +54,10 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.boost,
         constants_1.default.message_types.attachment,
     ],
+    [`${ml_1.ML_PREFIX.substring(1)}`]: [
+        constants_1.default.message_types.message,
+        constants_1.default.message_types.attachment,
+    ],
 };
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],

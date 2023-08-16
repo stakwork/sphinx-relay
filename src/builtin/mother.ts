@@ -47,6 +47,10 @@ const builtInBotMsgTypes = {
     constants.message_types.boost,
     constants.message_types.attachment,
   ],
+  [`${ML_PREFIX.substring(1)}`]: [
+    constants.message_types.message,
+    constants.message_types.attachment,
+  ],
 }
 
 const builtInHiddenCmd = {
