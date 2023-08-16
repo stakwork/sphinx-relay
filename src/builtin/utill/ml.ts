@@ -1,4 +1,4 @@
-import { ChatBotRecord, ChatRecord } from '../../models'
+import { ChatRecord } from '../../models'
 import { botResponse, findBot } from './index'
 import * as Sphinx from 'sphinx-bot'
 import { ML_BOTNAME } from '../ml'
@@ -63,7 +63,7 @@ export async function addUrl(
     sphinxLogger.error(`Error trying to update URL: ${error}`, logging.Bots)
     await botResponse(
       botName,
-      error.message || 'Error trying to updare URL',
+      error.message || 'Error trying to update URL',
       botPrefix,
       tribe.id,
       messageObj,
@@ -124,7 +124,7 @@ export async function addApiKey(
     sphinxLogger.error(`Error trying to update API KEY: ${error}`, logging.Bots)
     await botResponse(
       botName,
-      error.message || `Error trying to updare ${name.toUpperCase()} API KEY`,
+      error.message || `Error trying to update ${name.toUpperCase()} API KEY`,
       botPrefix,
       tribe.id,
       messageObj,
@@ -135,19 +135,68 @@ export async function addApiKey(
 }
 
 export async function addKind(
-  bot: ChatBotRecord,
-  meta: MlMeta,
   botName: string,
   botPrefix: string,
   tribe: ChatRecord,
-  cmd: string,
   messageObj: Sphinx.Message,
-  newKind: string
+  msgArray: string[]
 ) {
-  if (newKind !== 'text' && newKind !== 'image') {
+  const cmd = msgArray[1]
+  const name = msgArray[2]
+  const kind = msgArray[3]
+  try {
+    if (!name || !kind) {
+      await botResponse(
+        botName,
+        `Please provide a valid model ${name ? 'kind' : 'name'}`,
+        botPrefix,
+        tribe.id,
+        messageObj,
+        cmd
+      )
+      return
+    }
+    if (kind !== 'text' && kind !== 'image') {
+      await botResponse(
+        botName,
+        'Please provide a valid kind (text/image)',
+        botPrefix,
+        tribe.id,
+        messageObj,
+        cmd
+      )
+      return
+    }
+    const bot = await findBot({ botPrefix, tribe })
+    let metaObj: { [key: string]: MlMeta } = JSON.parse(bot.meta || `{}`)
+    const meta = metaObj[name]
+    if (!meta) {
+      await botResponse(
+        botName,
+        'Model does not exist',
+        botPrefix,
+        tribe.id,
+        messageObj,
+        cmd
+      )
+      return
+    }
+    metaObj[name] = { ...meta, kind }
+    await bot.update({ meta: JSON.stringify(metaObj) })
     await botResponse(
       botName,
-      'Please provide a valid kind (text/image)',
+      `${name.toUpperCase()} kind updated to ${kind}`,
+      botPrefix,
+      tribe.id,
+      messageObj,
+      cmd
+    )
+    return
+  } catch (error) {
+    sphinxLogger.error(`Error trying to update kind: ${error}`, logging.Bots)
+    await botResponse(
+      botName,
+      error.message || `Error trying to update ${name.toUpperCase()} kind`,
       botPrefix,
       tribe.id,
       messageObj,
@@ -155,17 +204,6 @@ export async function addKind(
     )
     return
   }
-  meta.kind = newKind
-  await bot.update({ meta: JSON.stringify(meta) })
-  await botResponse(
-    botName,
-    `bot kind updated to ${newKind}`,
-    botPrefix,
-    tribe.id,
-    messageObj,
-    cmd
-  )
-  return
 }
 
 export function defaultCommand(
@@ -198,8 +236,8 @@ export async function addModel(
   botName: string,
   botPrefix: string,
   tribe: ChatRecord,
-  msgArr: string[],
-  messageObject: Sphinx.Message
+  messageObject: Sphinx.Message,
+  msgArr: string[]
 ) {
   const cmd = msgArr[1]
   const name = msgArr[2]

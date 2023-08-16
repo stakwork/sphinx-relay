@@ -64,20 +64,10 @@ export function init() {
             await addApiKey(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'kind':
-            const newKind = arr[2]
-            await addKind(
-              bot,
-              meta,
-              ML_BOTNAME,
-              ML_PREFIX,
-              tribe,
-              cmd,
-              message,
-              newKind
-            )
+            await addKind(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'add':
-            await addModel(ML_BOTNAME, ML_PREFIX, tribe, arr, message)
+            await addModel(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           default:
             defaultCommand(ML_BOTNAME, ML_PREFIX, message)

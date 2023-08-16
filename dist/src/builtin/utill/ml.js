@@ -38,7 +38,7 @@ function addUrl(botName, botPrefix, tribe, messageObj, msgArr) {
         }
         catch (error) {
             logger_1.sphinxLogger.error(`Error trying to update URL: ${error}`, logger_1.logging.Bots);
-            yield (0, index_1.botResponse)(botName, error.message || 'Error trying to updare URL', botPrefix, tribe.id, messageObj, cmd);
+            yield (0, index_1.botResponse)(botName, error.message || 'Error trying to update URL', botPrefix, tribe.id, messageObj, cmd);
             return;
         }
     });
@@ -68,22 +68,43 @@ function addApiKey(botName, botPrefix, tribe, messageObj, msgArr) {
         }
         catch (error) {
             logger_1.sphinxLogger.error(`Error trying to update API KEY: ${error}`, logger_1.logging.Bots);
-            yield (0, index_1.botResponse)(botName, error.message || `Error trying to updare ${name.toUpperCase()} API KEY`, botPrefix, tribe.id, messageObj, cmd);
+            yield (0, index_1.botResponse)(botName, error.message || `Error trying to update ${name.toUpperCase()} API KEY`, botPrefix, tribe.id, messageObj, cmd);
             return;
         }
     });
 }
 exports.addApiKey = addApiKey;
-function addKind(bot, meta, botName, botPrefix, tribe, cmd, messageObj, newKind) {
+function addKind(botName, botPrefix, tribe, messageObj, msgArray) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (newKind !== 'text' && newKind !== 'image') {
-            yield (0, index_1.botResponse)(botName, 'Please provide a valid kind (text/image)', botPrefix, tribe.id, messageObj, cmd);
+        const cmd = msgArray[1];
+        const name = msgArray[2];
+        const kind = msgArray[3];
+        try {
+            if (!name || !kind) {
+                yield (0, index_1.botResponse)(botName, `Please provide a valid model ${name ? 'kind' : 'name'}`, botPrefix, tribe.id, messageObj, cmd);
+                return;
+            }
+            if (kind !== 'text' && kind !== 'image') {
+                yield (0, index_1.botResponse)(botName, 'Please provide a valid kind (text/image)', botPrefix, tribe.id, messageObj, cmd);
+                return;
+            }
+            const bot = yield (0, index_1.findBot)({ botPrefix, tribe });
+            let metaObj = JSON.parse(bot.meta || `{}`);
+            const meta = metaObj[name];
+            if (!meta) {
+                yield (0, index_1.botResponse)(botName, 'Model does not exist', botPrefix, tribe.id, messageObj, cmd);
+                return;
+            }
+            metaObj[name] = Object.assign(Object.assign({}, meta), { kind });
+            yield bot.update({ meta: JSON.stringify(metaObj) });
+            yield (0, index_1.botResponse)(botName, `${name.toUpperCase()} kind updated to ${kind}`, botPrefix, tribe.id, messageObj, cmd);
             return;
         }
-        meta.kind = newKind;
-        yield bot.update({ meta: JSON.stringify(meta) });
-        yield (0, index_1.botResponse)(botName, `bot kind updated to ${newKind}`, botPrefix, tribe.id, messageObj, cmd);
-        return;
+        catch (error) {
+            logger_1.sphinxLogger.error(`Error trying to update kind: ${error}`, logger_1.logging.Bots);
+            yield (0, index_1.botResponse)(botName, error.message || `Error trying to update ${name.toUpperCase()} kind`, botPrefix, tribe.id, messageObj, cmd);
+            return;
+        }
     });
 }
 exports.addKind = addKind;
@@ -109,7 +130,7 @@ function defaultCommand(botName, botPrefix, message) {
     message.channel.send({ embed });
 }
 exports.defaultCommand = defaultCommand;
-function addModel(botName, botPrefix, tribe, msgArr, messageObject) {
+function addModel(botName, botPrefix, tribe, messageObject, msgArr) {
     return __awaiter(this, void 0, void 0, function* () {
         const cmd = msgArr[1];
         const name = msgArr[2];

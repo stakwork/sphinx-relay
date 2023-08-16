@@ -55,11 +55,10 @@ function init() {
                         yield (0, ml_1.addApiKey)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'kind':
-                        const newKind = arr[2];
-                        yield (0, ml_1.addKind)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newKind);
+                        yield (0, ml_1.addKind)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'add':
-                        yield (0, ml_1.addModel)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, arr, message);
+                        yield (0, ml_1.addModel)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     default:
                         (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
