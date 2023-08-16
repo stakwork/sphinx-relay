@@ -24,33 +24,23 @@ function addUrl(botName, botPrefix, tribe, messageObj, msgArr) {
                 yield (0, index_1.botResponse)(botName, `Please provide a valid model ${name ? 'url' : 'name'}`, botPrefix, tribe.id, messageObj, cmd);
                 return;
             }
-            // const bot = await findBot({ botPrefix, tribe })
-            // let metaObj: MlMeta[] = JSON.parse(bot.meta || `[]`)
-            // const meta = findMetaByName(name, metaObj)
-            // if (!meta) {
-            //   await botResponse(
-            //     botName,
-            //     'Model does not exist',
-            //     botPrefix,
-            //     tribe.id,
-            //     messageObj,
-            //     cmd
-            //   )
-            //   return
-            // }
-            // meta.url = url
-            // await bot.update({ meta: JSON.stringify(meta) })
-            // await botResponse(
-            //   botName,
-            //   'URL updated successfully',
-            //   botPrefix,
-            //   tribe.id,
-            //   messageObj,
-            //   cmd
-            // )
-            // return
+            const bot = yield (0, index_1.findBot)({ botPrefix, tribe });
+            let metaObj = JSON.parse(bot.meta || `{}`);
+            const meta = metaObj[name];
+            if (!meta) {
+                yield (0, index_1.botResponse)(botName, 'Model does not exist', botPrefix, tribe.id, messageObj, cmd);
+                return;
+            }
+            metaObj[name] = Object.assign(Object.assign({}, meta), { url });
+            yield bot.update({ meta: JSON.stringify(metaObj) });
+            yield (0, index_1.botResponse)(botName, 'URL updated successfully', botPrefix, tribe.id, messageObj, cmd);
+            return;
         }
-        catch (error) { }
+        catch (error) {
+            logger_1.sphinxLogger.error(`Error trying to update URL: ${error}`, logger_1.logging.Bots);
+            yield (0, index_1.botResponse)(botName, error.message || 'Error trying to updare URL', botPrefix, tribe.id, messageObj, cmd);
+            return;
+        }
     });
 }
 exports.addUrl = addUrl;

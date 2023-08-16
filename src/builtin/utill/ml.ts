@@ -34,32 +34,43 @@ export async function addUrl(
       )
       return
     }
-    // const bot = await findBot({ botPrefix, tribe })
-    // let metaObj: MlMeta[] = JSON.parse(bot.meta || `[]`)
-    // const meta = findMetaByName(name, metaObj)
-    // if (!meta) {
-    //   await botResponse(
-    //     botName,
-    //     'Model does not exist',
-    //     botPrefix,
-    //     tribe.id,
-    //     messageObj,
-    //     cmd
-    //   )
-    //   return
-    // }
-    // meta.url = url
-    // await bot.update({ meta: JSON.stringify(meta) })
-    // await botResponse(
-    //   botName,
-    //   'URL updated successfully',
-    //   botPrefix,
-    //   tribe.id,
-    //   messageObj,
-    //   cmd
-    // )
-    // return
-  } catch (error) {}
+    const bot = await findBot({ botPrefix, tribe })
+    let metaObj: MlMeta[] = JSON.parse(bot.meta || `{}`)
+    const meta = metaObj[name]
+    if (!meta) {
+      await botResponse(
+        botName,
+        'Model does not exist',
+        botPrefix,
+        tribe.id,
+        messageObj,
+        cmd
+      )
+      return
+    }
+    metaObj[name] = { ...meta, url }
+    await bot.update({ meta: JSON.stringify(metaObj) })
+    await botResponse(
+      botName,
+      'URL updated successfully',
+      botPrefix,
+      tribe.id,
+      messageObj,
+      cmd
+    )
+    return
+  } catch (error) {
+    sphinxLogger.error(`Error trying to update URL: ${error}`, logging.Bots)
+    await botResponse(
+      botName,
+      error.message || 'Error trying to updare URL',
+      botPrefix,
+      tribe.id,
+      messageObj,
+      cmd
+    )
+    return
+  }
 }
 
 export async function addApiKey(
