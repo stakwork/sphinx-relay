@@ -13,37 +13,53 @@ export interface MlMeta {
 }
 
 export async function addUrl(
-  bot: ChatBotRecord,
-  meta: MlMeta,
   botName: string,
   botPrefix: string,
   tribe: ChatRecord,
-  cmd: string,
   messageObj: Sphinx.Message,
-  newUrl: string
+  msgArr: string[]
 ) {
-  if (!newUrl) {
-    await botResponse(
-      botName,
-      'Please provide a valid URL',
-      botPrefix,
-      tribe.id,
-      messageObj,
-      cmd
-    )
-    return
-  }
-  meta.url = newUrl
-  await bot.update({ meta: JSON.stringify(meta) })
-  await botResponse(
-    botName,
-    'URL updated successfully',
-    botPrefix,
-    tribe.id,
-    messageObj,
-    cmd
-  )
-  return
+  const cmd = msgArr[1]
+  const name = msgArr[2]
+  const url = msgArr[3]
+  try {
+    if (!name || !url) {
+      await botResponse(
+        botName,
+        `Please provide a valid model ${name ? 'url' : 'name'}`,
+        botPrefix,
+        tribe.id,
+        messageObj,
+        cmd
+      )
+      return
+    }
+    // const bot = await findBot({ botPrefix, tribe })
+    // let metaObj: MlMeta[] = JSON.parse(bot.meta || `[]`)
+    // const meta = findMetaByName(name, metaObj)
+    // if (!meta) {
+    //   await botResponse(
+    //     botName,
+    //     'Model does not exist',
+    //     botPrefix,
+    //     tribe.id,
+    //     messageObj,
+    //     cmd
+    //   )
+    //   return
+    // }
+    // meta.url = url
+    // await bot.update({ meta: JSON.stringify(meta) })
+    // await botResponse(
+    //   botName,
+    //   'URL updated successfully',
+    //   botPrefix,
+    //   tribe.id,
+    //   messageObj,
+    //   cmd
+    // )
+    // return
+  } catch (error) {}
 }
 
 export async function addApiKey(
@@ -140,15 +156,6 @@ export function defaultCommand(
   message.channel.send({ embed })
 }
 
-function findMetaByName(name: string, mlMeta: MlMeta[]) {
-  for (let i = 0; i < mlMeta.length; i++) {
-    const meta = mlMeta[i]
-    if (meta.name === name) {
-      return meta
-    }
-  }
-}
-
 export async function addModel(
   botName: string,
   botPrefix: string,
@@ -172,8 +179,8 @@ export async function addModel(
       return
     }
     const bot = await findBot({ botPrefix, tribe })
-    let metaArray: MlMeta[] = JSON.parse(bot.meta || `[]`)
-    const meta = findMetaByName(name, metaArray)
+    let metaObj: { [key: string]: MlMeta } = JSON.parse(bot.meta || `{}`)
+    const meta = metaObj[name]
     if (meta) {
       await botResponse(
         botName,
@@ -186,8 +193,8 @@ export async function addModel(
       return
     }
     const newModel: MlMeta = { name, apiKey: '', url: url || '', kind: 'text' }
-    metaArray.push(newModel)
-    await bot.update({ meta: JSON.stringify(metaArray) })
+    metaObj[name] = { ...newModel }
+    await bot.update({ meta: JSON.stringify(metaObj) })
     await botResponse(
       botName,
       'New model added successfully',

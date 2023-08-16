@@ -58,17 +58,7 @@ export function init() {
 
         switch (cmd) {
           case 'url':
-            const newUrl = arr[2]
-            await addUrl(
-              bot,
-              meta,
-              ML_BOTNAME,
-              ML_PREFIX,
-              tribe,
-              cmd,
-              message,
-              newUrl
-            )
+            await addUrl(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'api_key':
             const newApiKey = arr[2]

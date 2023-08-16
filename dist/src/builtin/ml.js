@@ -49,8 +49,7 @@ function init() {
                 const cmd = arr[1];
                 switch (cmd) {
                     case 'url':
-                        const newUrl = arr[2];
-                        yield (0, ml_1.addUrl)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newUrl);
+                        yield (0, ml_1.addUrl)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'api_key':
                         const newApiKey = arr[2];
