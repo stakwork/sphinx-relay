@@ -49,22 +49,31 @@ export async function mlBot(t, index1, index2, index3) {
   botAlias = 'MlBot'
 
   //http://ml-bot-sphinx-server:3500/text
-  const url = 'http://ml-bot-sphinx-server:3500/text'
+  const host = 'http://localhost:3500'
+  const url = `${host}/text`
+
+  const model1 = 'gpt'
+
+  //Add Model
+  const addModel = `/ml add ${model1}`
+  await sendTribeMessage(t, alice, tribe, addModel)
+
+  await sleep(1000)
 
   //Alice Set Text URL
-  const urlCommand = `/ml url ${url}`
+  const urlCommand = `/ml url ${model1} ${url}`
   await sendTribeMessage(t, alice, tribe, urlCommand)
 
   await sleep(20)
 
-  const botReply2 = await getCheckBotMsg(t, alice, botAlias, tribe, 1)
+  const botReply2 = await getCheckBotMsg(t, alice, botAlias, tribe, 2)
   t.truthy(botReply2, 'MlBot should reply')
 
   //Alice set API_KEY
-  const api_key = '/ml api_key qwerty'
+  const api_key = `/ml api_key ${model1} qwerty`
   const apiKeyMsg = await sendTribeMessage(t, alice, tribe, api_key)
 
-  const botReply3 = await getCheckBotMsg(t, alice, botAlias, tribe, 2)
+  const botReply3 = await getCheckBotMsg(t, alice, botAlias, tribe, 3)
   t.truthy(botReply3, 'MlBot should reply')
 
   const checkNode1 = await shouldNotGetNewMsgs(t, bob, apiKeyMsg.uuid)
@@ -120,24 +129,45 @@ export async function mlBot(t, index1, index2, index3) {
   t.true(checkNode4, 'BOB SHOULD NOT SEE VIRTUALNODE1 Message')
 
   //Alice change Tribe kind to image
-  const imageKind = '/ml kind image'
+  const imageKind = `/ml kind ${model1} image`
   await sendTribeMessage(t, alice, tribe, imageKind)
 
-  const botReply6 = await getCheckBotMsg(t, alice, botAlias, tribe, 5)
+  const botReply6 = await getCheckBotMsg(t, alice, botAlias, tribe, 6)
   t.truthy(botReply6, 'MlBot should reply')
 
-  const imageUrl = 'http://ml-bot-sphinx-server:3500/image'
+  const model2 = 'image_gpt'
 
-  //Alice change Tribe kind to image
-  const imageUrlMsg = `/ml url ${imageUrl}`
+  const imageUrl = `${host}/image`
+
+  //Add new Model
+  const newModel = `/ml add ${model2} ${imageUrl}`
+  await sendTribeMessage(t, alice, tribe, newModel)
+
+  await sleep(1000)
+
+  //Alice update new model api_key
+  const imageUrlMsg = `/ml api_key ${model2} twesting`
   await sendTribeMessage(t, alice, tribe, imageUrlMsg)
 
-  const botReply7 = await getCheckBotMsg(t, alice, botAlias, tribe, 6)
+  const botReply7 = await getCheckBotMsg(t, alice, botAlias, tribe, 8)
   t.truthy(botReply7, 'MlBot should reply')
+
+  await sleep(1000)
+
+  //Alice change new model kind to image
+  const imageUrlKind = `/ml kind ${model2} image`
+  await sendTribeMessage(t, alice, tribe, imageUrlKind)
+
+  await sleep(1000)
 
   //Alice sends Message in the tribe
   const text6 = randomText()
-  const aliceMsg = await sendTribeMessage(t, alice, tribe, text6)
+  const aliceMsg = await sendTribeMessage(
+    t,
+    alice,
+    tribe,
+    `@${model2} ${text6}`
+  )
 
   await sleep(8000)
 
@@ -146,7 +176,7 @@ export async function mlBot(t, index1, index2, index3) {
     alice,
     botAlias,
     tribe,
-    7
+    10
   )) as Message
   const botResponse3 = decryptMessage(alice, botReply8)
   t.true(botResponse3 === botImageResponse)
@@ -165,7 +195,7 @@ export async function mlBot(t, index1, index2, index3) {
     t,
     virtualNode1,
     tribe,
-    text9
+    `@${model2} ${text9}`
   )
   await sleep(8000)
 

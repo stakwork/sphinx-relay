@@ -59,7 +59,7 @@ const builtInHiddenCmd = {
   sentiment: ['threshold', 'timer', 'url'],
   jarvis: ['link', 'hide'],
   spam_gone: ['add', 'list', 'remove'],
-  [`${ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind'],
+  [`${ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind', 'add'],
 }
 
 const builtInBotNames = {
