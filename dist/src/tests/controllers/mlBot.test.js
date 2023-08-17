@@ -49,7 +49,7 @@ function mlBot(t, index1, index2, index3) {
         t.truthy(botReply, 'MotherBot should reply');
         botAlias = 'MlBot';
         //http://ml-bot-sphinx-server:3500/text
-        const host = 'http://localhost:3500';
+        const host = 'http://ml-bot-sphinx-server:3500';
         const url = `${host}/text`;
         const model1 = 'gpt';
         //Add Model

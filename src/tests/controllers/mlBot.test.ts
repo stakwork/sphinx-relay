@@ -49,7 +49,7 @@ export async function mlBot(t, index1, index2, index3) {
   botAlias = 'MlBot'
 
   //http://ml-bot-sphinx-server:3500/text
-  const host = 'http://localhost:3500'
+  const host = 'http://ml-bot-sphinx-server:3500'
   const url = `${host}/text`
 
   const model1 = 'gpt'
