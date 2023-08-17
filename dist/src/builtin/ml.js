@@ -39,11 +39,6 @@ function init() {
             const tribe = (yield models_1.models.Chat.findOne({
                 where: { uuid: message.channel.id },
             }));
-            const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
-            let meta = JSON.parse(bot.meta || `[]`);
-            meta.kind = meta.kind || 'text';
-            const url = meta.url;
-            const api_key = meta.apiKey;
             const arr = (message.content && message.content.split(' ')) || [];
             if (isAdmin && arr[0] === exports.ML_PREFIX) {
                 const cmd = arr[1];
@@ -65,6 +60,42 @@ function init() {
                         return;
                 }
             }
+            const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
+            let metaObj = JSON.parse(bot.meta || `{}`);
+            const modelsArr = Object.keys(metaObj);
+            if (modelsArr.length === 0) {
+                (0, ml_1.mlBotResponse)('No model added yet!', message);
+                return;
+            }
+            let meta;
+            let content = '';
+            if (modelsArr.length === 1) {
+                meta = metaObj[modelsArr[0]];
+                if (message.content.startsWith(`@${modelsArr[0]}`)) {
+                    content = message.content.substring(modelsArr[0].length + 1);
+                }
+                else {
+                    content = message.content;
+                }
+            }
+            else {
+                let modelName = '';
+                if (message.content.startsWith('@')) {
+                    modelName = message.content.substring(1, message.content.indexOf(' '));
+                    content = message.content.substring(modelName.length + 1);
+                }
+                else {
+                    (0, ml_1.mlBotResponse)('Specify model name by typing the @ sysmbol followed by model name immediately, without space', message);
+                    return;
+                }
+                meta = metaObj[modelName];
+                if (!meta) {
+                    (0, ml_1.mlBotResponse)('Please provide a valid model name', message);
+                    return;
+                }
+            }
+            const url = meta.url;
+            const api_key = meta.apiKey;
             if (!url || !api_key) {
                 (0, ml_1.mlBotResponse)('not configured!', message);
                 return;
@@ -76,7 +107,7 @@ function init() {
             const r = yield (0, node_fetch_1.default)(url, {
                 method: 'POST',
                 body: JSON.stringify({
-                    message: message.content,
+                    message: content.trim(),
                     webhook: `${host_name}/ml`,
                 }),
                 headers: {
