@@ -176,7 +176,12 @@ function sendSubscriptionPayment(sub, isFirstMessage, owner) {
                             jobs[subscription.id].stop();
                         delete jobs[subscription.id];
                     }
-                    yield subscription.update(obj);
+                    try {
+                        yield subscription.update(obj);
+                    }
+                    catch (e) {
+                        console.error('UPDATE SUB FAILED', e);
+                    }
                     const forMe = true;
                     const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe);
                     const encText = rsa.encrypt(owner.contactKey, text2);
