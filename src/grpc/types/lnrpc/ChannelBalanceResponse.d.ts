@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Amount as _lnrpc_Amount,
   Amount__Output as _lnrpc_Amount__Output,
 } from '../lnrpc/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 export interface ChannelBalanceResponse {
   balance?: number | string | Long

@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Chain as _lnrpc_proxy_Chain,
   Chain__Output as _lnrpc_proxy_Chain__Output,
@@ -8,7 +9,6 @@ import type {
   Feature as _lnrpc_proxy_Feature,
   Feature__Output as _lnrpc_proxy_Feature__Output,
 } from '../lnrpc_proxy/Feature'
-import type { Long } from '@grpc/proto-loader'
 
 export interface GetInfoResponse {
   identity_pubkey?: string
