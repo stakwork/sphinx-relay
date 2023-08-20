@@ -1,6 +1,5 @@
 // Original file: proto/router.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   ForwardEvent as _routerrpc_ForwardEvent,
   ForwardEvent__Output as _routerrpc_ForwardEvent__Output,
@@ -25,6 +24,7 @@ import type {
   FinalHtlcEvent as _routerrpc_FinalHtlcEvent,
   FinalHtlcEvent__Output as _routerrpc_FinalHtlcEvent__Output,
 } from '../routerrpc/FinalHtlcEvent'
+import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/router.proto
 
