@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   RouteHint as _lnrpc_RouteHint,
   RouteHint__Output as _lnrpc_RouteHint__Output,
@@ -17,6 +16,7 @@ import type {
   AMPInvoiceState as _lnrpc_AMPInvoiceState,
   AMPInvoiceState__Output as _lnrpc_AMPInvoiceState__Output,
 } from '../lnrpc/AMPInvoiceState'
+import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 
