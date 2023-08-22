@@ -12,8 +12,10 @@ import {
   defaultCommand,
   mlBotResponse,
   addModel,
+  getAttachmentBlob,
 } from './utill/ml'
 import { sphinxLogger, logging } from '../utils/logger'
+import constants from '../constants'
 
 const config = loadConfig()
 
@@ -67,6 +69,16 @@ export function init() {
             defaultCommand(ML_BOTNAME, ML_PREFIX, message)
             return
         }
+      }
+      if (message.type === constants.message_types.attachment) {
+        const blob = await getAttachmentBlob(
+          message.media_token!,
+          message.media_key!,
+          message.media_type!,
+          tribe
+        )
+        console.log('Image Blob', blob)
+        return
       }
       const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
 
@@ -157,6 +169,7 @@ export function init() {
         delete CALLBACKS[process_id]
       }, 5 * 60 * 1000)
     } catch (e) {
+      console.log(e)
       sphinxLogger.error(`ML CALL FAILED: ${e}`, logging.Bots)
     }
   })

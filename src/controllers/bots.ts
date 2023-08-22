@@ -514,6 +514,8 @@ export function buildBotPayload(
     amount: msg.message.amount,
     type: msg.type,
     media_key: msg.message.mediaKey,
+    media_token: msg.message.mediaToken,
+    media_type: msg.message.mediaType,
     member: {
       id: msg.sender.id ? msg.sender.id + '' : '0',
       nickname: msg.sender.alias,

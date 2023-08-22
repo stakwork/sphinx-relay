@@ -119,7 +119,9 @@ function finishTermsAndReceipt(full, destkey, senderPubkey) {
 // this is only for tribes
 // DECRYPT EITHER STRING OR FIRST VAL IN OBJ
 function decryptMessage(full, chat) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+        console.log('Actuall message in decrypt function', full);
         if (!chat.groupPrivateKey)
             return full;
         const m = full && full.message;
@@ -145,6 +147,17 @@ function decryptMessage(full, chat) {
             }
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey);
             obj.mediaKey = decMediaKey;
+        }
+        if (m.mediaTerms) {
+            let mediaToken = yield (0, ldat_1.tokenFromTerms)({
+                host: m.mediaTerms.host,
+                muid: m.mediaTerms.muid,
+                ttl: m.mediaTerms.ttl,
+                meta: m.mediaTerms.meta,
+                pubkey: (_a = full.sender) === null || _a === void 0 ? void 0 : _a.pub_key,
+                ownerPubkey: (_b = full.sender) === null || _b === void 0 ? void 0 : _b.pub_key,
+            });
+            obj.mediaToken = mediaToken;
         }
         // console.log("OBJ FILLED",fillmsg(full, obj))
         return fillmsg(full, obj);

@@ -9,11 +9,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+exports.getAttachmentBlob = exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
-const Sphinx = require("sphinx-bot");
+// import * as Sphinx from 'sphinx-bot'
+const Sphinx = require("sphinx-bot-joy");
 const ml_1 = require("../ml");
 const logger_1 = require("../../utils/logger");
+const ldat_1 = require("../../utils/ldat");
+const node_fetch_1 = require("node-fetch");
+const meme = require("../../utils/meme");
+const RNCryptor = require("jscryptor-3");
 function addUrl(botName, botPrefix, tribe, messageObj, msgArr) {
     return __awaiter(this, void 0, void 0, function* () {
         const cmd = msgArr[1];
@@ -169,4 +174,25 @@ function mlBotResponse(msg, message) {
     message.channel.send({ embed });
 }
 exports.mlBotResponse = mlBotResponse;
+function getAttachmentBlob(mediaToken, mediaKey, mediaType, tribe) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!mediaToken || !mediaKey)
+            return;
+        const ownerPubkey = tribe.ownerPubkey;
+        const terms = (0, ldat_1.parseLDAT)(mediaToken);
+        if (!terms.host)
+            return;
+        const token = yield meme.lazyToken(ownerPubkey, terms.host);
+        let protocol = 'https';
+        if (terms.host.includes('localhost'))
+            protocol = 'http';
+        const r = yield (0, node_fetch_1.default)(`${protocol}://${terms.host}/file/${mediaToken}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const buf = yield r.buffer();
+        const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), mediaKey);
+        return imgBuf;
+    });
+}
+exports.getAttachmentBlob = getAttachmentBlob;
 //# sourceMappingURL=ml.js.map

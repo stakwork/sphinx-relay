@@ -3,6 +3,10 @@ import { botResponse, findBot } from './index'
 import * as Sphinx from 'sphinx-bot'
 import { ML_BOTNAME } from '../ml'
 import { sphinxLogger, logging } from '../../utils/logger'
+import { parseLDAT } from '../../utils/ldat'
+import fetch from 'node-fetch'
+import * as meme from '../../utils/meme'
+import * as RNCryptor from 'jscryptor-3'
 
 type ContentKind = 'text' | 'image'
 export interface MlMeta {
@@ -300,4 +304,31 @@ export function mlBotResponse(msg: string, message: Sphinx.Message) {
     .setDescription(msg)
     .setOnlyUser(parseInt(message.member.id || '0'))
   message.channel.send({ embed })
+}
+
+export async function getAttachmentBlob(
+  mediaToken: string,
+  mediaKey: string,
+  mediaType: string,
+  tribe: ChatRecord
+) {
+  if (!mediaToken || !mediaKey) return
+
+  const ownerPubkey = tribe.ownerPubkey
+
+  const terms = parseLDAT(mediaToken)
+  if (!terms.host) return
+
+  const token = await meme.lazyToken(ownerPubkey, terms.host)
+
+  let protocol = 'https'
+  if (terms.host.includes('localhost')) protocol = 'http'
+  const r = await fetch(`${protocol}://${terms.host}/file/${mediaToken}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  const buf = await r.buffer()
+
+  const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), mediaKey)
+  return imgBuf
 }

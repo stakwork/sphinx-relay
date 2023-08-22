@@ -129,6 +129,7 @@ async function decryptMessage(
   full: Partial<Msg>,
   chat: Partial<models.Chat>
 ): Promise<Msg> {
+  console.log('Actuall message in decrypt function', full)
   if (!chat.groupPrivateKey) return full as Msg
   const m = full && full.message
   if (!m) return full as Msg
@@ -153,6 +154,17 @@ async function decryptMessage(
     }
     const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey)
     obj.mediaKey = decMediaKey
+  }
+  if (m.mediaTerms) {
+    let mediaToken = await tokenFromTerms({
+      host: m.mediaTerms.host,
+      muid: m.mediaTerms.muid,
+      ttl: m.mediaTerms.ttl,
+      meta: m.mediaTerms.meta,
+      pubkey: full.sender?.pub_key,
+      ownerPubkey: full.sender?.pub_key,
+    })
+    obj.mediaToken = mediaToken
   }
 
   // console.log("OBJ FILLED",fillmsg(full, obj))

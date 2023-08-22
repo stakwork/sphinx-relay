@@ -10,7 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.init = exports.CALLBACKS = exports.ML_BOTNAME = exports.ML_PREFIX = void 0;
-const Sphinx = require("sphinx-bot");
+// import * as Sphinx from 'sphinx-bot'
+const Sphinx = require("sphinx-bot-joy");
 const botapi_1 = require("../controllers/botapi");
 const models_1 = require("../models");
 const utill_1 = require("./utill");
@@ -18,6 +19,7 @@ const config_1 = require("../utils/config");
 const node_fetch_1 = require("node-fetch");
 const ml_1 = require("./utill/ml");
 const logger_1 = require("../utils/logger");
+const constants_1 = require("../constants");
 const config = (0, config_1.loadConfig)();
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -59,6 +61,11 @@ function init() {
                         (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
                         return;
                 }
+            }
+            if (message.type === constants_1.default.message_types.attachment) {
+                const blob = yield (0, ml_1.getAttachmentBlob)(message.media_token, message.media_key, message.media_type, tribe);
+                console.log('Image Blob', blob);
+                return;
             }
             const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
             let metaObj = JSON.parse(bot.meta || `{}`);
@@ -143,6 +150,7 @@ function init() {
             }, 5 * 60 * 1000);
         }
         catch (e) {
+            console.log(e);
             logger_1.sphinxLogger.error(`ML CALL FAILED: ${e}`, logger_1.logging.Bots);
         }
     }));

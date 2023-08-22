@@ -12,7 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBagdeChatBot = exports.addPatToGitBot = exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
 const crypto = require("crypto");
 const node_fetch_1 = require("node-fetch");
-const SphinxBot = require("sphinx-bot");
+// import * as SphinxBot from 'sphinx-bot'
+const SphinxBot = require("sphinx-bot-joy");
 const short = require("short-uuid");
 const socket = require("../utils/socket");
 const constants_1 = require("../constants");
@@ -478,6 +479,7 @@ exports.postToBotServer = postToBotServer;
  * @returns {SphinxBot.Message} The created SphinxBot message.
  */
 function buildBotPayload(msg, botPrefix) {
+    console.log(msg.message);
     const chat_uuid = msg.chat && msg.chat.uuid;
     const m = {
         id: msg.message.uuid,
@@ -491,6 +493,8 @@ function buildBotPayload(msg, botPrefix) {
         amount: msg.message.amount,
         type: msg.type,
         media_key: msg.message.mediaKey,
+        media_token: msg.message.mediaToken,
+        media_type: msg.message.mediaType,
         member: {
             id: msg.sender.id ? msg.sender.id + '' : '0',
             nickname: msg.sender.alias,
