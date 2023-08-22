@@ -11,8 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAttachmentBlob = exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const index_1 = require("./index");
-// import * as Sphinx from 'sphinx-bot'
-const Sphinx = require("sphinx-bot-joy");
+const Sphinx = require("sphinx-bot");
 const ml_1 = require("../ml");
 const logger_1 = require("../../utils/logger");
 const ldat_1 = require("../../utils/ldat");

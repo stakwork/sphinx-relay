@@ -12,8 +12,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.init = void 0;
 // import * as SphinxBot from '../../../sphinx-bot'
-// import * as Sphinx from 'sphinx-bot'
-const Sphinx = require("sphinx-bot-joy");
+const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
 const bots_1 = require("../controllers/bots");
 const models_1 = require("../models");

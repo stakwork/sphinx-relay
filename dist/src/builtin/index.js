@@ -11,8 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildBotPayload = exports.builtinBotEmit = exports.init = void 0;
 // import * as SphinxBot from '../../../sphinx-bot'
-// import * as SphinxBot from 'sphinx-bot'
-const SphinxBot = require("sphinx-bot-joy");
+const SphinxBot = require("sphinx-bot");
 const MotherBot = require("./mother");
 const WelcomeBot = require("./welcome");
 const LoopBot = require("./loop");
