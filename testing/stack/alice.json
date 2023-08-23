@@ -13,6 +13,6 @@
     "tribes_insecure": true,
     "public_url": "127.0.0.1:3001",
     "connect_ui": true,
-    "host_name": "http://localhost:3001"
+    "host_name": "https://3377-105-112-235-209.ngrok-free.app"
   }
 }

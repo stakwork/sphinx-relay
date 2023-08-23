@@ -61,10 +61,10 @@ function init() {
                         return;
                 }
             }
+            let imageBase64 = '';
             if (message.type === constants_1.default.message_types.attachment) {
                 const blob = yield (0, ml_1.getAttachmentBlob)(message.media_token, message.media_key, message.media_type, tribe);
-                console.log('Image Blob', blob);
-                return;
+                imageBase64 = blob.toString('base64');
             }
             const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
             let metaObj = JSON.parse(bot.meta || `{}`);
@@ -77,7 +77,10 @@ function init() {
             let content = '';
             if (modelsArr.length === 1) {
                 meta = metaObj[modelsArr[0]];
-                if (message.content.startsWith(`@${modelsArr[0]}`)) {
+                if (message.type === constants_1.default.message_types.attachment) {
+                    content = imageBase64;
+                }
+                else if (message.content.startsWith(`@${modelsArr[0]}`)) {
                     content = message.content.substring(modelsArr[0].length + 1);
                 }
                 else {
@@ -87,11 +90,22 @@ function init() {
             else {
                 let modelName = '';
                 if (message.content.startsWith('@')) {
-                    modelName = message.content.substring(1, message.content.indexOf(' '));
-                    content = message.content.substring(modelName.length + 1);
+                    modelName = message.content.substring(1, message.content.indexOf(' ') > 0
+                        ? message.content.indexOf(' ')
+                        : 100);
+                    if (message.type === constants_1.default.message_types.attachment) {
+                        content = imageBase64;
+                    }
+                    else {
+                        content = message.content.substring(modelName.length + 1);
+                    }
                 }
                 else {
                     (0, ml_1.mlBotResponse)('Specify model name by typing the @ sysmbol followed by model name immediately, without space', message);
+                    return;
+                }
+                if (!content) {
+                    (0, ml_1.mlBotResponse)('Please provide content', message);
                     return;
                 }
                 meta = metaObj[modelName];
@@ -122,6 +136,7 @@ function init() {
                 },
             });
             const j = yield r.json();
+            console.log('Response from image endpoint', j);
             if (!j.body) {
                 (0, ml_1.mlBotResponse)('failed to process message (no body)', message);
                 return;
