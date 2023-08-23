@@ -92,9 +92,7 @@ export function init() {
       let content = ''
       if (modelsArr.length === 1) {
         meta = metaObj[modelsArr[0]]
-        if (message.type === constants.message_types.attachment) {
-          content = imageBase64
-        } else if (message.content.startsWith(`@${modelsArr[0]}`)) {
+        if (message.content.startsWith(`@${modelsArr[0]}`)) {
           content = message.content.substring(modelsArr[0].length + 1)
         } else {
           content = message.content
@@ -108,11 +106,7 @@ export function init() {
               ? message.content.indexOf(' ')
               : 100
           )
-          if (message.type === constants.message_types.attachment) {
-            content = imageBase64
-          } else {
-            content = message.content.substring(modelName.length + 1)
-          }
+          content = message.content.substring(modelName.length + 1)
         } else {
           mlBotResponse(
             'Specify model name by typing the @ sysmbol followed by model name immediately, without space',
@@ -120,10 +114,7 @@ export function init() {
           )
           return
         }
-        if (!content) {
-          mlBotResponse('Please provide content', message)
-          return
-        }
+
         meta = metaObj[modelName]
         if (!meta) {
           mlBotResponse('Please provide a valid model name', message)
@@ -142,20 +133,35 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
-
-      const r = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          message: content.trim(),
-          webhook: `${host_name}/ml`,
-        }),
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-      const j = await r.json()
-      console.log('Response from image endpoint', j)
+      let j
+      if (message.type === constants.message_types.attachment) {
+        const r = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: content.trim(),
+            image64: imageBase64,
+            webhook: `${host_name}/ml`,
+          }),
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        })
+        j = await r.json()
+      } else {
+        const r = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: content.trim(),
+            webhook: `${host_name}/ml`,
+          }),
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        })
+        j = await r.json()
+      }
 
       if (!j.body) {
         mlBotResponse('failed to process message (no body)', message)

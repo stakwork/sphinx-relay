@@ -77,10 +77,7 @@ function init() {
             let content = '';
             if (modelsArr.length === 1) {
                 meta = metaObj[modelsArr[0]];
-                if (message.type === constants_1.default.message_types.attachment) {
-                    content = imageBase64;
-                }
-                else if (message.content.startsWith(`@${modelsArr[0]}`)) {
+                if (message.content.startsWith(`@${modelsArr[0]}`)) {
                     content = message.content.substring(modelsArr[0].length + 1);
                 }
                 else {
@@ -93,19 +90,10 @@ function init() {
                     modelName = message.content.substring(1, message.content.indexOf(' ') > 0
                         ? message.content.indexOf(' ')
                         : 100);
-                    if (message.type === constants_1.default.message_types.attachment) {
-                        content = imageBase64;
-                    }
-                    else {
-                        content = message.content.substring(modelName.length + 1);
-                    }
+                    content = message.content.substring(modelName.length + 1);
                 }
                 else {
                     (0, ml_1.mlBotResponse)('Specify model name by typing the @ sysmbol followed by model name immediately, without space', message);
-                    return;
-                }
-                if (!content) {
-                    (0, ml_1.mlBotResponse)('Please provide content', message);
                     return;
                 }
                 meta = metaObj[modelName];
@@ -124,19 +112,36 @@ function init() {
             if (!host_name.startsWith('http')) {
                 host_name = `https://${host_name}`;
             }
-            const r = yield (0, node_fetch_1.default)(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    message: content.trim(),
-                    webhook: `${host_name}/ml`,
-                }),
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            const j = yield r.json();
-            console.log('Response from image endpoint', j);
+            let j;
+            if (message.type === constants_1.default.message_types.attachment) {
+                const r = yield (0, node_fetch_1.default)(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message: content.trim(),
+                        image64: imageBase64,
+                        webhook: `${host_name}/ml`,
+                    }),
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                j = yield r.json();
+            }
+            else {
+                const r = yield (0, node_fetch_1.default)(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message: content.trim(),
+                        webhook: `${host_name}/ml`,
+                    }),
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                j = yield r.json();
+            }
             if (!j.body) {
                 (0, ml_1.mlBotResponse)('failed to process message (no body)', message);
                 return;
