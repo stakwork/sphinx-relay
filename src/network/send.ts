@@ -557,7 +557,7 @@ async function interceptTribeMsgForHiddenCmds(
     })) as ChatBotRecord[]
 
     const content = msg.message.content as string
-    const splitedContent = content.split(' ')
+    const splitedContent = (content && content.split(' ')) || []
     for (let i = 0; i < bots.length; i++) {
       const bot = bots[i]
 

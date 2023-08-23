@@ -433,7 +433,7 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 where: { tenant, chatId: newChat.id },
             }));
             const content = msg.message.content;
-            const splitedContent = content.split(' ');
+            const splitedContent = (content && content.split(' ')) || [];
             for (let i = 0; i < bots.length; i++) {
                 const bot = bots[i];
                 const isHidden = bot.botPrefix === splitedContent[0] &&

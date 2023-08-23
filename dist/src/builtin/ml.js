@@ -89,7 +89,7 @@ function init() {
             }
             else {
                 let modelName = '';
-                if (message.content.startsWith('@')) {
+                if (message.content && message.content.startsWith('@')) {
                     modelName = message.content.substring(1, message.content.indexOf(' ') > 0
                         ? message.content.indexOf(' ')
                         : 100);
