@@ -121,7 +121,6 @@ function finishTermsAndReceipt(full, destkey, senderPubkey) {
 function decryptMessage(full, chat) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-        console.log('Actuall message in decrypt function', full);
         if (!chat.groupPrivateKey)
             return full;
         const m = full && full.message;

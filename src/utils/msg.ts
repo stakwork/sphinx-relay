@@ -129,7 +129,6 @@ async function decryptMessage(
   full: Partial<Msg>,
   chat: Partial<models.Chat>
 ): Promise<Msg> {
-  console.log('Actuall message in decrypt function', full)
   if (!chat.groupPrivateKey) return full as Msg
   const m = full && full.message
   if (!m) return full as Msg
