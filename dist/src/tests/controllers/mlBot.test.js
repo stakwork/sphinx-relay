@@ -75,7 +75,7 @@ function mlBot(t, index1, index2, index3) {
         const text4 = (0, helpers_1.randomText)();
         const bobMessage = yield (0, msg_1.sendTribeMessage)(t, bob, tribe, text4);
         const botTextResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="font-size:15px;margin:5px 0;max-width:90%;">This is a response from test ml-bot server built in sphinx-stack</div></div>';
-        const botImageResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>';
+        const botImageResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:10rem;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>';
         yield (0, helpers_1.sleep)(8000);
         const botReply4 = (yield (0, get_1.getCheckBotMsg)(t, bob, botAlias, tribe, 1));
         const botResponse = (0, msg_1.decryptMessage)(bob, botReply4);
