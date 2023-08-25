@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   LightningNode as _lnrpc_LightningNode,
   LightningNode__Output as _lnrpc_LightningNode__Output,
@@ -8,7 +9,6 @@ import type {
   ChannelEdge as _lnrpc_ChannelEdge,
   ChannelEdge__Output as _lnrpc_ChannelEdge__Output,
 } from '../lnrpc/ChannelEdge'
-import type { Long } from '@grpc/proto-loader'
 
 export interface NodeInfo {
   node?: _lnrpc_LightningNode | null
