@@ -19,7 +19,8 @@ const helpers_1 = require("../helpers");
 const get_1 = require("../get");
 const helpers_2 = require("../helpers");
 const config_1 = require("../../config");
-function sendImage(t, node1, node2, image, tribe, price, thread_uuid) {
+const rsa = require("../../../crypto/rsa");
+function sendImage(t, node1, node2, image, tribe, price, thread_uuid, text) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS AN IMAGE TO NODE2
         var token = yield (0, helpers_2.getToken)(t, node1);
@@ -28,6 +29,14 @@ function sendImage(t, node1, node2, image, tribe, price, thread_uuid) {
         let typ = 'image/jpg';
         let filename = 'Image.jpg';
         let isPublic = false;
+        let encryptedText = '';
+        let remoteText = '';
+        if (text) {
+            encryptedText = rsa.encrypt(node1.contact_key, text);
+        }
+        if (tribe && text) {
+            remoteText = rsa.encrypt(tribe.group_key, text);
+        }
         const upload = yield (0, meme_1.uploadMeme)(fileBase64, typ, host, token, filename, isPublic);
         t.true(typeof upload === 'object', 'meme should have been uploaded');
         t.true(typeof upload.media_key === 'string', 'upload should have media key');
@@ -75,10 +84,11 @@ function sendImage(t, node1, node2, image, tribe, price, thread_uuid) {
             muid: upload.muid,
             media_key_map: mediaKeyMap,
             media_type: 'image/jpg',
-            text: '',
+            text: encryptedText || '',
             amount: 0,
             price: 0 || price,
             thread_uuid,
+            remote_text_map: { chat: remoteText } || '',
         };
         //send message from node1 to node2
         const img = yield http.post(node1.external_ip + '/attachment', (0, helpers_2.makeArgs)(node1, i));

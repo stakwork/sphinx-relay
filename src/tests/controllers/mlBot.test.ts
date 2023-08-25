@@ -2,10 +2,11 @@ import test from 'ava'
 import { randomText, sleep } from '../utils/helpers'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
-import { sendTribeMessage, decryptMessage } from '../utils/msg'
+import { sendTribeMessage, decryptMessage, sendImage } from '../utils/msg'
 import nodes from '../nodes'
 import { getCheckBotMsg, shouldNotGetNewMsgs } from '../utils/get'
 import { Message } from '../types'
+import { greenSquare } from '../utils/base64images'
 
 /*
 npx ava src/tests/controllers/mlBot.test.ts --verbose --serial --timeout=2m
@@ -191,12 +192,17 @@ export async function mlBot(t, index1, index2, index3) {
 
   //VirtualNode1 send message in tribe
   const text9 = randomText()
-  const virtualNodeImageMsg = await sendTribeMessage(
+  const imageSent = await sendImage(
     t,
     virtualNode1,
+    alice,
+    greenSquare,
     tribe,
+    0,
+    '',
     `@${model2} ${text9}`
   )
+  t.true(!!imageSent, 'message should have been sent')
   await sleep(8000)
 
   const botReply9 = (await getCheckBotMsg(
@@ -210,7 +216,7 @@ export async function mlBot(t, index1, index2, index3) {
   t.true(botResponse4 === botImageResponse)
 
   //Bob Node Should not See VirtualNode Message
-  const checkNode7 = await shouldNotGetNewMsgs(t, bob, virtualNodeImageMsg.uuid)
+  const checkNode7 = await shouldNotGetNewMsgs(t, bob, imageSent.uuid)
   t.true(checkNode7, 'BOB SHOULD NOT SEE VirtualNode Message')
 
   //BOB LEAVES TRIBE

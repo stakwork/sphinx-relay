@@ -22,7 +22,7 @@
     "tribes_mqtt_port": "1883",
     "tribes_insecure": true,
     "public_url": "127.0.0.1:3004",
-    "media_host": "localhost:5555",
+    "media_host": "memes.sphinx.chat",
     "connect_ui": true,
     "logging_level": "debug",
     "mqtt_host": "127.0.0.1",

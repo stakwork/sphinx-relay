@@ -71,6 +71,12 @@ export function init() {
         }
       }
       let imageBase64 = ''
+      // let imageUrl = ''
+      if (message.reply_id) {
+        //Look for original message
+        //Decrypt message
+        //Check if message has img tag
+      }
       if (message.type === constants.message_types.attachment) {
         const blob = await getAttachmentBlob(
           message.media_token!,

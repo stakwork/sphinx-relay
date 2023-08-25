@@ -17,6 +17,7 @@ const save_1 = require("../utils/save");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
 const get_1 = require("../utils/get");
+const base64images_1 = require("../utils/base64images");
 /*
 npx ava src/tests/controllers/mlBot.test.ts --verbose --serial --timeout=2m
 */
@@ -129,13 +130,14 @@ function mlBot(t, index1, index2, index3) {
         t.true(checkNode6, 'VIRTUALNODE1 SHOULD NOT SEE ALICE Message');
         //VirtualNode1 send message in tribe
         const text9 = (0, helpers_1.randomText)();
-        const virtualNodeImageMsg = yield (0, msg_1.sendTribeMessage)(t, virtualNode1, tribe, `@${model2} ${text9}`);
+        const imageSent = yield (0, msg_1.sendImage)(t, virtualNode1, alice, base64images_1.greenSquare, tribe, 0, '', `@${model2} ${text9}`);
+        t.true(!!imageSent, 'message should have been sent');
         yield (0, helpers_1.sleep)(8000);
         const botReply9 = (yield (0, get_1.getCheckBotMsg)(t, virtualNode1, botAlias, tribe, 2));
         const botResponse4 = (0, msg_1.decryptMessage)(virtualNode1, botReply9);
         t.true(botResponse4 === botImageResponse);
         //Bob Node Should not See VirtualNode Message
-        const checkNode7 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, virtualNodeImageMsg.uuid);
+        const checkNode7 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, imageSent.uuid);
         t.true(checkNode7, 'BOB SHOULD NOT SEE VirtualNode Message');
         //BOB LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, bob, tribe);
