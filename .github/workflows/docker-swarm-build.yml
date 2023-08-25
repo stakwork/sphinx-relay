@@ -48,7 +48,7 @@ jobs:
           echo ${{ env.RELEASE_TAG }}
       - name: Run Docker buildx
         run: |
-          docker -f Dockerfile.swarm buildx build \
+          docker buildx build -f Dockerfile.swarm \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
           --platform linux/amd64,linux/arm64/v8,linux/arm/v7 \
@@ -56,7 +56,7 @@ jobs:
           --output "type=registry" ./
       - name: Run Docker buildx with latest tag
         run: |
-          docker -f Dockerfile.swarm buildx build \
+          docker buildx build -f Dockerfile.swarm \
           --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
           --platform linux/amd64,linux/arm64/v8,linux/arm/v7 \
