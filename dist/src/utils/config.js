@@ -27,11 +27,13 @@ const DEFAULT_PROXY_HD_KEYS = false;
 const DEFAULT_STORE_CACHE = '';
 const DEFAULT_PRUNE = null;
 const DEFAULT_PEOPLE_HOST = 'people.sphinx.chat';
+const DEFAULT_MAX_PAYLOAD_LEN = 972;
 function loadConfig() {
     const logg = ENV.LOGGING || config.logging;
     const provider = ENV.LIGHTNING_PROVIDER || config.lightning_provider || 'LND';
     const min_sat = ENV.MIN_SAT || config.min_sat;
     const final_cltv_delta = ENV.FINAL_CLTV_DELTA || config.final_cltv_delta;
+    const max_payload_len = ENV.MAX_PAYLOAD_LEN || config.max_payload_len;
     return {
         lightning_provider: provider,
         //Node info and settings
@@ -48,6 +50,7 @@ function loadConfig() {
         //Minimum sat amount to be sent per message
         min_sat: parseInt(min_sat) || DEFAULT_MIN_SAT,
         final_cltv_delta: parseInt(final_cltv_delta) || DEFAULT_FINAL_CLTV_DELTA,
+        max_payload_len: parseInt(max_payload_len) || DEFAULT_MAX_PAYLOAD_LEN,
         senza_url: ENV.SENZA_URL || config.senza_url,
         //LND settings
         macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,

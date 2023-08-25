@@ -527,7 +527,7 @@ export function loadRouter(): RouterClient {
   }
 }
 
-const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
+const MAX_MSG_LENGTH = config.max_payload_len || 972 // 1146 - 20 ???
 export async function keysendMessage(
   opts: KeysendOpts,
   ownerPubkey?: string
