@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   RouteHint as _lnrpc_RouteHint,
   RouteHint__Output as _lnrpc_RouteHint__Output,
@@ -9,6 +8,7 @@ import type {
   Feature as _lnrpc_Feature,
   Feature__Output as _lnrpc_Feature__Output,
 } from '../lnrpc/Feature'
+import type { Long } from '@grpc/proto-loader'
 
 export interface PayReq {
   destination?: string
