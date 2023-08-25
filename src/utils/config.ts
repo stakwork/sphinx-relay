@@ -63,7 +63,7 @@ export function loadConfig() {
     final_cltv_delta: parseInt(final_cltv_delta) || DEFAULT_FINAL_CLTV_DELTA,
     senza_url: ENV.SENZA_URL || config.senza_url,
 
-    //LND settings 
+    //LND settings
     macaroon_location: ENV.MACAROON_LOCATION || config.macaroon_location,
     router_macaroon_location:
       ENV.ROUTER_MACAROON_LOCATION || config.router_macaroon_location,

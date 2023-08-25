@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   FeeLimit as _lnrpc_proxy_FeeLimit,
   FeeLimit__Output as _lnrpc_proxy_FeeLimit__Output,
@@ -12,7 +13,6 @@ import type {
   RouteHint as _lnrpc_proxy_RouteHint,
   RouteHint__Output as _lnrpc_proxy_RouteHint__Output,
 } from '../lnrpc_proxy/RouteHint'
-import type { Long } from '@grpc/proto-loader'
 
 export interface SendRequest {
   dest?: Buffer | Uint8Array | string
