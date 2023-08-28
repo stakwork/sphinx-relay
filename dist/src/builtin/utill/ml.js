@@ -183,7 +183,7 @@ function getAttachmentBlob(mediaToken, mediaKey, mediaType, tribe) {
             return;
         const token = yield meme.lazyToken(ownerPubkey, terms.host);
         let protocol = 'https';
-        if (terms.host.includes('localhost'))
+        if (terms.host.includes('localhost') || terms.host.includes('meme.sphinx'))
             protocol = 'http';
         const r = yield (0, node_fetch_1.default)(`${protocol}://${terms.host}/file/${mediaToken}`, {
             headers: { Authorization: `Bearer ${token}` },

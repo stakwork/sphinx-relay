@@ -322,7 +322,8 @@ export async function getAttachmentBlob(
   const token = await meme.lazyToken(ownerPubkey, terms.host)
 
   let protocol = 'https'
-  if (terms.host.includes('localhost')) protocol = 'http'
+  if (terms.host.includes('localhost') || terms.host.includes('meme.sphinx'))
+    protocol = 'http'
   const r = await fetch(`${protocol}://${terms.host}/file/${mediaToken}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
