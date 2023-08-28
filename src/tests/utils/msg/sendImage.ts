@@ -34,7 +34,7 @@ export async function sendImage(
   //NODE1 SENDS AN IMAGE TO NODE2
 
   var token = await getToken(t, node1)
-  let host = config.memeHost
+  let host = config.memeHost // Change this in config to localhost:5555 when running on local
   let fileBase64 = 'data:image/jpg;base64,' + image
   let typ = 'image/jpg'
   let filename = 'Image.jpg'

@@ -2,7 +2,7 @@
 
 export const config = {
   iterate: true,
-  memeHost: 'localhost:5555',
+  memeHost: 'meme.sphinx:5555', // Change this to localhost:5555 when running on local
   tribeHost: 'localhost:13000',
   tribeHostInternal: 'tribes.sphinx:13000',
   allowedFee: 4,
