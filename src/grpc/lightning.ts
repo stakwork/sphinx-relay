@@ -541,7 +541,10 @@ export async function keysendMessage(
     if (!opts.data || typeof opts.data !== 'string') {
       return reject('string plz')
     }
-
+    sphinxLogger.info(
+      'keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH,
+      logging.Network
+    )
     if (opts.data.length < MAX_MSG_LENGTH) {
       try {
         const res = await keysend(opts, ownerPubkey)

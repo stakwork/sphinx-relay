@@ -471,6 +471,7 @@ function keysendMessage(opts, ownerPubkey) {
                 if (!opts.data || typeof opts.data !== 'string') {
                     return reject('string plz');
                 }
+                logger_1.sphinxLogger.info('keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH, logger_1.logging.Network);
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts, ownerPubkey);
