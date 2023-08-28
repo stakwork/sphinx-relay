@@ -1,10 +1,10 @@
 // Original file: proto/greenlight.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   FeeratePreset as _greenlight_FeeratePreset,
   FeeratePreset__Output as _greenlight_FeeratePreset__Output,
 } from '../greenlight/FeeratePreset'
+import type { Long } from '@grpc/proto-loader'
 
 export interface Feerate {
   preset?: _greenlight_FeeratePreset
