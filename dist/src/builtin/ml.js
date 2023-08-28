@@ -18,6 +18,7 @@ const config_1 = require("../utils/config");
 const node_fetch_1 = require("node-fetch");
 const ml_1 = require("./utill/ml");
 const logger_1 = require("../utils/logger");
+const constants_1 = require("../constants");
 const config = (0, config_1.loadConfig)();
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -39,32 +40,76 @@ function init() {
             const tribe = (yield models_1.models.Chat.findOne({
                 where: { uuid: message.channel.id },
             }));
-            const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
-            let meta = JSON.parse(bot.meta || `{}`);
-            meta.kind = meta.kind || 'text';
-            const url = meta.url;
-            const api_key = meta.apiKey;
             const arr = (message.content && message.content.split(' ')) || [];
             if (isAdmin && arr[0] === exports.ML_PREFIX) {
                 const cmd = arr[1];
                 switch (cmd) {
                     case 'url':
-                        const newUrl = arr[2];
-                        yield (0, ml_1.addUrl)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newUrl);
+                        yield (0, ml_1.addUrl)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'api_key':
-                        const newApiKey = arr[2];
-                        yield (0, ml_1.addApiKey)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newApiKey);
+                        yield (0, ml_1.addApiKey)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     case 'kind':
-                        const newKind = arr[2];
-                        yield (0, ml_1.addKind)(bot, meta, exports.ML_BOTNAME, exports.ML_PREFIX, tribe, cmd, message, newKind);
+                        yield (0, ml_1.addKind)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
+                        return;
+                    case 'add':
+                        yield (0, ml_1.addModel)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
                         return;
                     default:
                         (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
                         return;
                 }
             }
+            let imageBase64 = '';
+            // let imageUrl = ''
+            if (message.reply_id) {
+                //Look for original message
+                //Decrypt message
+                //Check if message has img tag
+            }
+            if (message.type === constants_1.default.message_types.attachment) {
+                const blob = yield (0, ml_1.getAttachmentBlob)(message.media_token, message.media_key, message.media_type, tribe);
+                imageBase64 = blob.toString('base64');
+            }
+            const bot = yield (0, utill_1.findBot)({ botPrefix: exports.ML_PREFIX, tribe });
+            let metaObj = JSON.parse(bot.meta || `{}`);
+            const modelsArr = Object.keys(metaObj);
+            if (modelsArr.length === 0) {
+                (0, ml_1.mlBotResponse)('No model added yet!', message);
+                return;
+            }
+            let meta;
+            let content = '';
+            if (modelsArr.length === 1) {
+                meta = metaObj[modelsArr[0]];
+                if (message.content.startsWith(`@${modelsArr[0]}`)) {
+                    content = message.content.substring(modelsArr[0].length + 1);
+                }
+                else {
+                    content = message.content;
+                }
+            }
+            else {
+                let modelName = '';
+                if (message.content && message.content.startsWith('@')) {
+                    modelName = message.content.substring(1, message.content.indexOf(' ') > 0
+                        ? message.content.indexOf(' ')
+                        : 100);
+                    content = message.content.substring(modelName.length + 1);
+                }
+                else {
+                    (0, ml_1.mlBotResponse)('Specify model name by typing the @ sysmbol followed by model name immediately, without space', message);
+                    return;
+                }
+                meta = metaObj[modelName];
+                if (!meta) {
+                    (0, ml_1.mlBotResponse)('Please provide a valid model name', message);
+                    return;
+                }
+            }
+            const url = meta.url;
+            const api_key = meta.apiKey;
             if (!url || !api_key) {
                 (0, ml_1.mlBotResponse)('not configured!', message);
                 return;
@@ -73,18 +118,36 @@ function init() {
             if (!host_name.startsWith('http')) {
                 host_name = `https://${host_name}`;
             }
-            const r = yield (0, node_fetch_1.default)(url, {
-                method: 'POST',
-                body: JSON.stringify({
-                    message: message.content,
-                    webhook: `${host_name}/ml`,
-                }),
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            const j = yield r.json();
+            let j;
+            if (message.type === constants_1.default.message_types.attachment) {
+                const r = yield (0, node_fetch_1.default)(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message: content.trim(),
+                        image64: imageBase64,
+                        webhook: `${host_name}/ml`,
+                    }),
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                j = yield r.json();
+            }
+            else {
+                const r = yield (0, node_fetch_1.default)(url, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message: content.trim(),
+                        webhook: `${host_name}/ml`,
+                    }),
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                j = yield r.json();
+            }
             if (!j.body) {
                 (0, ml_1.mlBotResponse)('failed to process message (no body)', message);
                 return;
@@ -112,6 +175,7 @@ function init() {
             }, 5 * 60 * 1000);
         }
         catch (e) {
+            console.log(e);
             logger_1.sphinxLogger.error(`ML CALL FAILED: ${e}`, logger_1.logging.Bots);
         }
     }));

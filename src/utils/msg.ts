@@ -154,6 +154,17 @@ async function decryptMessage(
     const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey)
     obj.mediaKey = decMediaKey
   }
+  if (m.mediaTerms) {
+    let mediaToken = await tokenFromTerms({
+      host: m.mediaTerms.host,
+      muid: m.mediaTerms.muid,
+      ttl: m.mediaTerms.ttl,
+      meta: m.mediaTerms.meta,
+      pubkey: full.sender?.pub_key,
+      ownerPubkey: full.sender?.pub_key,
+    })
+    obj.mediaToken = mediaToken
+  }
 
   // console.log("OBJ FILLED",fillmsg(full, obj))
   return fillmsg(full, obj)

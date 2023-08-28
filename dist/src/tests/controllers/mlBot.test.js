@@ -17,6 +17,7 @@ const save_1 = require("../utils/save");
 const msg_1 = require("../utils/msg");
 const nodes_1 = require("../nodes");
 const get_1 = require("../utils/get");
+const base64images_1 = require("../utils/base64images");
 /*
 npx ava src/tests/controllers/mlBot.test.ts --verbose --serial --timeout=2m
 */
@@ -49,17 +50,23 @@ function mlBot(t, index1, index2, index3) {
         t.truthy(botReply, 'MotherBot should reply');
         botAlias = 'MlBot';
         //http://ml-bot-sphinx-server:3500/text
-        const url = 'http://ml-bot-sphinx-server:3500/text';
+        const host = 'http://ml-bot-sphinx-server:3500';
+        const url = `${host}/text`;
+        const model1 = 'gpt';
+        //Add Model
+        const addModel = `/ml add ${model1}`;
+        yield (0, msg_1.sendTribeMessage)(t, alice, tribe, addModel);
+        yield (0, helpers_1.sleep)(1000);
         //Alice Set Text URL
-        const urlCommand = `/ml url ${url}`;
+        const urlCommand = `/ml url ${model1} ${url}`;
         yield (0, msg_1.sendTribeMessage)(t, alice, tribe, urlCommand);
         yield (0, helpers_1.sleep)(20);
-        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 1);
+        const botReply2 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 2);
         t.truthy(botReply2, 'MlBot should reply');
         //Alice set API_KEY
-        const api_key = '/ml api_key qwerty';
+        const api_key = `/ml api_key ${model1} qwerty`;
         const apiKeyMsg = yield (0, msg_1.sendTribeMessage)(t, alice, tribe, api_key);
-        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 2);
+        const botReply3 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 3);
         t.truthy(botReply3, 'MlBot should reply');
         const checkNode1 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, apiKeyMsg.uuid);
         t.true(checkNode1, 'BOB SHOULD NOT SEE THE API_KEY TRIBE COMMAND');
@@ -69,7 +76,7 @@ function mlBot(t, index1, index2, index3) {
         const text4 = (0, helpers_1.randomText)();
         const bobMessage = yield (0, msg_1.sendTribeMessage)(t, bob, tribe, text4);
         const botTextResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="font-size:15px;margin:5px 0;max-width:90%;">This is a response from test ml-bot server built in sphinx-stack</div></div>';
-        const botImageResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>';
+        const botImageResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:10rem;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>';
         yield (0, helpers_1.sleep)(8000);
         const botReply4 = (yield (0, get_1.getCheckBotMsg)(t, bob, botAlias, tribe, 1));
         const botResponse = (0, msg_1.decryptMessage)(bob, botReply4);
@@ -88,21 +95,31 @@ function mlBot(t, index1, index2, index3) {
         const checkNode4 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, virtualNode1Message.uuid);
         t.true(checkNode4, 'BOB SHOULD NOT SEE VIRTUALNODE1 Message');
         //Alice change Tribe kind to image
-        const imageKind = '/ml kind image';
+        const imageKind = `/ml kind ${model1} image`;
         yield (0, msg_1.sendTribeMessage)(t, alice, tribe, imageKind);
-        const botReply6 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 5);
+        const botReply6 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 6);
         t.truthy(botReply6, 'MlBot should reply');
-        const imageUrl = 'http://ml-bot-sphinx-server:3500/image';
-        //Alice change Tribe kind to image
-        const imageUrlMsg = `/ml url ${imageUrl}`;
+        const model2 = 'image_gpt';
+        const imageUrl = `${host}/image`;
+        //Add new Model
+        const newModel = `/ml add ${model2} ${imageUrl}`;
+        yield (0, msg_1.sendTribeMessage)(t, alice, tribe, newModel);
+        yield (0, helpers_1.sleep)(1000);
+        //Alice update new model api_key
+        const imageUrlMsg = `/ml api_key ${model2} twesting`;
         yield (0, msg_1.sendTribeMessage)(t, alice, tribe, imageUrlMsg);
-        const botReply7 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 6);
+        const botReply7 = yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 8);
         t.truthy(botReply7, 'MlBot should reply');
+        yield (0, helpers_1.sleep)(1000);
+        //Alice change new model kind to image
+        const imageUrlKind = `/ml kind ${model2} image`;
+        yield (0, msg_1.sendTribeMessage)(t, alice, tribe, imageUrlKind);
+        yield (0, helpers_1.sleep)(1000);
         //Alice sends Message in the tribe
         const text6 = (0, helpers_1.randomText)();
-        const aliceMsg = yield (0, msg_1.sendTribeMessage)(t, alice, tribe, text6);
+        const aliceMsg = yield (0, msg_1.sendTribeMessage)(t, alice, tribe, `@${model2} ${text6}`);
         yield (0, helpers_1.sleep)(8000);
-        const botReply8 = (yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 7));
+        const botReply8 = (yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 10));
         const botResponse3 = (0, msg_1.decryptMessage)(alice, botReply8);
         t.true(botResponse3 === botImageResponse);
         //Bob Node Should not See Alice Message
@@ -113,13 +130,14 @@ function mlBot(t, index1, index2, index3) {
         t.true(checkNode6, 'VIRTUALNODE1 SHOULD NOT SEE ALICE Message');
         //VirtualNode1 send message in tribe
         const text9 = (0, helpers_1.randomText)();
-        const virtualNodeImageMsg = yield (0, msg_1.sendTribeMessage)(t, virtualNode1, tribe, text9);
+        const imageSent = yield (0, msg_1.sendImage)(t, virtualNode1, alice, base64images_1.greenSquare, tribe, 0, '', `@${model2} ${text9}`);
+        t.true(!!imageSent, 'message should have been sent');
         yield (0, helpers_1.sleep)(8000);
         const botReply9 = (yield (0, get_1.getCheckBotMsg)(t, virtualNode1, botAlias, tribe, 2));
         const botResponse4 = (0, msg_1.decryptMessage)(virtualNode1, botReply9);
         t.true(botResponse4 === botImageResponse);
         //Bob Node Should not See VirtualNode Message
-        const checkNode7 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, virtualNodeImageMsg.uuid);
+        const checkNode7 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, imageSent.uuid);
         t.true(checkNode7, 'BOB SHOULD NOT SEE VirtualNode Message');
         //BOB LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, bob, tribe);

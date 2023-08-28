@@ -93,7 +93,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
-                if (msg.type === 0) {
+                if (msg.type === 0 || msg.type === constants_1.default.message_types.attachment) {
                     const hiddenCmd = yield interceptTribeMsgForHiddenCmds(msg, tenant);
                     justMe = hiddenCmd ? hiddenCmd : justMe;
                 }
@@ -433,7 +433,7 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 where: { tenant, chatId: newChat.id },
             }));
             const content = msg.message.content;
-            const splitedContent = content.split(' ');
+            const splitedContent = (content && content.split(' ')) || [];
             for (let i = 0; i < bots.length; i++) {
                 const bot = bots[i];
                 const isHidden = bot.botPrefix === splitedContent[0] &&

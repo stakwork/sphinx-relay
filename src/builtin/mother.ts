@@ -47,6 +47,10 @@ const builtInBotMsgTypes = {
     constants.message_types.boost,
     constants.message_types.attachment,
   ],
+  [`${ML_PREFIX.substring(1)}`]: [
+    constants.message_types.message,
+    constants.message_types.attachment,
+  ],
 }
 
 const builtInHiddenCmd = {
@@ -55,7 +59,7 @@ const builtInHiddenCmd = {
   sentiment: ['threshold', 'timer', 'url'],
   jarvis: ['link', 'hide'],
   spam_gone: ['add', 'list', 'remove'],
-  [`${ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind'],
+  [`${ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind', 'add'],
 }
 
 const builtInBotNames = {

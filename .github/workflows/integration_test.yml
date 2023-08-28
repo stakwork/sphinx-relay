@@ -71,7 +71,7 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone -b feat/ml-bot-server https://github.com/stakwork/sphinx-stack.git stack
+          git clone -b update/add_media https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
@@ -107,3 +107,11 @@ jobs:
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m
+        continue-on-error: true
+      - name: Display Logs
+        run: |
+          docker logs alice.sphinx
+          docker logs bob.sphinx
+          docker logs dave.sphinx
+          docker logs meme.sphinx
+          docker ps

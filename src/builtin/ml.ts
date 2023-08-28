@@ -11,8 +11,11 @@ import {
   addKind,
   defaultCommand,
   mlBotResponse,
+  addModel,
+  getAttachmentBlob,
 } from './utill/ml'
 import { sphinxLogger, logging } from '../utils/logger'
+import constants from '../constants'
 
 const config = loadConfig()
 
@@ -44,12 +47,6 @@ export function init() {
         where: { uuid: message.channel.id },
       })) as ChatRecord
 
-      const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
-
-      let meta: MlMeta = JSON.parse(bot.meta || `{}`)
-      meta.kind = meta.kind || 'text'
-      const url = meta.url
-      const api_key = meta.apiKey
       const arr = (message.content && message.content.split(' ')) || []
 
       if (isAdmin && arr[0] === ML_PREFIX) {
@@ -57,49 +54,82 @@ export function init() {
 
         switch (cmd) {
           case 'url':
-            const newUrl = arr[2]
-            await addUrl(
-              bot,
-              meta,
-              ML_BOTNAME,
-              ML_PREFIX,
-              tribe,
-              cmd,
-              message,
-              newUrl
-            )
+            await addUrl(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'api_key':
-            const newApiKey = arr[2]
-            await addApiKey(
-              bot,
-              meta,
-              ML_BOTNAME,
-              ML_PREFIX,
-              tribe,
-              cmd,
-              message,
-              newApiKey
-            )
+            await addApiKey(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           case 'kind':
-            const newKind = arr[2]
-            await addKind(
-              bot,
-              meta,
-              ML_BOTNAME,
-              ML_PREFIX,
-              tribe,
-              cmd,
-              message,
-              newKind
-            )
+            await addKind(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
+            return
+          case 'add':
+            await addModel(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
             return
           default:
             defaultCommand(ML_BOTNAME, ML_PREFIX, message)
             return
         }
       }
+      let imageBase64 = ''
+      // let imageUrl = ''
+      if (message.reply_id) {
+        //Look for original message
+        //Decrypt message
+        //Check if message has img tag
+      }
+      if (message.type === constants.message_types.attachment) {
+        const blob = await getAttachmentBlob(
+          message.media_token!,
+          message.media_key!,
+          message.media_type!,
+          tribe
+        )
+        imageBase64 = blob.toString('base64')
+      }
+      const bot: ChatBotRecord = await findBot({ botPrefix: ML_PREFIX, tribe })
+
+      let metaObj: { [key: string]: MlMeta } = JSON.parse(bot.meta || `{}`)
+      const modelsArr = Object.keys(metaObj)
+      if (modelsArr.length === 0) {
+        mlBotResponse('No model added yet!', message)
+        return
+      }
+      let meta: MlMeta
+      let content = ''
+      if (modelsArr.length === 1) {
+        meta = metaObj[modelsArr[0]]
+        if (message.content.startsWith(`@${modelsArr[0]}`)) {
+          content = message.content.substring(modelsArr[0].length + 1)
+        } else {
+          content = message.content
+        }
+      } else {
+        let modelName = ''
+        if (message.content && message.content.startsWith('@')) {
+          modelName = message.content.substring(
+            1,
+            message.content.indexOf(' ') > 0
+              ? message.content.indexOf(' ')
+              : 100
+          )
+          content = message.content.substring(modelName.length + 1)
+        } else {
+          mlBotResponse(
+            'Specify model name by typing the @ sysmbol followed by model name immediately, without space',
+            message
+          )
+          return
+        }
+
+        meta = metaObj[modelName]
+        if (!meta) {
+          mlBotResponse('Please provide a valid model name', message)
+          return
+        }
+      }
+      const url = meta.url
+      const api_key = meta.apiKey
+
       if (!url || !api_key) {
         mlBotResponse('not configured!', message)
         return
@@ -109,19 +139,35 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
-
-      const r = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          message: message.content,
-          webhook: `${host_name}/ml`,
-        }),
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      })
-      const j = await r.json()
+      let j
+      if (message.type === constants.message_types.attachment) {
+        const r = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: content.trim(),
+            image64: imageBase64,
+            webhook: `${host_name}/ml`,
+          }),
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        })
+        j = await r.json()
+      } else {
+        const r = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            message: content.trim(),
+            webhook: `${host_name}/ml`,
+          }),
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        })
+        j = await r.json()
+      }
 
       if (!j.body) {
         mlBotResponse('failed to process message (no body)', message)
@@ -151,6 +197,7 @@ export function init() {
         delete CALLBACKS[process_id]
       }, 5 * 60 * 1000)
     } catch (e) {
+      console.log(e)
       sphinxLogger.error(`ML CALL FAILED: ${e}`, logging.Bots)
     }
   })
