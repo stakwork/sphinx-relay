@@ -24,7 +24,7 @@ function sendImage(t, node1, node2, image, tribe, price, thread_uuid, text) {
     return __awaiter(this, void 0, void 0, function* () {
         //NODE1 SENDS AN IMAGE TO NODE2
         var token = yield (0, helpers_2.getToken)(t, node1);
-        let host = config_1.config.memeHost; // Change this in config to localhost:5555 when running on local
+        let host = config_1.config.memeHost;
         let fileBase64 = 'data:image/jpg;base64,' + image;
         let typ = 'image/jpg';
         let filename = 'Image.jpg';
