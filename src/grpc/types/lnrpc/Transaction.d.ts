@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   OutputDetail as _lnrpc_OutputDetail,
   OutputDetail__Output as _lnrpc_OutputDetail__Output,
@@ -9,6 +8,7 @@ import type {
   PreviousOutPoint as _lnrpc_PreviousOutPoint,
   PreviousOutPoint__Output as _lnrpc_PreviousOutPoint__Output,
 } from '../lnrpc/PreviousOutPoint'
+import type { Long } from '@grpc/proto-loader'
 
 export interface Transaction {
   tx_hash?: string
