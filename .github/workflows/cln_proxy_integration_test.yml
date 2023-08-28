@@ -114,3 +114,4 @@ jobs:
           docker logs bob.sphinx
           docker logs dave.sphinx
           docker logs meme.sphinx
+          docker ps
