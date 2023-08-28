@@ -7,7 +7,7 @@
     "macaroon_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/bob/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
     "node_http_protocol": "http",
     "node_http_port": "3002",
-    "media_host": "memes.sphinx.chat",
+    "media_host": "localhost:5555",
     "tribes_host": "localhost:13000",
     "tribes_mqtt_port": "1883",
     "tribes_insecure": true,
