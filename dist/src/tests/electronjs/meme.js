@@ -37,7 +37,7 @@ function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
             });
             const formHeaders = form.getHeaders();
             let protocol = 'https';
-            if (host.includes('localhost'))
+            if (host.includes('localhost') || host.includes('meme.sphinx'))
                 protocol = 'http';
             const resp = yield (0, node_fetch_1.default)(`${protocol}://${host}/${isPublic ? 'public' : 'file'}`, {
                 method: 'POST',
