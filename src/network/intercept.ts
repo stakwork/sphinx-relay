@@ -6,6 +6,7 @@ import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
 import { BotMsg } from './interfaces'
+import { ML_PREFIX, ML_BOTNAME } from '../builtin/ml'
 
 /*
 default show or not
@@ -63,6 +64,9 @@ export async function isBotMsg(
         },
       })) as Message
       if (ogBotMsg && ogBotMsg.senderAlias) {
+        if (ogBotMsg.senderAlias === ML_BOTNAME) {
+          ogBotMsg.senderAlias = ML_PREFIX.substring(1)
+        }
         const ogSenderBot: ChatRecord = (await models.ChatBot.findOne({
           where: {
             chatId: chat.id,
