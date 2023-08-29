@@ -461,7 +461,7 @@ function loadRouter() {
     }
 }
 exports.loadRouter = loadRouter;
-const MAX_MSG_LENGTH = config.max_payload_len || 630; // 640 - 10
+const MAX_MSG_LENGTH = config.max_payload_len || 600; // 640 - 10 - 30(threading)
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('keysendMessage', logger_1.logging.Lightning);
