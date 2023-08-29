@@ -93,7 +93,7 @@ export function init() {
           imageUrl = secondSplitting[1]
         }
       }
-      console.log(imageUrl)
+
       if (message.type === constants.message_types.attachment) {
         const blob = await getAttachmentBlob(
           message.media_token!,
@@ -156,35 +156,21 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
-      let j
-      if (message.type === constants.message_types.attachment) {
-        const r = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            message: content.trim(),
-            image64: imageBase64,
-            webhook: `${host_name}/ml`,
-          }),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        })
-        j = await r.json()
-      } else {
-        const r = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            message: content.trim(),
-            webhook: `${host_name}/ml`,
-          }),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        })
-        j = await r.json()
-      }
+
+      const r = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          message: content.trim(),
+          image64: imageBase64 || '',
+          image_url: imageUrl || '',
+          webhook: `${host_name}/ml`,
+        }),
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+      let j = await r.json()
 
       if (!j.body) {
         mlBotResponse('failed to process message (no body)', message)

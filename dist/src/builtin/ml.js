@@ -77,7 +77,6 @@ function init() {
                     imageUrl = secondSplitting[1];
                 }
             }
-            console.log(imageUrl);
             if (message.type === constants_1.default.message_types.attachment) {
                 const blob = yield (0, ml_1.getAttachmentBlob)(message.media_token, message.media_key, message.media_type, tribe);
                 imageBase64 = blob.toString('base64');
@@ -128,36 +127,20 @@ function init() {
             if (!host_name.startsWith('http')) {
                 host_name = `https://${host_name}`;
             }
-            let j;
-            if (message.type === constants_1.default.message_types.attachment) {
-                const r = yield (0, node_fetch_1.default)(url, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        message: content.trim(),
-                        image64: imageBase64,
-                        webhook: `${host_name}/ml`,
-                    }),
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                });
-                j = yield r.json();
-            }
-            else {
-                const r = yield (0, node_fetch_1.default)(url, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        message: content.trim(),
-                        webhook: `${host_name}/ml`,
-                    }),
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                });
-                j = yield r.json();
-            }
+            const r = yield (0, node_fetch_1.default)(url, {
+                method: 'POST',
+                body: JSON.stringify({
+                    message: content.trim(),
+                    image64: imageBase64 || '',
+                    image_url: imageUrl || '',
+                    webhook: `${host_name}/ml`,
+                }),
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+            let j = yield r.json();
             if (!j.body) {
                 (0, ml_1.mlBotResponse)('failed to process message (no body)', message);
                 return;
