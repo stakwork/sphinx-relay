@@ -33,7 +33,7 @@ const DEFAULT_PROXY_HD_KEYS = false
 const DEFAULT_STORE_CACHE = ''
 const DEFAULT_PRUNE = null
 const DEFAULT_PEOPLE_HOST = 'people.sphinx.chat'
-const DEFAULT_MAX_PAYLOAD_LEN = 630
+const DEFAULT_MAX_PAYLOAD_LEN = 600
 
 export function loadConfig() {
   const logg = ENV.LOGGING || config.logging
