@@ -78,8 +78,13 @@ export async function hmacMiddleware(req: Req, res: Res, next): Promise<void> {
     next()
     return
   }
+
+  if (!req.owner) {
+    next()
+    return
+  }
   // opt-in feature
-  if (!req.owner.hmacKey) {
+  if (!req.owner?.hmacKey) {
     next()
     return
   }

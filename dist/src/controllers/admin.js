@@ -9,12 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.initialAdminPubkey = exports.hasAdmin = exports.swarmAdminRegister = void 0;
+exports.adminBalance = exports.listTribes = exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.initialAdminPubkey = exports.hasAdmin = exports.swarmAdminRegister = void 0;
 const crypto = require("crypto");
 const res_1 = require("../utils/res");
 const json = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
 const models_1 = require("../models");
+const constants_1 = require("../constants");
+const Lightning = require("../grpc/lightning");
 const swarmAdminRegister = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const pubkey = req.body['pubkey'];
     if (!pubkey) {
@@ -182,4 +184,37 @@ function listUsers(req, res) {
     });
 }
 exports.listUsers = listUsers;
+function listTribes(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.admin)
+            return (0, res_1.failure)(res, 'no owner');
+        const tenant = req.admin.id;
+        const chats = (yield models_1.models.Chat.findAll({
+            where: { deleted: false, tenant, type: constants_1.default.chat_types.tribe },
+            raw: true,
+        }));
+        const c = chats.map((chat) => json.chatToJson(chat));
+        (0, res_1.success)(res, c);
+    });
+}
+exports.listTribes = listTribes;
+function adminBalance(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!req.admin)
+            return (0, res_1.failure)(res, 'no owner');
+        res.status(200);
+        try {
+            const blcs = yield Lightning.complexBalances(req.admin.publicKey);
+            res.json({
+                success: true,
+                response: blcs,
+            });
+        }
+        catch (e) {
+            res.json({ success: false });
+        }
+        res.end();
+    });
+}
+exports.adminBalance = adminBalance;
 //# sourceMappingURL=admin.js.map

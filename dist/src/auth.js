@@ -74,6 +74,7 @@ function unlocker(req, res) {
 }
 exports.unlocker = unlocker;
 function hmacMiddleware(req, res, next) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         if (no_auth(req.path)) {
             next();
@@ -85,8 +86,12 @@ function hmacMiddleware(req, res, next) {
             next();
             return;
         }
+        if (!req.owner) {
+            next();
+            return;
+        }
         // opt-in feature
-        if (!req.owner.hmacKey) {
+        if (!((_a = req.owner) === null || _a === void 0 ? void 0 : _a.hmacKey)) {
             next();
             return;
         }

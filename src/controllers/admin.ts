@@ -4,6 +4,8 @@ import { Req, Res } from '../types'
 import * as json from '../utils/json'
 import { generateNewUser, getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { models, ContactRecord, Chat, Contact } from '../models'
+import constants from '../constants'
+import * as Lightning from '../grpc/lightning'
 
 export const swarmAdminRegister = async (req: Req, res: Res): Promise<void> => {
   const pubkey = req.body['pubkey'] as string
@@ -139,4 +141,30 @@ export async function listUsers(req: Req, res: Res): Promise<void> {
   } catch (e) {
     failure(res, e)
   }
+}
+
+export async function listTribes(req: Req, res: Response): Promise<void> {
+  if (!req.admin) return failure(res, 'no owner')
+  const tenant: number = req.admin.id
+  const chats: Chat[] = (await models.Chat.findAll({
+    where: { deleted: false, tenant, type: constants.chat_types.tribe },
+    raw: true,
+  })) as Chat[]
+  const c = chats.map((chat) => json.chatToJson(chat))
+  success(res, c)
+}
+
+export async function adminBalance(req: Req, res: Res): Promise<void> {
+  if (!req.admin) return failure(res, 'no owner')
+  res.status(200)
+  try {
+    const blcs = await Lightning.complexBalances(req.admin.publicKey)
+    res.json({
+      success: true,
+      response: blcs,
+    })
+  } catch (e) {
+    res.json({ success: false })
+  }
+  res.end()
 }

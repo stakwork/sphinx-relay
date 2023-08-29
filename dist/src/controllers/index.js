@@ -44,7 +44,7 @@ const feeds = require("./getFeeds");
 const contentFeedStatus = require("./contentFeedStatus");
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 1000,
-    max: 1,
+    max: 2,
     standardHeaders: true,
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
@@ -189,10 +189,17 @@ function set(app) {
         app.get('/content_feed_status', contentFeedStatus.getAllContentFeedStatus);
         app.put('/content_feed_status/:feed_id', contentFeedStatus.updateContentFeedStatus);
         app.get('/content_feed_status/:feed_id', contentFeedStatus.getContentFeedStatus);
+        app.get('/my_ip', (request, response) => response.send(request.ip));
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
-        app.get('/my_ip', (request, response) => response.send(request.ip));
+        // following routes are only for proxy admin user (isAdmin=true)
+        app.get('/add_user', auth_1.proxyAdminMiddleware, admin.addProxyUser);
+        app.get('/list_users', auth_1.proxyAdminMiddleware, admin.listUsers);
+        app.post('/default_tribe/:id', auth_1.proxyAdminMiddleware, admin.addDefaultJoinTribe);
+        app.delete('/default_tribe/:id', auth_1.proxyAdminMiddleware, admin.removeDefaultJoinTribe);
+        app.get('/tribes', auth_1.proxyAdminMiddleware, admin.listTribes);
+        app.get('/admin_balance', auth_1.proxyAdminMiddleware, admin.adminBalance);
         // rate limit these routes:
         app.use(limiter);
         app.post('/messages', messages.sendMessage);
@@ -211,12 +218,6 @@ function set(app) {
         app.post('/subscriptions', subcriptions.createSubscription);
         app.post('/update_channel_policy', details.updateChannelPolicy);
         app.post('/swarm_admin_register', admin.swarmAdminRegister);
-        // following routes are only for proxy admin user (isAdmin=true)
-        app.use(auth_1.proxyAdminMiddleware);
-        app.get('/add_user', admin.addProxyUser);
-        app.get('/list_users', admin.listUsers);
-        app.post('/default_tribe/:id', admin.addDefaultJoinTribe);
-        app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe);
     });
 }
 exports.set = set;
