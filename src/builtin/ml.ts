@@ -13,9 +13,11 @@ import {
   mlBotResponse,
   addModel,
   getAttachmentBlob,
+  getOgMessage,
 } from './utill/ml'
 import { sphinxLogger, logging } from '../utils/logger'
 import constants from '../constants'
+import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
 
@@ -71,12 +73,27 @@ export function init() {
         }
       }
       let imageBase64 = ''
-      // let imageUrl = ''
+      let imageUrl = ''
       if (message.reply_id) {
         //Look for original message
+        const ogMessage = await getOgMessage(message.reply_id, tribe.tenant)
+        const parsedRemoteMessage = JSON.parse(ogMessage.remoteMessageContent)
+
         //Decrypt message
+        const decryptedMessage = rsa.decrypt(
+          tribe.groupPrivateKey,
+          parsedRemoteMessage.chat
+        )
+
         //Check if message has img tag
+        const splittedMessage = decryptedMessage.split('<img src=')
+        if (splittedMessage.length > 1) {
+          const secondSplitting =
+            splittedMessage[1] && splittedMessage[1]?.split('"')
+          imageUrl = secondSplitting[1]
+        }
       }
+      console.log(imageUrl)
       if (message.type === constants.message_types.attachment) {
         const blob = await getAttachmentBlob(
           message.media_token!,

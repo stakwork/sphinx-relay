@@ -9,7 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAttachmentBlob = exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+exports.getOgMessage = exports.getAttachmentBlob = exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+const models_1 = require("../../models");
 const index_1 = require("./index");
 const Sphinx = require("sphinx-bot");
 const ml_1 = require("../ml");
@@ -194,4 +195,12 @@ function getAttachmentBlob(mediaToken, mediaKey, mediaType, tribe) {
     });
 }
 exports.getAttachmentBlob = getAttachmentBlob;
+function getOgMessage(uuid, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return (yield models_1.models.Message.findOne({
+            where: { uuid, tenant },
+        }));
+    });
+}
+exports.getOgMessage = getOgMessage;
 //# sourceMappingURL=ml.js.map

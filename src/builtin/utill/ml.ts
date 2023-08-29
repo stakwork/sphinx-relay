@@ -1,4 +1,4 @@
-import { ChatRecord } from '../../models'
+import { ChatRecord, MessageRecord, models } from '../../models'
 import { botResponse, findBot } from './index'
 import * as Sphinx from 'sphinx-bot'
 import { ML_BOTNAME } from '../ml'
@@ -332,4 +332,13 @@ export async function getAttachmentBlob(
 
   const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), mediaKey)
   return imgBuf
+}
+
+export async function getOgMessage(
+  uuid: string,
+  tenant: number
+): Promise<MessageRecord> {
+  return (await models.Message.findOne({
+    where: { uuid, tenant },
+  })) as MessageRecord
 }

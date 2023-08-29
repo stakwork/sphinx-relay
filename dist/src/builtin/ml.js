@@ -19,6 +19,7 @@ const node_fetch_1 = require("node-fetch");
 const ml_1 = require("./utill/ml");
 const logger_1 = require("../utils/logger");
 const constants_1 = require("../constants");
+const rsa = require("../crypto/rsa");
 const config = (0, config_1.loadConfig)();
 const msg_types = Sphinx.MSG_TYPE;
 let initted = false;
@@ -32,7 +33,7 @@ function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
     client.on(msg_types.MESSAGE, (message) => __awaiter(this, void 0, void 0, function* () {
-        var _a;
+        var _a, _b;
         if (((_a = message.author) === null || _a === void 0 ? void 0 : _a.bot) !== exports.ML_PREFIX)
             return;
         const isAdmin = message.member.roles.find((role) => role.name === 'Admin');
@@ -62,12 +63,21 @@ function init() {
                 }
             }
             let imageBase64 = '';
-            // let imageUrl = ''
+            let imageUrl = '';
             if (message.reply_id) {
                 //Look for original message
+                const ogMessage = yield (0, ml_1.getOgMessage)(message.reply_id, tribe.tenant);
+                const parsedRemoteMessage = JSON.parse(ogMessage.remoteMessageContent);
                 //Decrypt message
+                const decryptedMessage = rsa.decrypt(tribe.groupPrivateKey, parsedRemoteMessage.chat);
                 //Check if message has img tag
+                const splittedMessage = decryptedMessage.split('<img src=');
+                if (splittedMessage.length > 1) {
+                    const secondSplitting = splittedMessage[1] && ((_b = splittedMessage[1]) === null || _b === void 0 ? void 0 : _b.split('"'));
+                    imageUrl = secondSplitting[1];
+                }
             }
+            console.log(imageUrl);
             if (message.type === constants_1.default.message_types.attachment) {
                 const blob = yield (0, ml_1.getAttachmentBlob)(message.media_token, message.media_key, message.media_type, tribe);
                 imageBase64 = blob.toString('base64');
