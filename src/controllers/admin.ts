@@ -1,8 +1,40 @@
+import * as crypto from 'crypto'
 import { success, failure } from '../utils/res'
 import { Req, Res } from '../types'
 import * as json from '../utils/json'
 import { generateNewUser, getProxyRootPubkey, isProxy } from '../utils/proxy'
-import { models, ContactRecord, Chat } from '../models'
+import { models, ContactRecord, Chat, Contact } from '../models'
+
+export const swarmAdminRegister = async (req: Req, res: Res): Promise<void> => {
+  const pubkey = req.body['pubkey'] as string
+  if (!pubkey) {
+    return failure(res, 'no pubkey')
+  }
+  const owner: Contact = (await models.Contact.findOne({
+    where: { isOwner: true, publicKey: pubkey },
+  })) as Contact
+  if (!owner) {
+    return failure(res, 'no owner')
+  }
+
+  const token = req.body['token'] as string
+  if (!token) {
+    return failure(res, 'no token in body')
+  }
+  const hash = crypto.createHash('sha256').update(token).digest('base64')
+
+  if (owner.adminToken) {
+    if (owner.adminToken !== hash) {
+      return failure(res, 'invalid admin token')
+    }
+  } else {
+    await owner.update({ adminToken: hash, isAdmin: true })
+  }
+
+  success(res, {
+    id: (owner && owner.id) || 0,
+  })
+}
 
 export async function hasAdmin(req: Req, res: Res): Promise<void> {
   if (!isProxy()) return failure(res, 'not proxy')
@@ -35,15 +67,15 @@ export async function initialAdminPubkey(req: Req, res: Res): Promise<void> {
 }
 
 export async function addDefaultJoinTribe(req: Req, res: Res): Promise<void> {
-  if (!req.owner) return failure(res, 'no owner')
-  if (!req.owner.isAdmin) return failure(res, 'not admin')
+  if (!req.admin) return failure(res, 'no owner')
+  if (!req.admin.isAdmin) return failure(res, 'not admin')
   if (!isProxy()) return failure(res, 'not proxy')
 
   const id = parseInt(req.params.id)
   if (!id) return failure(res, 'no id specified')
   try {
     const chat = (await models.Chat.findOne({
-      where: { id, tenant: req.owner.id },
+      where: { id, tenant: req.admin.id },
     })) as Chat
     if (!chat) return failure(res, 'chat not found')
     await chat.update({ defaultJoin: true })
@@ -57,15 +89,15 @@ export async function removeDefaultJoinTribe(
   req: Req,
   res: Res
 ): Promise<void> {
-  if (!req.owner) return failure(res, 'no owner')
-  if (!req.owner.isAdmin) return failure(res, 'not admin')
+  if (!req.admin) return failure(res, 'no owner')
+  if (!req.admin.isAdmin) return failure(res, 'not admin')
   if (!isProxy()) return failure(res, 'not proxy')
 
   const id = parseInt(req.params.id)
   if (!id) return failure(res, 'no id specified')
   try {
     const chat = (await models.Chat.findOne({
-      where: { id, tenant: req.owner.id },
+      where: { id, tenant: req.admin.id },
     })) as Chat
     if (!chat) return failure(res, 'chat not found')
     await chat.update({ defaultJoin: false })
@@ -76,8 +108,8 @@ export async function removeDefaultJoinTribe(
 }
 
 export async function addProxyUser(req: Req, res: Res): Promise<void> {
-  if (!req.owner) return failure(res, 'no owner')
-  if (!req.owner.isAdmin) return failure(res, 'not admin')
+  if (!req.admin) return failure(res, 'no owner')
+  if (!req.admin.isAdmin) return failure(res, 'not admin')
   if (!isProxy()) return failure(res, 'not proxy')
 
   try {
@@ -93,8 +125,8 @@ export async function addProxyUser(req: Req, res: Res): Promise<void> {
 }
 
 export async function listUsers(req: Req, res: Res): Promise<void> {
-  if (!req.owner) return failure(res, 'no owner')
-  if (!req.owner.isAdmin) return failure(res, 'not admin')
+  if (!req.admin) return failure(res, 'no owner')
+  if (!req.admin.isAdmin) return failure(res, 'not admin')
   if (!isProxy()) return failure(res, 'not proxy')
 
   try {

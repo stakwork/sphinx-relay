@@ -9,11 +9,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.initialAdminPubkey = exports.hasAdmin = void 0;
+exports.listUsers = exports.addProxyUser = exports.removeDefaultJoinTribe = exports.addDefaultJoinTribe = exports.initialAdminPubkey = exports.hasAdmin = exports.swarmAdminRegister = void 0;
+const crypto = require("crypto");
 const res_1 = require("../utils/res");
 const json = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
 const models_1 = require("../models");
+const swarmAdminRegister = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const pubkey = req.body['pubkey'];
+    if (!pubkey) {
+        return (0, res_1.failure)(res, 'no pubkey');
+    }
+    const owner = (yield models_1.models.Contact.findOne({
+        where: { isOwner: true, publicKey: pubkey },
+    }));
+    if (!owner) {
+        return (0, res_1.failure)(res, 'no owner');
+    }
+    const token = req.body['token'];
+    if (!token) {
+        return (0, res_1.failure)(res, 'no token in body');
+    }
+    const hash = crypto.createHash('sha256').update(token).digest('base64');
+    if (owner.adminToken) {
+        if (owner.adminToken !== hash) {
+            return (0, res_1.failure)(res, 'invalid admin token');
+        }
+    }
+    else {
+        yield owner.update({ adminToken: hash, isAdmin: true });
+    }
+    (0, res_1.success)(res, {
+        id: (owner && owner.id) || 0,
+    });
+});
+exports.swarmAdminRegister = swarmAdminRegister;
 function hasAdmin(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(0, proxy_1.isProxy)())
@@ -56,9 +86,9 @@ function initialAdminPubkey(req, res) {
 exports.initialAdminPubkey = initialAdminPubkey;
 function addDefaultJoinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!req.owner)
+        if (!req.admin)
             return (0, res_1.failure)(res, 'no owner');
-        if (!req.owner.isAdmin)
+        if (!req.admin.isAdmin)
             return (0, res_1.failure)(res, 'not admin');
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.failure)(res, 'not proxy');
@@ -67,7 +97,7 @@ function addDefaultJoinTribe(req, res) {
             return (0, res_1.failure)(res, 'no id specified');
         try {
             const chat = (yield models_1.models.Chat.findOne({
-                where: { id, tenant: req.owner.id },
+                where: { id, tenant: req.admin.id },
             }));
             if (!chat)
                 return (0, res_1.failure)(res, 'chat not found');
@@ -82,9 +112,9 @@ function addDefaultJoinTribe(req, res) {
 exports.addDefaultJoinTribe = addDefaultJoinTribe;
 function removeDefaultJoinTribe(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!req.owner)
+        if (!req.admin)
             return (0, res_1.failure)(res, 'no owner');
-        if (!req.owner.isAdmin)
+        if (!req.admin.isAdmin)
             return (0, res_1.failure)(res, 'not admin');
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.failure)(res, 'not proxy');
@@ -93,7 +123,7 @@ function removeDefaultJoinTribe(req, res) {
             return (0, res_1.failure)(res, 'no id specified');
         try {
             const chat = (yield models_1.models.Chat.findOne({
-                where: { id, tenant: req.owner.id },
+                where: { id, tenant: req.admin.id },
             }));
             if (!chat)
                 return (0, res_1.failure)(res, 'chat not found');
@@ -108,9 +138,9 @@ function removeDefaultJoinTribe(req, res) {
 exports.removeDefaultJoinTribe = removeDefaultJoinTribe;
 function addProxyUser(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!req.owner)
+        if (!req.admin)
             return (0, res_1.failure)(res, 'no owner');
-        if (!req.owner.isAdmin)
+        if (!req.admin.isAdmin)
             return (0, res_1.failure)(res, 'not admin');
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.failure)(res, 'not proxy');
@@ -132,9 +162,9 @@ function addProxyUser(req, res) {
 exports.addProxyUser = addProxyUser;
 function listUsers(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!req.owner)
+        if (!req.admin)
             return (0, res_1.failure)(res, 'no owner');
-        if (!req.owner.isAdmin)
+        if (!req.admin.isAdmin)
             return (0, res_1.failure)(res, 'not admin');
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.failure)(res, 'not proxy');

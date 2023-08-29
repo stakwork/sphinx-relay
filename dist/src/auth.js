@@ -113,9 +113,9 @@ function proxyAdminMiddleware(req, res, next) {
             next();
             return;
         }
-        if (!req.owner)
+        if (!req.admin)
             return (0, res_1.unauthorized)(res);
-        if (!req.owner.isAdmin)
+        if (!req.admin.isAdmin)
             return (0, res_1.unauthorized)(res);
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.unauthorized)(res);
@@ -200,8 +200,9 @@ function ownerMiddleware(req, res, next) {
                 .createHash('sha256')
                 .update(token)
                 .digest('base64');
+            const tokenKey = x_admin_token ? 'adminToken' : 'authToken';
             owner = (yield models_1.models.Contact.findOne({
-                where: { authToken: hashedToken, isOwner: true },
+                where: { [tokenKey]: hashedToken, isOwner: true },
             }));
             if (x_admin_token) {
                 if (!owner.isAdmin) {
@@ -249,7 +250,12 @@ function ownerMiddleware(req, res, next) {
             }
             yield owner.update({ lastTimestamp: timestamp });
         }
-        req.owner = owner.dataValues;
+        if (x_admin_token) {
+            req.admin = owner.dataValues;
+        }
+        else {
+            req.owner = owner.dataValues;
+        }
         next();
     });
 }
