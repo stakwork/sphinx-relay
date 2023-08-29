@@ -91,7 +91,7 @@ export async function mlBot(t, index1, index2, index3) {
     '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="font-size:15px;margin:5px 0;max-width:90%;">This is a response from test ml-bot server built in sphinx-stack</div></div>'
   const botImageResponse =
     '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:10rem;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>'
-  await sleep(8000)
+  await sleep(6000)
   const botReply4 = (await getCheckBotMsg(
     t,
     bob,
@@ -114,7 +114,7 @@ export async function mlBot(t, index1, index2, index3) {
     tribe,
     text5
   )
-  await sleep(8000)
+  await sleep(6000)
   const botReply5 = (await getCheckBotMsg(
     t,
     bob,
@@ -170,7 +170,7 @@ export async function mlBot(t, index1, index2, index3) {
     `@${model2} ${text6}`
   )
 
-  await sleep(8000)
+  await sleep(6000)
 
   const botReply8 = (await getCheckBotMsg(
     t,
@@ -203,7 +203,7 @@ export async function mlBot(t, index1, index2, index3) {
     `@${model2} ${text9}`
   )
   t.true(!!imageSent, 'message should have been sent')
-  await sleep(8000)
+  await sleep(6000)
 
   const botReply9 = (await getCheckBotMsg(
     t,
@@ -218,6 +218,24 @@ export async function mlBot(t, index1, index2, index3) {
   //Bob Node Should not See VirtualNode Message
   const checkNode7 = await shouldNotGetNewMsgs(t, bob, imageSent.uuid)
   t.true(checkNode7, 'BOB SHOULD NOT SEE VirtualNode Message')
+
+  //VirtualNode sends reply bot response to get image URL
+  const text10 = randomText()
+  await sendTribeMessage(t, virtualNode1, tribe, `@${model2} ${text10}`, {
+    reply_uuid: botReply9.uuid,
+  })
+
+  await sleep(6000)
+
+  const botReply10 = (await getCheckBotMsg(
+    t,
+    virtualNode1,
+    botAlias,
+    tribe,
+    3
+  )) as Message
+  const botResponse8 = decryptMessage(virtualNode1, botReply10)
+  t.true(botResponse8 === botImageResponse)
 
   //BOB LEAVES TRIBE
   let left2 = await leaveTribe(t, bob, tribe)

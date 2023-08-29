@@ -34,7 +34,7 @@ function sendTribeMessage(t, node1, tribe, text, options) {
             amount: (options && options.amount) || 0,
             parent_id: (options && options.parent_id) || 0,
             thread_uuid: (options && options.thread_uuid) || '',
-            reply_uuid: '',
+            reply_uuid: (options && options.reply_uuid) || '',
             boost: false,
         };
         //send message from node1 to node2
