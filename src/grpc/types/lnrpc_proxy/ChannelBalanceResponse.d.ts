@@ -1,10 +1,10 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Amount as _lnrpc_proxy_Amount,
   Amount__Output as _lnrpc_proxy_Amount__Output,
 } from '../lnrpc_proxy/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 export interface ChannelBalanceResponse {
   balance?: number | string | Long
