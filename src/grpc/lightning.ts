@@ -386,7 +386,7 @@ function maxfee(amt: number): number {
 export interface KeysendOpts {
   amt: number
   dest: string
-  data?: string
+  data?: Buffer | string
   route_hint?: string
   extra_tlv?: { [k: string]: string }
 }
@@ -410,10 +410,10 @@ export function keysend(
         })
       }
       if (opts.data) {
-        dest_custom_records[`${SPHINX_CUSTOM_RECORD_KEY}`] = Buffer.from(
-          opts.data,
-          'utf-8'
-        )
+        const theData = Buffer.isBuffer(opts.data)
+          ? opts.data
+          : Buffer.from(opts.data, 'utf-8')
+        dest_custom_records[`${SPHINX_CUSTOM_RECORD_KEY}`] = theData
       }
       const options: interfaces.KeysendRequest = {
         amt: Math.max(opts.amt, constants.min_sat_amount || 3),
@@ -539,13 +539,14 @@ export async function keysendMessage(
   )
   return new Promise(async function (resolve, reject) {
     if (!opts.data || typeof opts.data !== 'string') {
-      return reject('string plz')
+      return reject('data string plz')
     }
     sphinxLogger.info(
       'keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH,
       logging.Network
     )
-    if (opts.data.length < MAX_MSG_LENGTH) {
+    const dataBuf = Buffer.from(opts.data || '', 'utf-8')
+    if (dataBuf.length < MAX_MSG_LENGTH) {
       try {
         const res = await keysend(opts, ownerPubkey)
         resolve(res)
@@ -555,15 +556,15 @@ export async function keysendMessage(
       return
     }
     // too long! need to send serial
-    const n = Math.ceil(opts.data.length / MAX_MSG_LENGTH)
+    const n = Math.ceil(dataBuf.length / MAX_MSG_LENGTH)
     let success = false
     let fail = false
     let res: any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
     for (let i = 0; i < n; i++) {
-      const spliti = Math.ceil((opts.data || '').length / n)
-      const m = (opts.data || '').substring(i * spliti, i * spliti + spliti)
+      const spliti = Math.ceil(dataBuf.length / n)
+      const m = dataBuf.slice(i * spliti, i * spliti + spliti)
       const isLastThread = i === n - 1
       const amt = isLastThread ? opts.amt : constants.min_sat_amount
       try {
