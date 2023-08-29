@@ -7,12 +7,12 @@
     "macaroon_location": "/Users/oluwatobibamidele/Desktop/work/sphinx/sphinx-stack/lnd/alice/.lnd/data/chain/bitcoin/regtest/admin.macaroon",
     "node_http_protocol": "http",
     "node_http_port": "3001",
-    "media_host": "memes.sphinx.chat",
+    "media_host": "localhost:5555",
     "tribes_host": "localhost:13000",
     "tribes_mqtt_port": "1883",
     "tribes_insecure": true,
     "public_url": "127.0.0.1:3001",
     "connect_ui": true,
-    "host_name": "https://7bb5-105-112-235-249.ngrok-free.app"
+    "host_name": "http://localhost:3001"
   }
 }
