@@ -527,7 +527,7 @@ export function loadRouter(): RouterClient {
   }
 }
 
-const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
+const MAX_MSG_LENGTH = config.max_payload_len || 600 // 640 - 10 - 30(threading)
 export async function keysendMessage(
   opts: KeysendOpts,
   ownerPubkey?: string
@@ -541,7 +541,10 @@ export async function keysendMessage(
     if (!opts.data || typeof opts.data !== 'string') {
       return reject('string plz')
     }
-
+    sphinxLogger.info(
+      'keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH,
+      logging.Network
+    )
     if (opts.data.length < MAX_MSG_LENGTH) {
       try {
         const res = await keysend(opts, ownerPubkey)

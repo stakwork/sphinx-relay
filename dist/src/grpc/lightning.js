@@ -461,7 +461,7 @@ function loadRouter() {
     }
 }
 exports.loadRouter = loadRouter;
-const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
+const MAX_MSG_LENGTH = config.max_payload_len || 600; // 640 - 10 - 30(threading)
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('keysendMessage', logger_1.logging.Lightning);
@@ -471,6 +471,7 @@ function keysendMessage(opts, ownerPubkey) {
                 if (!opts.data || typeof opts.data !== 'string') {
                     return reject('string plz');
                 }
+                logger_1.sphinxLogger.info('keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH, logger_1.logging.Network);
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts, ownerPubkey);
