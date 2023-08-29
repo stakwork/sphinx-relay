@@ -141,7 +141,8 @@ function no_auth(path) {
         path == '/webhook' ||
         path == '/has_admin' ||
         path == '/initial_admin_pubkey' ||
-        path == '/my_ip');
+        path == '/my_ip' ||
+        path == '/swarm_admin_register');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
