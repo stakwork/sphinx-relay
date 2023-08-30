@@ -21,10 +21,9 @@ const payInvoice = (t, sendingNode, receivingNode, amount, payment_request) => _
     const receivingNodebeforeBalance = yield (0, get_1.getBalance)(t, receivingNode);
     const v = { payment_request };
     const r = yield http.put(sendingNode.external_ip + '/invoices', (0, helpers_1.makeArgs)(sendingNode, v));
-    console.log('-> payInvoice res', sendingNode.alias, r);
     t.true(r.success, 'Put method should have succeeded');
     const paymentHash = r.response.payment_hash;
-    t.truthy(paymentHash, 'paymentHash should exist');
+    t.truthy(paymentHash, `paymentHash should exist for ${sendingNode.alias}`);
     //wait for PUT method
     const paid = yield (0, get_1.getCheckNewPaidInvoice)(t, receivingNode, paymentHash);
     t.truthy(paid, 'receivingNode should see payment');
@@ -32,9 +31,6 @@ const payInvoice = (t, sendingNode, receivingNode, amount, payment_request) => _
     const sendingNodeafterBalance = yield (0, get_1.getBalance)(t, sendingNode);
     //get receivingNode balance after payment
     const receivingNodeafterBalance = yield (0, get_1.getBalance)(t, receivingNode);
-    console.log('amount', amount);
-    console.log('NODE1 === ', sendingNodebeforeBalance - sendingNodeafterBalance);
-    console.log('NODE2 === ', receivingNodeafterBalance - receivingNodebeforeBalance);
     //check that sendingNode sent payment and receivingNode received payment based on balances
     //3 SAT ARE ADDED AS A MESSAGE FEE
     t.true(sendingNodebeforeBalance - sendingNodeafterBalance >= amount, 'sendingNode should have paid amount');
