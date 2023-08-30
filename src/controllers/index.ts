@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit'
 import { models, Message } from '../models'
-import { proxyAdminMiddleware } from '../auth'
+import { proxyAdminMiddleware as pamid } from '../auth'
 import * as gitinfo from '../utils/gitinfo'
 import * as timers from '../utils/timers'
 import * as builtInBots from '../builtin'
@@ -33,8 +33,8 @@ import * as feeds from './getFeeds'
 import * as contentFeedStatus from './contentFeedStatus'
 
 const limiter = rateLimit({
-  windowMs: 1000, // 15 minutes
-  max: 1, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  windowMs: 1000, // 1 second
+  max: 2, // Limit each IP to 2 requests per `window` (here, per 1 second)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
@@ -213,11 +213,19 @@ export async function set(app) {
     contentFeedStatus.getContentFeedStatus
   )
 
+  app.get('/my_ip', (request, response) => response.send(request.ip))
+
   // open
   app.get('/has_admin', admin.hasAdmin)
   app.get('/initial_admin_pubkey', admin.initialAdminPubkey)
 
-  app.get('/my_ip', (request, response) => response.send(request.ip))
+  // following routes are only for proxy admin user (isAdmin=true)
+  app.get('/add_user', pamid, admin.addProxyUser)
+  app.get('/list_users', pamid, admin.listUsers)
+  app.post('/default_tribe/:id', pamid, admin.addDefaultJoinTribe)
+  app.delete('/default_tribe/:id', pamid, admin.removeDefaultJoinTribe)
+  app.get('/tribes', pamid, admin.listTribes)
+  app.get('/admin_balance', pamid, admin.adminBalance)
 
   // rate limit these routes:
   app.use(limiter)
@@ -245,12 +253,7 @@ export async function set(app) {
   app.post('/subscriptions', subcriptions.createSubscription)
   app.post('/update_channel_policy', details.updateChannelPolicy)
 
-  // following routes are only for proxy admin user (isAdmin=true)
-  app.use(proxyAdminMiddleware)
-  app.get('/add_user', admin.addProxyUser)
-  app.get('/list_users', admin.listUsers)
-  app.post('/default_tribe/:id', admin.addDefaultJoinTribe)
-  app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe)
+  app.post('/swarm_admin_register', admin.swarmAdminRegister)
 }
 
 const msgtypes = constants.message_types

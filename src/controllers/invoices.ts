@@ -211,9 +211,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
           msg
         )) as MessageRecord
 
-        success(res, jsonUtils.messageToJson(message, chat))
-
-        network.sendMessage({
+        await network.sendMessage({
           chat: chat as Partial<ChatPlusMembers>,
           sender: owner,
           type: constants.message_types.invoice,
@@ -222,6 +220,8 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
             invoice: message.paymentRequest,
           },
         })
+
+        success(res, jsonUtils.messageToJson(message, chat))
       }
     } catch (err) {
       sphinxLogger.error(`addInvoice error: ${err}`)
