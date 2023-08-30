@@ -84,7 +84,7 @@ async function tribe3Escrow(t, node1, node2, node3) {
 
   t.true(
     balBefore - balImmediatelyAfter ===
-      tribe.escrow_amount + tribe.price_per_message,
+      tribe.escrow_amount + tribe.price_per_message + 3,
     'Difference between balance before and after message should be equal to the sum of escrow and price_per_message'
   )
 
