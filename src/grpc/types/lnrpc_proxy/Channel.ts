@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   HTLC as _lnrpc_proxy_HTLC,
   HTLC__Output as _lnrpc_proxy_HTLC__Output,
@@ -12,7 +13,6 @@ import type {
   ChannelConstraints as _lnrpc_proxy_ChannelConstraints,
   ChannelConstraints__Output as _lnrpc_proxy_ChannelConstraints__Output,
 } from '../lnrpc_proxy/ChannelConstraints'
-import type { Long } from '@grpc/proto-loader'
 
 export interface Channel {
   active?: boolean
