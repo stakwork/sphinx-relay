@@ -3,6 +3,7 @@ import { Contact } from './models'
 
 export interface Req extends express.Request {
   owner: Contact
+  admin: Contact
   rawBody: string
 }
 

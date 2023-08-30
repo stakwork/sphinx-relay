@@ -51,6 +51,7 @@ function clearTransportTokens() {
 }
 function migrate() {
     return __awaiter(this, void 0, void 0, function* () {
+        addTableColumn('sphinx_contacts', 'admin_token');
         addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT');
         yield clearTransportTokens();
         addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN');
