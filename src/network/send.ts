@@ -22,10 +22,10 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
+import { ML_PREFIX } from '../builtin/ml'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import * as intercept from './intercept'
 import { typesToForward, receiveCoTenantMessage } from './receive'
-import { ML_PREFIX } from '../builtin/ml'
 
 const config = loadConfig()
 

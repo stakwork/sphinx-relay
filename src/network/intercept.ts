@@ -5,8 +5,8 @@ import { builtinBotEmit } from '../builtin'
 import { keysendBotCmd, postToBotServer } from '../controllers/bots'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { BotMsg } from './interfaces'
 import { ML_PREFIX, ML_BOTNAME } from '../builtin/ml'
+import { BotMsg } from './interfaces'
 
 /*
 default show or not

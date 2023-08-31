@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Invoice as _lnrpc_Invoice,
   Invoice__Output as _lnrpc_Invoice__Output,
 } from '../lnrpc/Invoice'
-import type { Long } from '@grpc/proto-loader'
 
 export interface ListInvoiceResponse {
   invoices?: _lnrpc_Invoice[]

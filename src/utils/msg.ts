@@ -155,7 +155,7 @@ async function decryptMessage(
     obj.mediaKey = decMediaKey
   }
   if (m.mediaTerms) {
-    let mediaToken = await tokenFromTerms({
+    const mediaToken = await tokenFromTerms({
       host: m.mediaTerms.host,
       muid: m.mediaTerms.muid,
       ttl: m.mediaTerms.ttl,
