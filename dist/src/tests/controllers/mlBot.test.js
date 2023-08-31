@@ -77,7 +77,7 @@ function mlBot(t, index1, index2, index3) {
         const bobMessage = yield (0, msg_1.sendTribeMessage)(t, bob, tribe, text4);
         const botTextResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="font-size:15px;margin:5px 0;max-width:90%;">This is a response from test ml-bot server built in sphinx-stack</div></div>';
         const botImageResponse = '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:10rem;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>';
-        yield (0, helpers_1.sleep)(8000);
+        yield (0, helpers_1.sleep)(6000);
         const botReply4 = (yield (0, get_1.getCheckBotMsg)(t, bob, botAlias, tribe, 1));
         const botResponse = (0, msg_1.decryptMessage)(bob, botReply4);
         t.true(botResponse === botTextResponse);
@@ -87,7 +87,7 @@ function mlBot(t, index1, index2, index3) {
         //Bot sends Message in tribe
         const text5 = (0, helpers_1.randomText)();
         const virtualNode1Message = yield (0, msg_1.sendTribeMessage)(t, virtualNode1, tribe, text5);
-        yield (0, helpers_1.sleep)(8000);
+        yield (0, helpers_1.sleep)(6000);
         const botReply5 = (yield (0, get_1.getCheckBotMsg)(t, bob, botAlias, tribe, 1));
         const botResponse2 = (0, msg_1.decryptMessage)(bob, botReply5);
         t.true(botResponse2 === botTextResponse);
@@ -118,7 +118,7 @@ function mlBot(t, index1, index2, index3) {
         //Alice sends Message in the tribe
         const text6 = (0, helpers_1.randomText)();
         const aliceMsg = yield (0, msg_1.sendTribeMessage)(t, alice, tribe, `@${model2} ${text6}`);
-        yield (0, helpers_1.sleep)(8000);
+        yield (0, helpers_1.sleep)(6000);
         const botReply8 = (yield (0, get_1.getCheckBotMsg)(t, alice, botAlias, tribe, 10));
         const botResponse3 = (0, msg_1.decryptMessage)(alice, botReply8);
         t.true(botResponse3 === botImageResponse);
@@ -132,13 +132,22 @@ function mlBot(t, index1, index2, index3) {
         const text9 = (0, helpers_1.randomText)();
         const imageSent = yield (0, msg_1.sendImage)(t, virtualNode1, alice, base64images_1.greenSquare, tribe, 0, '', `@${model2} ${text9}`);
         t.true(!!imageSent, 'message should have been sent');
-        yield (0, helpers_1.sleep)(8000);
+        yield (0, helpers_1.sleep)(6000);
         const botReply9 = (yield (0, get_1.getCheckBotMsg)(t, virtualNode1, botAlias, tribe, 2));
         const botResponse4 = (0, msg_1.decryptMessage)(virtualNode1, botReply9);
         t.true(botResponse4 === botImageResponse);
         //Bob Node Should not See VirtualNode Message
         const checkNode7 = yield (0, get_1.shouldNotGetNewMsgs)(t, bob, imageSent.uuid);
         t.true(checkNode7, 'BOB SHOULD NOT SEE VirtualNode Message');
+        //VirtualNode sends reply bot response to get image URL
+        const text10 = (0, helpers_1.randomText)();
+        yield (0, msg_1.sendTribeMessage)(t, virtualNode1, tribe, `@${model2} ${text10}`, {
+            reply_uuid: botReply9.uuid,
+        });
+        yield (0, helpers_1.sleep)(6000);
+        const botReply10 = (yield (0, get_1.getCheckBotMsg)(t, virtualNode1, botAlias, tribe, 3));
+        const botResponse8 = (0, msg_1.decryptMessage)(virtualNode1, botReply10);
+        t.true(botResponse8 === botImageResponse);
         //BOB LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, bob, tribe);
         t.true(left2, 'bob should leave tribe');

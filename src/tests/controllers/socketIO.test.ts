@@ -109,15 +109,15 @@ async function testSocketIO(t: ExecutionContext<Context>, legacy: boolean) {
   await sendBoost(t, nodes[0], nodes[1], tribeMessage, 10, socketTribe)
 
   t.true(
-    responseArray[responseArray.length - 4].type == 'confirmation',
+    responseArray[responseArray.length - 4].type == 'message',
     'we should receive a confirmation'
   )
   t.true(
-    responseArray[responseArray.length - 3].type == 'message',
+    responseArray[responseArray.length - 3].type == 'group_join',
     'we should receive a message'
   )
   t.true(
-    responseArray[responseArray.length - 2].type == 'group_join',
+    responseArray[responseArray.length - 2].type == 'confirmation',
     'we should get back something when we join a tribe group chat'
   )
   t.true(

@@ -176,7 +176,11 @@ async function sendSubscriptionPayment(sub, isFirstMessage, owner) {
           if (jobs[sub.id]) jobs[subscription.id].stop()
           delete jobs[subscription.id]
         }
-        await subscription.update(obj)
+        try {
+          await subscription.update(obj)
+        } catch (e) {
+          console.error('UPDATE SUB FAILED', e)
+        }
 
         const forMe = true
         const text2 = msgForSubPayment(owner, sub, isFirstMessage, forMe)

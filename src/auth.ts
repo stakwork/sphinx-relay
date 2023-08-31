@@ -78,8 +78,13 @@ export async function hmacMiddleware(req: Req, res: Res, next): Promise<void> {
     next()
     return
   }
+
+  if (!req.owner) {
+    next()
+    return
+  }
   // opt-in feature
-  if (!req.owner.hmacKey) {
+  if (!req.owner?.hmacKey) {
     next()
     return
   }
@@ -108,8 +113,8 @@ export async function proxyAdminMiddleware(
     next()
     return
   }
-  if (!req.owner) return unauthorized(res)
-  if (!req.owner.isAdmin) return unauthorized(res)
+  if (!req.admin) return unauthorized(res)
+  if (!req.admin.isAdmin) return unauthorized(res)
   if (!isProxy()) return unauthorized(res)
   next()
 }
@@ -134,7 +139,8 @@ function no_auth(path) {
     path == '/has_admin' ||
     path == '/initial_admin_pubkey' ||
     path == '/my_ip' ||
-    path == '/ml'
+    path == '/ml' ||
+    path == '/swarm_admin_register'
   )
 }
 
@@ -203,8 +209,9 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
       .createHash('sha256')
       .update(token)
       .digest('base64')
+    const tokenKey = x_admin_token ? 'adminToken' : 'authToken'
     owner = (await models.Contact.findOne({
-      where: { authToken: hashedToken, isOwner: true },
+      where: { [tokenKey]: hashedToken, isOwner: true },
     })) as ContactRecord
     if (x_admin_token) {
       if (!owner.isAdmin) {
@@ -255,7 +262,11 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
     }
     await owner.update({ lastTimestamp: timestamp })
   }
-  req.owner = owner.dataValues
+  if (x_admin_token) {
+    req.admin = owner.dataValues
+  } else {
+    req.owner = owner.dataValues
+  }
   next()
 }
 

@@ -194,8 +194,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     msg.expirationDate = new Date(expiry);
                 }
                 const message = (yield models_1.models.Message.create(msg));
-                (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
-                network.sendMessage({
+                yield network.sendMessage({
                     chat: chat,
                     sender: owner,
                     type: constants_1.default.message_types.invoice,
@@ -204,6 +203,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         invoice: message.paymentRequest,
                     },
                 });
+                (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
             }
         }
         catch (err) {

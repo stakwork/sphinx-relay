@@ -13,9 +13,11 @@ import {
   mlBotResponse,
   addModel,
   getAttachmentBlob,
+  getOgMessage,
 } from './utill/ml'
 import { sphinxLogger, logging } from '../utils/logger'
 import constants from '../constants'
+import * as rsa from '../crypto/rsa'
 
 const config = loadConfig()
 
@@ -71,12 +73,27 @@ export function init() {
         }
       }
       let imageBase64 = ''
-      // let imageUrl = ''
+      let imageUrl = ''
       if (message.reply_id) {
         //Look for original message
+        const ogMessage = await getOgMessage(message.reply_id, tribe.tenant)
+        const parsedRemoteMessage = JSON.parse(ogMessage.remoteMessageContent)
+
         //Decrypt message
+        const decryptedMessage = rsa.decrypt(
+          tribe.groupPrivateKey,
+          parsedRemoteMessage.chat
+        )
+
         //Check if message has img tag
+        const splittedMessage = decryptedMessage.split('<img src=')
+        if (splittedMessage.length > 1) {
+          const secondSplitting =
+            splittedMessage[1] && splittedMessage[1]?.split('"')
+          imageUrl = secondSplitting[1]
+        }
       }
+
       if (message.type === constants.message_types.attachment) {
         const blob = await getAttachmentBlob(
           message.media_token!,
@@ -139,35 +156,21 @@ export function init() {
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
-      let j
-      if (message.type === constants.message_types.attachment) {
-        const r = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            message: content.trim(),
-            image64: imageBase64,
-            webhook: `${host_name}/ml`,
-          }),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        })
-        j = await r.json()
-      } else {
-        const r = await fetch(url, {
-          method: 'POST',
-          body: JSON.stringify({
-            message: content.trim(),
-            webhook: `${host_name}/ml`,
-          }),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        })
-        j = await r.json()
-      }
+
+      const r = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          message: content.trim(),
+          image64: imageBase64 || '',
+          image_url: imageUrl || '',
+          webhook: `${host_name}/ml`,
+        }),
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      })
+      let j = await r.json()
 
       if (!j.body) {
         mlBotResponse('failed to process message (no body)', message)

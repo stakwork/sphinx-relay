@@ -232,21 +232,10 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else {
         // done!
-        let isAdmin = true;
         if ((0, proxy_1.isProxy)()) {
-            const theAdmin = (yield models_1.models.Contact.findOne({
-                where: { isAdmin: true },
-            }));
-            // there can be only 1 admin
-            if (theAdmin) {
-                isAdmin = false;
-            }
             tribes.newSubscription(owner, network.receiveMqttMessage);
         }
-        if (isAdmin) {
-            logger_1.sphinxLogger.info('Admin signing up!!!');
-        }
-        yield owner.update({ authToken: hash, isAdmin });
+        yield owner.update({ authToken: hash });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,

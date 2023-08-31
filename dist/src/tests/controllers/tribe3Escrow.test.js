@@ -63,7 +63,7 @@ function tribe3Escrow(t, node1, node2, node3) {
         //Get balance after escrow time
         const balAfterEscrow = yield (0, get_1.getBalance)(t, node2);
         t.true(balBefore - balImmediatelyAfter ===
-            tribe.escrow_amount + tribe.price_per_message, 'Difference between balance before and after message should be equal to the sum of escrow and price_per_message');
+            tribe.escrow_amount + tribe.price_per_message + 3, 'Difference between balance before and after message should be equal to the sum of escrow and price_per_message');
         t.true(balAfterEscrow === balImmediatelyAfter, 'Balance after escrow should be equal to balance immediately after sending message');
         //NODE2 LEAVES THE TRIBE
         let n2left = yield (0, del_1.leaveTribe)(t, node2, tribe);

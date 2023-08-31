@@ -100,6 +100,9 @@ export default class Contact extends Model<Contact> {
 
   @Column
   prune: number
+
+  @Column
+  adminToken: string
 }
 
 export interface ContactRecord extends Contact {

@@ -387,7 +387,6 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.recipientPic = recipientPic;
     // console.log(msg)
     const message = (yield models_1.models.Message.create(msg));
-    (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
         id: message.id,
         uuid: message.uuid,
@@ -425,7 +424,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     // final send
     // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
-    network.sendMessage(sendMessageParams);
+    yield network.sendMessage(sendMessageParams);
+    (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
 });
 exports.sendMessage = sendMessage;
 /**

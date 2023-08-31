@@ -191,7 +191,7 @@ function downloadAndUploadAndSaveReturningTermsAndKey(payload, chat, sender, own
         // console.log('[modify] terms.host', terms.host)
         // console.log('[modify] mt', mt)
         let protocol = 'https';
-        if (terms.host.includes('localhost'))
+        if (terms.host.includes('localhost') || terms.host.includes('meme.sphinx'))
             protocol = 'http';
         const r = yield (0, node_fetch_1.default)(`${protocol}://${terms.host}/file/${mt}`, {
             headers: { Authorization: `Bearer ${token}` },

@@ -13,6 +13,7 @@ interface SendMessageOptions {
   amount?: number
   parent_id?: number
   thread_uuid?: string
+  reply_uuid?: string
 }
 
 export async function sendTribeMessage(
@@ -43,7 +44,7 @@ export async function sendTribeMessage(
     amount: (options && options.amount) || 0,
     parent_id: (options && options.parent_id) || 0,
     thread_uuid: (options && options.thread_uuid) || '',
-    reply_uuid: '',
+    reply_uuid: (options && options.reply_uuid) || '',
     boost: false,
   }
 

@@ -251,21 +251,10 @@ export const generateToken = async (req: Req, res: Res): Promise<void> => {
     }
   } else {
     // done!
-    let isAdmin = true
     if (isProxy()) {
-      const theAdmin = (await models.Contact.findOne({
-        where: { isAdmin: true },
-      })) as Contact
-      // there can be only 1 admin
-      if (theAdmin) {
-        isAdmin = false
-      }
       tribes.newSubscription(owner, network.receiveMqttMessage)
     }
-    if (isAdmin) {
-      sphinxLogger.info('Admin signing up!!!')
-    }
-    await owner.update({ authToken: hash, isAdmin })
+    await owner.update({ authToken: hash })
   }
 
   success(res, {

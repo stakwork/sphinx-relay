@@ -24,10 +24,9 @@ export const payInvoice = async (
     makeArgs(sendingNode, v)
   )
 
-  console.log('-> payInvoice res', sendingNode.alias, r)
   t.true(r.success, 'Put method should have succeeded')
   const paymentHash = r.response.payment_hash
-  t.truthy(paymentHash, 'paymentHash should exist')
+  t.truthy(paymentHash, `paymentHash should exist for ${sendingNode.alias}`)
 
   //wait for PUT method
   const paid = await getCheckNewPaidInvoice(t, receivingNode, paymentHash)
@@ -37,13 +36,6 @@ export const payInvoice = async (
   const sendingNodeafterBalance = await getBalance(t, sendingNode)
   //get receivingNode balance after payment
   const receivingNodeafterBalance = await getBalance(t, receivingNode)
-
-  console.log('amount', amount)
-  console.log('NODE1 === ', sendingNodebeforeBalance - sendingNodeafterBalance)
-  console.log(
-    'NODE2 === ',
-    receivingNodeafterBalance - receivingNodebeforeBalance
-  )
 
   //check that sendingNode sent payment and receivingNode received payment based on balances
   //3 SAT ARE ADDED AS A MESSAGE FEE

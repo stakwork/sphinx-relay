@@ -1,4 +1,4 @@
-import { ChatRecord } from '../../models'
+import { ChatRecord, MessageRecord, models } from '../../models'
 import { botResponse, findBot } from './index'
 import * as Sphinx from 'sphinx-bot'
 import { ML_BOTNAME } from '../ml'
@@ -322,7 +322,8 @@ export async function getAttachmentBlob(
   const token = await meme.lazyToken(ownerPubkey, terms.host)
 
   let protocol = 'https'
-  if (terms.host.includes('localhost')) protocol = 'http'
+  if (terms.host.includes('localhost') || terms.host.includes('meme.sphinx'))
+    protocol = 'http'
   const r = await fetch(`${protocol}://${terms.host}/file/${mediaToken}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -331,4 +332,13 @@ export async function getAttachmentBlob(
 
   const imgBuf = RNCryptor.Decrypt(buf.toString('base64'), mediaKey)
   return imgBuf
+}
+
+export async function getOgMessage(
+  uuid: string,
+  tenant: number
+): Promise<MessageRecord> {
+  return (await models.Message.findOne({
+    where: { uuid, tenant },
+  })) as MessageRecord
 }

@@ -36,6 +36,8 @@ async function clearTransportTokens() {
 }
 
 export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_contacts', 'admin_token')
+
   addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT')
   await clearTransportTokens()
   addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN')
