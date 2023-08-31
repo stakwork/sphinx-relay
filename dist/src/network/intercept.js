@@ -16,6 +16,7 @@ const builtin_1 = require("../builtin");
 const bots_1 = require("../controllers/bots");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const ml_1 = require("../builtin/ml");
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -63,6 +64,9 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     },
                 }));
                 if (ogBotMsg && ogBotMsg.senderAlias) {
+                    if (ogBotMsg.senderAlias === ml_1.ML_BOTNAME) {
+                        ogBotMsg.senderAlias = ml_1.ML_PREFIX.substring(1);
+                    }
                     const ogSenderBot = (yield models_1.models.ChatBot.findOne({
                         where: {
                             chatId: chat.id,

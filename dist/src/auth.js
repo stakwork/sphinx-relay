@@ -147,6 +147,7 @@ function no_auth(path) {
         path == '/has_admin' ||
         path == '/initial_admin_pubkey' ||
         path == '/my_ip' ||
+        path == '/ml' ||
         path == '/swarm_admin_register');
 }
 function ownerMiddleware(req, res, next) {

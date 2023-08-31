@@ -124,7 +124,7 @@ export async function getToken(t, node) {
 
 export function memeProtocol(host) {
   let p = 'https'
-  if (host.includes('localhost')) p = 'http'
+  if (host.includes('localhost') || host.includes('meme.sphinx')) p = 'http'
   return p
 }
 

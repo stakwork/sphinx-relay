@@ -23,6 +23,7 @@ const errMsgString_1 = require("../utils/errMsgString");
 const proxy_1 = require("../utils/proxy");
 const intercept = require("./intercept");
 const receive_1 = require("./receive");
+const ml_1 = require("../builtin/ml");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
@@ -92,7 +93,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
-                if (msg.sender.role === constants_1.default.chat_roles.owner && msg.type === 0) {
+                if (msg.type === 0 || msg.type === constants_1.default.message_types.attachment) {
                     const hiddenCmd = yield interceptTribeMsgForHiddenCmds(msg, tenant);
                     justMe = hiddenCmd ? hiddenCmd : justMe;
                 }
@@ -432,12 +433,14 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 where: { tenant, chatId: newChat.id },
             }));
             const content = msg.message.content;
-            const splitedContent = content.split(' ');
+            const splitedContent = (content && content.split(' ')) || [];
             for (let i = 0; i < bots.length; i++) {
                 const bot = bots[i];
-                if (bot.botPrefix === splitedContent[0] &&
+                const isHidden = bot.botPrefix === splitedContent[0] &&
                     bot.hiddenCommands &&
-                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
+                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1]);
+                const isPersonal = bot.botPrefix === ml_1.ML_PREFIX;
+                if (isHidden || isPersonal) {
                     yield models_1.models.Message.update({
                         onlyOwner: true,
                     }, { where: { uuid: msg.message.uuid, tenant } });

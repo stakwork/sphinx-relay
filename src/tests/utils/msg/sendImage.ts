@@ -17,6 +17,7 @@ import { arraysEqual, getToken, makeArgs, memeProtocol } from '../helpers'
 import { NodeConfig } from '../../types'
 import { Contact, Chat } from '../../types'
 import { config } from '../../config'
+import * as rsa from '../../../crypto/rsa'
 
 interface Context {}
 
@@ -27,7 +28,8 @@ export async function sendImage(
   image: string,
   tribe?: Chat | null,
   price?: Number,
-  thread_uuid?: string
+  thread_uuid?: string,
+  text?: string
 ) {
   //NODE1 SENDS AN IMAGE TO NODE2
 
@@ -37,6 +39,14 @@ export async function sendImage(
   let typ = 'image/jpg'
   let filename = 'Image.jpg'
   let isPublic = false
+  let encryptedText = ''
+  let remoteText = ''
+  if (text) {
+    encryptedText = rsa.encrypt(node1.contact_key, text)
+  }
+  if (tribe && text) {
+    remoteText = rsa.encrypt(tribe.group_key, text)
+  }
 
   const upload = await uploadMeme(
     fileBase64,
@@ -93,10 +103,11 @@ export async function sendImage(
     muid: upload.muid,
     media_key_map: mediaKeyMap,
     media_type: 'image/jpg',
-    text: '',
+    text: encryptedText || '',
     amount: 0,
     price: 0 || price,
     thread_uuid,
+    remote_text_map: { chat: remoteText } || '',
   }
 
   //send message from node1 to node2

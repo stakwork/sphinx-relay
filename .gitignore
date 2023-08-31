@@ -7,7 +7,6 @@ sphinx.db
 binaries/nodeapp-macos 
 binaries/nodeapp-alpine 
 
-dist
 dist/public/uploads
 
 dist/config/app.json

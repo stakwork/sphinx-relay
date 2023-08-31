@@ -78,7 +78,7 @@ export async function sendPayment(t, node1, node2, amount, text) {
   t.true(
     Math.abs(node1beforeBalance - node1afterBalance - amount) <=
       config.allowedFee,
-    'node1 should have paid amount'
+    `${node1.alias} should have paid amount`
   )
   t.true(
     Math.abs(node2afterBalance - node2beforeBalance - amount) <=

@@ -248,7 +248,8 @@ export async function downloadAndUploadAndSaveReturningTermsAndKey(
   // console.log('[modify] terms.host', terms.host)
   // console.log('[modify] mt', mt)
   let protocol = 'https'
-  if (terms.host.includes('localhost')) protocol = 'http'
+  if (terms.host.includes('localhost') || terms.host.includes('meme.sphinx'))
+    protocol = 'http'
   const r = await fetch(`${protocol}://${terms.host}/file/${mt}`, {
     headers: { Authorization: `Bearer ${token}` },
   })

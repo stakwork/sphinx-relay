@@ -25,6 +25,7 @@ import { getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import * as intercept from './intercept'
 import { typesToForward, receiveCoTenantMessage } from './receive'
+import { ML_PREFIX } from '../builtin/ml'
 
 const config = loadConfig()
 
@@ -148,7 +149,7 @@ export async function sendMessage({
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
-      if (msg.sender.role === constants.chat_roles.owner && msg.type === 0) {
+      if (msg.type === 0 || msg.type === constants.message_types.attachment) {
         const hiddenCmd = await interceptTribeMsgForHiddenCmds(msg, tenant)
         justMe = hiddenCmd ? hiddenCmd : justMe
       }
@@ -554,15 +555,18 @@ async function interceptTribeMsgForHiddenCmds(
     const bots = (await models.ChatBot.findAll({
       where: { tenant, chatId: newChat.id },
     })) as ChatBotRecord[]
+
     const content = msg.message.content as string
-    const splitedContent = content.split(' ')
+    const splitedContent = (content && content.split(' ')) || []
     for (let i = 0; i < bots.length; i++) {
       const bot = bots[i]
-      if (
+
+      const isHidden =
         bot.botPrefix === splitedContent[0] &&
         bot.hiddenCommands &&
         JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
-      ) {
+      const isPersonal = bot.botPrefix === ML_PREFIX
+      if (isHidden || isPersonal) {
         await models.Message.update(
           {
             onlyOwner: true,

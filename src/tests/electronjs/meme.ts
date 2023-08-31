@@ -26,7 +26,8 @@ async function uploadMeme(fileBase64, typ, host, token, filename, isPublic) {
     })
     const formHeaders = form.getHeaders()
     let protocol = 'https'
-    if (host.includes('localhost')) protocol = 'http'
+    if (host.includes('localhost') || host.includes('meme.sphinx'))
+      protocol = 'http'
     const resp = await fetch(
       `${protocol}://${host}/${isPublic ? 'public' : 'file'}`,
       {

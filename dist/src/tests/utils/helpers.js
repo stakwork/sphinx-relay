@@ -120,7 +120,7 @@ function getToken(t, node) {
 exports.getToken = getToken;
 function memeProtocol(host) {
     let p = 'https';
-    if (host.includes('localhost'))
+    if (host.includes('localhost') || host.includes('meme.sphinx'))
         p = 'http';
     return p;
 }

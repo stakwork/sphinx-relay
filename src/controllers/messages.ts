@@ -461,8 +461,6 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   // console.log(msg)
   const message: Message = (await models.Message.create(msg)) as Message
 
-  success(res, jsonUtils.messageToJson(message, chat))
-
   const msgToSend: { [k: string]: string | number } = {
     id: message.id,
     uuid: message.uuid,
@@ -498,7 +496,8 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
 
   // final send
   // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
-  network.sendMessage(sendMessageParams)
+  await network.sendMessage(sendMessageParams)
+  success(res, jsonUtils.messageToJson(message, chat))
 }
 
 /**
