@@ -153,6 +153,10 @@ export function init() {
       }
 
       let host_name = config.host_name
+      if (!host_name) {
+        mlBotResponse('no host_name!', message)
+        return
+      }
       if (!host_name.startsWith('http')) {
         host_name = `https://${host_name}`
       }
@@ -182,6 +186,7 @@ export function init() {
         return
       }
 
+      console.log('ML req sent!', j.body)
       CALLBACKS[process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()
           .setAuthor(ML_BOTNAME)
