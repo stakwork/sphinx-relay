@@ -91,13 +91,13 @@ export async function mlBot(t, index1, index2, index3) {
     '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="font-size:15px;margin:5px 0;max-width:90%;">This is a response from test ml-bot server built in sphinx-stack</div></div>'
   const botImageResponse =
     '<div style="position:relative;max-width:fit-content;min-width:180px;"><div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:10rem;"><img src="https://res.cloudinary.com/teebams/image/upload/v1648478325/elite/wiot5aymifdzqwplyu1a.png" style="max-width:100%;object-fit:cover;"></div></div>'
-  await sleep(6000)
+  await sleep(5100)
   const botReply4 = (await getCheckBotMsg(
     t,
     bob,
     botAlias,
     tribe,
-    1
+    2
   )) as Message
   const botResponse = decryptMessage(bob, botReply4)
   t.true(botResponse === botTextResponse)
@@ -114,13 +114,13 @@ export async function mlBot(t, index1, index2, index3) {
     tribe,
     text5
   )
-  await sleep(6000)
+  await sleep(5100)
   const botReply5 = (await getCheckBotMsg(
     t,
     bob,
     botAlias,
     tribe,
-    1
+    2
   )) as Message
   const botResponse2 = decryptMessage(bob, botReply5)
   t.true(botResponse2 === botTextResponse)
@@ -133,7 +133,7 @@ export async function mlBot(t, index1, index2, index3) {
   const imageKind = `/ml kind ${model1} image`
   await sendTribeMessage(t, alice, tribe, imageKind)
 
-  const botReply6 = await getCheckBotMsg(t, alice, botAlias, tribe, 6)
+  const botReply6 = await getCheckBotMsg(t, alice, botAlias, tribe, 8)
   t.truthy(botReply6, 'MlBot should reply')
 
   const model2 = 'image_gpt'
@@ -150,7 +150,7 @@ export async function mlBot(t, index1, index2, index3) {
   const imageUrlMsg = `/ml api_key ${model2} twesting`
   await sendTribeMessage(t, alice, tribe, imageUrlMsg)
 
-  const botReply7 = await getCheckBotMsg(t, alice, botAlias, tribe, 8)
+  const botReply7 = await getCheckBotMsg(t, alice, botAlias, tribe, 10)
   t.truthy(botReply7, 'MlBot should reply')
 
   await sleep(1000)
@@ -170,14 +170,14 @@ export async function mlBot(t, index1, index2, index3) {
     `@${model2} ${text6}`
   )
 
-  await sleep(6000)
+  await sleep(5100)
 
   const botReply8 = (await getCheckBotMsg(
     t,
     alice,
     botAlias,
     tribe,
-    10
+    13
   )) as Message
   const botResponse3 = decryptMessage(alice, botReply8)
   t.true(botResponse3 === botImageResponse)
@@ -203,14 +203,14 @@ export async function mlBot(t, index1, index2, index3) {
     `@${model2} ${text9}`
   )
   t.true(!!imageSent, 'message should have been sent')
-  await sleep(6000)
+  await sleep(5100)
 
   const botReply9 = (await getCheckBotMsg(
     t,
     virtualNode1,
     botAlias,
     tribe,
-    2
+    4
   )) as Message
   const botResponse4 = decryptMessage(virtualNode1, botReply9)
   t.true(botResponse4 === botImageResponse)
@@ -225,14 +225,14 @@ export async function mlBot(t, index1, index2, index3) {
     reply_uuid: botReply9.uuid,
   })
 
-  await sleep(6000)
+  await sleep(5100)
 
   const botReply10 = (await getCheckBotMsg(
     t,
     virtualNode1,
     botAlias,
     tribe,
-    3
+    6
   )) as Message
   const botResponse8 = decryptMessage(virtualNode1, botReply10)
   t.true(botResponse8 === botImageResponse)
