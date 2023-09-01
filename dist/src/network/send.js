@@ -21,9 +21,9 @@ const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
 const proxy_1 = require("../utils/proxy");
+const ml_1 = require("../builtin/ml");
 const intercept = require("./intercept");
 const receive_1 = require("./receive");
-const ml_1 = require("../builtin/ml");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.

@@ -154,6 +154,7 @@ function init() {
                 (0, ml_1.mlBotResponse)('failed to process message', message);
                 return;
             }
+            (0, ml_1.mlBotResponse)('Message received... estimated response time 30 seconds', message);
             console.log('ML req sent!', j.body);
             exports.CALLBACKS[process_id] = function (msg) {
                 const embed = new Sphinx.MessageEmbed()

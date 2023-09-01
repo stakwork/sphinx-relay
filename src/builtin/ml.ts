@@ -186,6 +186,11 @@ export function init() {
         return
       }
 
+      mlBotResponse(
+        'Message received... estimated response time 30 seconds',
+        message
+      )
+
       console.log('ML req sent!', j.body)
       CALLBACKS[process_id] = function (msg: string) {
         const embed = new Sphinx.MessageEmbed()
