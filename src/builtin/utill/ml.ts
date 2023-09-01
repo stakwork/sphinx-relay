@@ -342,3 +342,34 @@ export async function getOgMessage(
     where: { uuid, tenant },
   })) as MessageRecord
 }
+
+export async function listModels(
+  botPrefix: string,
+  tribe: ChatRecord,
+  messageObject: Sphinx.Message
+) {
+  try {
+    const bot = await findBot({ botPrefix, tribe })
+    let metaObj: { [key: string]: MlMeta } = JSON.parse(bot.meta || `{}`)
+    const arrMetaName = Object.keys(metaObj)
+    if (arrMetaName.length === 0) {
+      mlBotResponse('Ops!!, No model available at the moment.', messageObject)
+      return
+    }
+    let message = '<p style="margin-top:-0.5rem;">List of available models:</p>'
+    for (let i = 0; i < arrMetaName.length; i++) {
+      message = `${message}<p style="margin-top:-0.5rem;">${i + 1}. ${
+        arrMetaName[i]
+      }</p>`
+    }
+    mlBotResponse(message, messageObject)
+    return
+  } catch (error) {
+    sphinxLogger.error(`error while adding model: ${error}`, logging.Bots)
+    mlBotResponse(
+      error.message || 'Error occured while listing models',
+      messageObject
+    )
+    return
+  }
+}

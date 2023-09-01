@@ -148,7 +148,7 @@ function decryptMessage(full, chat) {
             obj.mediaKey = decMediaKey;
         }
         if (m.mediaTerms) {
-            let mediaToken = yield (0, ldat_1.tokenFromTerms)({
+            const mediaToken = yield (0, ldat_1.tokenFromTerms)({
                 host: m.mediaTerms.host,
                 muid: m.mediaTerms.muid,
                 ttl: m.mediaTerms.ttl,

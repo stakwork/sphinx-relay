@@ -1,6 +1,6 @@
 import test from 'ava'
 import { randomText } from '../utils/helpers'
-// import { deleteTribe, leaveTribe } from '../utils/del'
+import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
 import { sendTribeMessageAndCheckDecryption, sendBoost } from '../utils/msg'
 import nodes from '../nodes'
@@ -84,14 +84,14 @@ export async function boostPayment(t, index1, index2, index3) {
   t.true(boost3.success)
 
   //NODE2 LEAVES TRIBE
-  // let left2 = await leaveTribe(t, node2, tribe)
-  // t.true(left2, 'node2 should leave tribe')
+  let left2 = await leaveTribe(t, node2, tribe)
+  t.true(left2, 'node2 should leave tribe')
 
-  // //NODE3 LEAVES TRIBE
-  // let left3 = await leaveTribe(t, node3, tribe)
-  // t.true(left3, 'node3 should leave tribe')
+  //NODE3 LEAVES TRIBE
+  let left3 = await leaveTribe(t, node3, tribe)
+  t.true(left3, 'node3 should leave tribe')
 
-  // //NODE1 DELETES TRIBE
-  // let delTribe2 = await deleteTribe(t, node1, tribe)
-  // t.true(delTribe2, 'node1 should delete tribe')
+  //NODE1 DELETES TRIBE
+  let delTribe2 = await deleteTribe(t, node1, tribe)
+  t.true(delTribe2, 'node1 should delete tribe')
 }

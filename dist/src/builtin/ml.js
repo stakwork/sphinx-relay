@@ -42,8 +42,8 @@ function init() {
                 where: { uuid: message.channel.id },
             }));
             const arr = (message.content && message.content.split(' ')) || [];
-            if (isAdmin && arr[0] === exports.ML_PREFIX) {
-                const cmd = arr[1];
+            const cmd = arr[1];
+            if ((isAdmin && arr[0] === exports.ML_PREFIX) || cmd === 'list') {
                 switch (cmd) {
                     case 'url':
                         yield (0, ml_1.addUrl)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
@@ -56,6 +56,9 @@ function init() {
                         return;
                     case 'add':
                         yield (0, ml_1.addModel)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
+                        return;
+                    case 'list':
+                        yield (0, ml_1.listModels)(exports.ML_PREFIX, tribe, message);
                         return;
                     default:
                         (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
@@ -154,6 +157,7 @@ function init() {
                 (0, ml_1.mlBotResponse)('failed to process message', message);
                 return;
             }
+            (0, ml_1.mlBotResponse)('Message received... estimated response time 30 seconds', message);
             console.log('ML req sent!', j.body);
             exports.CALLBACKS[process_id] = function (msg) {
                 const embed = new Sphinx.MessageEmbed()
@@ -170,7 +174,7 @@ function init() {
             };
             setTimeout(() => {
                 delete exports.CALLBACKS[process_id];
-            }, 5 * 60 * 1000);
+            }, 15 * 60 * 1000);
         }
         catch (e) {
             console.log(e);
