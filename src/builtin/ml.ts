@@ -14,6 +14,7 @@ import {
   addModel,
   getAttachmentBlob,
   getOgMessage,
+  listModels,
 } from './utill/ml'
 import { sphinxLogger, logging } from '../utils/logger'
 import constants from '../constants'
@@ -50,10 +51,8 @@ export function init() {
       })) as ChatRecord
 
       const arr = (message.content && message.content.split(' ')) || []
-
-      if (isAdmin && arr[0] === ML_PREFIX) {
-        const cmd = arr[1]
-
+      const cmd = arr[1]
+      if ((isAdmin && arr[0] === ML_PREFIX) || cmd === 'list') {
         switch (cmd) {
           case 'url':
             await addUrl(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
@@ -66,6 +65,9 @@ export function init() {
             return
           case 'add':
             await addModel(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
+            return
+          case 'list':
+            await listModels(ML_PREFIX, tribe, message)
             return
           default:
             defaultCommand(ML_BOTNAME, ML_PREFIX, message)

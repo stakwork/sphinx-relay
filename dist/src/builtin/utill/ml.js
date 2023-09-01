@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOgMessage = exports.getAttachmentBlob = exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
+exports.listModels = exports.getOgMessage = exports.getAttachmentBlob = exports.mlBotResponse = exports.addModel = exports.defaultCommand = exports.addKind = exports.addApiKey = exports.addUrl = void 0;
 const models_1 = require("../../models");
 const index_1 = require("./index");
 const Sphinx = require("sphinx-bot");
@@ -203,4 +203,29 @@ function getOgMessage(uuid, tenant) {
     });
 }
 exports.getOgMessage = getOgMessage;
+function listModels(botPrefix, tribe, messageObject) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const bot = yield (0, index_1.findBot)({ botPrefix, tribe });
+            let metaObj = JSON.parse(bot.meta || `{}`);
+            const arrMetaName = Object.keys(metaObj);
+            if (arrMetaName.length === 0) {
+                mlBotResponse('Ops!!, No model available at the moment.', messageObject);
+                return;
+            }
+            let message = '<p style="margin-top:-0.5rem;">List of available models:</p>';
+            for (let i = 0; i < arrMetaName.length; i++) {
+                message = `${message}<p style="margin-top:-0.5rem;">${i + 1}. ${arrMetaName[i]}</p>`;
+            }
+            mlBotResponse(message, messageObject);
+            return;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`error while adding model: ${error}`, logger_1.logging.Bots);
+            mlBotResponse(error.message || 'Error occured while listing models', messageObject);
+            return;
+        }
+    });
+}
+exports.listModels = listModels;
 //# sourceMappingURL=ml.js.map

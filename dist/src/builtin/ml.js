@@ -42,8 +42,8 @@ function init() {
                 where: { uuid: message.channel.id },
             }));
             const arr = (message.content && message.content.split(' ')) || [];
-            if (isAdmin && arr[0] === exports.ML_PREFIX) {
-                const cmd = arr[1];
+            const cmd = arr[1];
+            if ((isAdmin && arr[0] === exports.ML_PREFIX) || cmd === 'list') {
                 switch (cmd) {
                     case 'url':
                         yield (0, ml_1.addUrl)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
@@ -56,6 +56,9 @@ function init() {
                         return;
                     case 'add':
                         yield (0, ml_1.addModel)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
+                        return;
+                    case 'list':
+                        yield (0, ml_1.listModels)(exports.ML_PREFIX, tribe, message);
                         return;
                     default:
                         (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
