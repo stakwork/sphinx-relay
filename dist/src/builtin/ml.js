@@ -174,7 +174,7 @@ function init() {
             };
             setTimeout(() => {
                 delete exports.CALLBACKS[process_id];
-            }, 5 * 60 * 1000);
+            }, 15 * 60 * 1000);
         }
         catch (e) {
             console.log(e);

@@ -210,7 +210,7 @@ export function init() {
 
       setTimeout(() => {
         delete CALLBACKS[process_id]
-      }, 5 * 60 * 1000)
+      }, 15 * 60 * 1000)
     } catch (e) {
       console.log(e)
       sphinxLogger.error(`ML CALL FAILED: ${e}`, logging.Bots)
