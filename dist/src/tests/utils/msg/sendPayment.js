@@ -71,7 +71,7 @@ function sendPayment(t, node1, node2, amount, text) {
         // console.log("NODE2 === ", (node2afterBalance - node2beforeBalance) -  amount)
         //check that node1 sent payment and node2 received payment based on balances
         t.true(Math.abs(node1beforeBalance - node1afterBalance - amount) <=
-            config_1.config.allowedFee, 'node1 should have paid amount');
+            config_1.config.allowedFee, `${node1.alias} should have paid amount`);
         t.true(Math.abs(node2afterBalance - node2beforeBalance - amount) <=
             config_1.config.allowedFee, 'node2 should have received amount');
         return true;

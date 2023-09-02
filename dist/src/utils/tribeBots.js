@@ -10,17 +10,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeBotsJSON = exports.declare_bot = exports.delete_bot = void 0;
+const node_fetch_1 = require("node-fetch");
 const models_1 = require("../models");
 const tribes_1 = require("./tribes");
-const node_fetch_1 = require("node-fetch");
 const config_1 = require("./config");
-const tribes_2 = require("./tribes");
 const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();
 function delete_bot({ uuid, owner_pubkey }) {
     return __awaiter(this, void 0, void 0, function* () {
         const host = (0, tribes_1.getHost)();
-        const token = yield (0, tribes_2.genSignedTimestamp)(owner_pubkey);
+        const token = yield (0, tribes_1.genSignedTimestamp)(owner_pubkey);
         try {
             let protocol = 'https';
             if (config.tribes_insecure)

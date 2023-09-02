@@ -80,4 +80,4 @@ export type FeatureBit =
   | 'AMP_OPT'
   | 31
 
-export type FeatureBit__Output = typeof FeatureBit[keyof typeof FeatureBit]
+export type FeatureBit__Output = (typeof FeatureBit)[keyof typeof FeatureBit]

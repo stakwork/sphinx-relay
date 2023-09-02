@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   RouteHint as _lnrpc_proxy_RouteHint,
   RouteHint__Output as _lnrpc_proxy_RouteHint__Output,
@@ -12,7 +13,6 @@ import type {
   Feature as _lnrpc_proxy_Feature,
   Feature__Output as _lnrpc_proxy_Feature__Output,
 } from '../lnrpc_proxy/Feature'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/rpc_proxy.proto
 
@@ -34,7 +34,7 @@ export type _lnrpc_proxy_Invoice_InvoiceState =
   | 3
 
 export type _lnrpc_proxy_Invoice_InvoiceState__Output =
-  typeof _lnrpc_proxy_Invoice_InvoiceState[keyof typeof _lnrpc_proxy_Invoice_InvoiceState]
+  (typeof _lnrpc_proxy_Invoice_InvoiceState)[keyof typeof _lnrpc_proxy_Invoice_InvoiceState]
 
 export interface Invoice {
   memo?: string

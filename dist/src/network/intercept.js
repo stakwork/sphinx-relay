@@ -10,12 +10,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isBotMsg = void 0;
+const SphinxBot = require("sphinx-bot");
 const models_1 = require("../models");
 const builtin_1 = require("../builtin");
 const bots_1 = require("../controllers/bots");
-const SphinxBot = require("sphinx-bot");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
+const ml_1 = require("../builtin/ml");
 /*
 default show or not
 restrictions (be able to toggle, or dont show chat)
@@ -63,6 +64,9 @@ function isBotMsg(m, sentByMe, sender, forwardedFromContactId) {
                     },
                 }));
                 if (ogBotMsg && ogBotMsg.senderAlias) {
+                    if (ogBotMsg.senderAlias === ml_1.ML_BOTNAME) {
+                        ogBotMsg.senderAlias = ml_1.ML_PREFIX.substring(1);
+                    }
                     const ogSenderBot = (yield models_1.models.ChatBot.findOne({
                         where: {
                             chatId: chat.id,

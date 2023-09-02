@@ -10,12 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requestTransportKey = exports.requestExternalTokens = exports.verifyAuthRequest = void 0;
+const fs = require("fs");
 const jwt_1 = require("../utils/jwt");
 const res_1 = require("../utils/res");
 const config_1 = require("../utils/config");
 const tribes = require("../utils/tribes");
 const cert_1 = require("../utils/cert");
-const fs = require("fs");
 const config = (0, config_1.loadConfig)();
 /**
  *Verify an auth request.

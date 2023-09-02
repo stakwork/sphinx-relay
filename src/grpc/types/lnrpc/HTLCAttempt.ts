@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Route as _lnrpc_Route,
   Route__Output as _lnrpc_Route__Output,
@@ -8,7 +9,6 @@ import type {
   Failure as _lnrpc_Failure,
   Failure__Output as _lnrpc_Failure__Output,
 } from '../lnrpc/Failure'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 
@@ -27,7 +27,7 @@ export type _lnrpc_HTLCAttempt_HTLCStatus =
   | 2
 
 export type _lnrpc_HTLCAttempt_HTLCStatus__Output =
-  typeof _lnrpc_HTLCAttempt_HTLCStatus[keyof typeof _lnrpc_HTLCAttempt_HTLCStatus]
+  (typeof _lnrpc_HTLCAttempt_HTLCStatus)[keyof typeof _lnrpc_HTLCAttempt_HTLCStatus]
 
 export interface HTLCAttempt {
   status?: _lnrpc_HTLCAttempt_HTLCStatus

@@ -10,24 +10,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.disappearingMessages = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = exports.getMessageByUuid = void 0;
-const models_1 = require("../models");
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
+const short = require("short-uuid");
+const cron_1 = require("cron");
+const models_1 = require("../models");
 const hub_1 = require("../hub");
 const socket = require("../utils/socket");
 const jsonUtils = require("../utils/json");
 const helpers = require("../helpers");
 const res_1 = require("../utils/res");
 const timers = require("../utils/timers");
-const confirmations_1 = require("./confirmations");
 const network = require("../network");
-const short = require("short-uuid");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
-const cron_1 = require("cron");
 const config_1 = require("../utils/config");
 const reversal_1 = require("../utils/reversal");
+const confirmations_1 = require("./confirmations");
 // store all current running jobs in memory
 const jobs = {};
 const config = (0, config_1.loadConfig)();
@@ -271,7 +271,7 @@ function deleteMessage(req, res) {
         const owner = req.owner;
         const isTribeOwner = isTribe && owner.publicKey === chat.ownerPubkey;
         if (isTribeOwner) {
-            timers.removeTimerByMsgId(id);
+            timers.removeTimerByMsgId(uuid);
         }
         network.sendMessage({
             chat: chat,
@@ -299,7 +299,7 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // } catch(e) {
     // 	return failure(res, e.message)
     // }
-    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, pay, call, } = req.body;
+    const { contact_id, text, remote_text, chat_id, remote_text_map, amount, reply_uuid, boost, message_price, parent_id, pay, call, thread_uuid, } = req.body;
     let msgtype = constants_1.default.message_types.message;
     if (boost)
         msgtype = constants_1.default.message_types.boost;
@@ -379,13 +379,14 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         msg.replyUuid = reply_uuid;
     if (parent_id)
         msg.parentId = parent_id;
+    if (thread_uuid)
+        msg.thread_uuid = thread_uuid;
     if (recipientAlias)
         msg.recipientAlias = recipientAlias;
     if (recipientPic)
         msg.recipientPic = recipientPic;
     // console.log(msg)
     const message = (yield models_1.models.Message.create(msg));
-    (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
     const msgToSend = {
         id: message.id,
         uuid: message.uuid,
@@ -401,6 +402,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     if (parent_id)
         msgToSend.parentId = parent_id;
+    if (thread_uuid)
+        msgToSend.thread_uuid = thread_uuid;
     if (recipientAlias)
         msgToSend.recipientAlias = recipientAlias;
     if (recipientPic)
@@ -421,7 +424,8 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
     // final send
     // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
-    network.sendMessage(sendMessageParams);
+    yield network.sendMessage(sendMessageParams);
+    (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
 });
 exports.sendMessage = sendMessage;
 /**
@@ -431,7 +435,7 @@ Receive a message and store it in the database.
 @returns {Promise<void>} - A promise that resolves when the message has been received and stored.
 */
 const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, cached, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, force_push, hasForwardedSats, person, cached, thread_uuid, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> no group chat!');
     }
@@ -468,6 +472,8 @@ const receiveMessage = (payload) => __awaiter(void 0, void 0, void 0, function* 
     }
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (thread_uuid)
+        msg.thread_uuid = thread_uuid;
     if (parent_id)
         msg.parentId = parent_id;
     let message = null;
@@ -490,7 +496,7 @@ Receives a boost message and stores it in the database.
 @return {Promise<void>} - A promise that resolves when the function completes.
 */
 const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, cached, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, remote_content, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, msg_id, force_push, hasForwardedSats, cached, thread_uuid, } = yield helpers.parseReceiveParams(payload);
     logger_1.sphinxLogger.info(`=> received boost ${amount} sats on network: ${network_type}`, logger_1.logging.Network);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.error('=> no group chat!');
@@ -535,6 +541,8 @@ const receiveBoost = (payload) => __awaiter(void 0, void 0, void 0, function* ()
     }
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (thread_uuid)
+        msg.thread_uuid = thread_uuid;
     if (parent_id)
         msg.parentId = parent_id;
     let message = null;
@@ -700,7 +708,7 @@ function disappearingMessages(req, res) {
 exports.disappearingMessages = disappearingMessages;
 const receiveVoip = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     logger_1.sphinxLogger.info(`received Voip ${payload}`);
-    const { owner, sender, chat, content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, hasForwardedSats, person, remote_content, } = yield helpers.parseReceiveParams(payload);
+    const { owner, sender, chat, content, msg_id, chat_type, sender_alias, msg_uuid, date_string, reply_uuid, parent_id, amount, network_type, sender_photo_url, message_status, hasForwardedSats, person, remote_content, thread_uuid, } = yield helpers.parseReceiveParams(payload);
     if (!owner || !sender || !chat) {
         return logger_1.sphinxLogger.info('=> invalid message');
     }
@@ -735,6 +743,8 @@ const receiveVoip = (payload) => __awaiter(void 0, void 0, void 0, function* () 
     }
     if (reply_uuid)
         msg.replyUuid = reply_uuid;
+    if (thread_uuid)
+        msg.thread_uuid = thread_uuid;
     if (parent_id)
         msg.parentId = parent_id;
     const message = (yield models_1.models.Message.create(msg));

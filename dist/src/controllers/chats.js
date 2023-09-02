@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addTribePreivew = exports.receiveGroupCreateOrInvite = exports.receiveGroupLeave = exports.receiveGroupJoin = exports.addTribeMember = exports.deleteChat = exports.addGroupMembers = exports.createGroupChat = exports.mute = exports.setNotifyLevel = exports.getChats = exports.receiveGroupKick = exports.kickChatMember = exports.updateChat = void 0;
+const md5 = require("md5");
 const models_1 = require("../models");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
@@ -17,15 +18,14 @@ const helpers = require("../helpers");
 const network = require("../network");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
-const md5 = require("md5");
 const tribes = require("../utils/tribes");
 const timers = require("../utils/timers");
-const chatTribes_1 = require("./chatTribes");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const helpers_1 = require("../helpers");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
+const chatTribes_1 = require("./chatTribes");
 const config = (0, config_1.loadConfig)();
 /**
  * Updates a chat.

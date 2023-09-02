@@ -38,6 +38,7 @@ function contactToJson(contact) {
   if (!contact) return {}
   const c = contact.dataValues || contact
   if (c.authToken) delete c.authToken
+  if (c.adminToken) delete c.adminToken
   return toSnake(c)
 }
 

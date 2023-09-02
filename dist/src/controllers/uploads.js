@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadFile = exports.avatarUpload = void 0;
-const models_1 = require("../models");
 const path = require("path");
-const config_1 = require("../utils/config");
 const multer = require("multer");
+const models_1 = require("../models");
+const config_1 = require("../utils/config");
 const config = (0, config_1.loadConfig)();
 // setup disk storage
 const avatarStorage = multer.diskStorage({

@@ -17,7 +17,7 @@ export type _cln_ListsendpaysRequest_ListsendpaysStatus =
   | 2
 
 export type _cln_ListsendpaysRequest_ListsendpaysStatus__Output =
-  typeof _cln_ListsendpaysRequest_ListsendpaysStatus[keyof typeof _cln_ListsendpaysRequest_ListsendpaysStatus]
+  (typeof _cln_ListsendpaysRequest_ListsendpaysStatus)[keyof typeof _cln_ListsendpaysRequest_ListsendpaysStatus]
 
 export interface ListsendpaysRequest {
   bolt11?: string

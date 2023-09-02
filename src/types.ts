@@ -3,6 +3,7 @@ import { Contact } from './models'
 
 export interface Req extends express.Request {
   owner: Contact
+  admin: Contact
   rawBody: string
 }
 
@@ -17,3 +18,10 @@ export interface Badge {
 }
 
 export type Res = express.Response
+
+export interface SpamGoneMeta {
+  pubkeys: {
+    pubkey: string
+    alias: string
+  }[]
+}

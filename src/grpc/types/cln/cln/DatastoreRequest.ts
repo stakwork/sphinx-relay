@@ -25,7 +25,7 @@ export type _cln_DatastoreRequest_DatastoreMode =
   | 4
 
 export type _cln_DatastoreRequest_DatastoreMode__Output =
-  typeof _cln_DatastoreRequest_DatastoreMode[keyof typeof _cln_DatastoreRequest_DatastoreMode]
+  (typeof _cln_DatastoreRequest_DatastoreMode)[keyof typeof _cln_DatastoreRequest_DatastoreMode]
 
 export interface DatastoreRequest {
   hex?: Buffer | Uint8Array | string

@@ -11,8 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.onReceiveReversal = void 0;
 const models_1 = require("../models");
-const socket = require("./socket");
 const constants_1 = require("../constants");
+const socket = require("./socket");
 const jsonUtils = require("./json");
 function onReceiveReversal({ tenant, type, errorMsg, msgUuid, chat, sender, }) {
     return __awaiter(this, void 0, void 0, function* () {

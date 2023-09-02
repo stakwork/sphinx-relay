@@ -1,8 +1,8 @@
-import { ChatMemberRecord, ChatRecord, ContactRecord, models } from './models'
-import { loadConfig } from './utils/config'
-import { genSignedTimestamp } from './utils/tribes'
-import fetch from 'node-fetch'
 import * as https from 'https'
+import fetch from 'node-fetch'
+import { ChatMemberRecord, ChatRecord, ContactRecord, models } from '../models'
+import { loadConfig } from './config'
+import { genSignedTimestamp } from './tribes'
 
 interface LeadershipProps {
   alias: string
@@ -71,6 +71,6 @@ function parseLeaderRecord(members: ChatMemberRecord[]) {
   return leaderShipRecord
 }
 
-export function leadershipBoardInterval(ms: number) {
+export function leadershipBoardInterval(ms: number): void {
   setInterval(updateLeadershipBoard, ms)
 }

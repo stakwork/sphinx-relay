@@ -1,5 +1,6 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   ListpeersPeersChannelsFeerate as _cln_ListpeersPeersChannelsFeerate,
   ListpeersPeersChannelsFeerate__Output as _cln_ListpeersPeersChannelsFeerate__Output,
@@ -28,7 +29,6 @@ import type {
   ListpeersPeersChannelsAlias as _cln_ListpeersPeersChannelsAlias,
   ListpeersPeersChannelsAlias__Output as _cln_ListpeersPeersChannelsAlias__Output,
 } from '../cln/ListpeersPeersChannelsAlias'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/cln/node.proto
 
@@ -71,7 +71,7 @@ export type _cln_ListpeersPeersChannels_ListpeersPeersChannelsState =
   | 10
 
 export type _cln_ListpeersPeersChannels_ListpeersPeersChannelsState__Output =
-  typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState[keyof typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState]
+  (typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState)[keyof typeof _cln_ListpeersPeersChannels_ListpeersPeersChannelsState]
 
 export interface ListpeersPeersChannels {
   state?: _cln_ListpeersPeersChannels_ListpeersPeersChannelsState

@@ -1,3 +1,5 @@
+/* eslint-disable import/no-unresolved */
+import { WebhookEvent } from '@octokit/webhooks-types'
 import * as network from '../../network'
 import {
   Bot,
@@ -12,16 +14,16 @@ import {
 import { success, failure, unauthorized } from '../../utils/res'
 import constants from '../../constants'
 import { getTribeOwnersChatByUUID } from '../../utils/tribes'
-import broadcast from './broadcast'
-import pay from './pay'
-import direct_message from './dm'
 import { sphinxLogger, logging } from '../../utils/logger'
 import * as hmac from '../../crypto/hmac'
 import { GITBOT_UUID, GitBotMeta, Repo, GITBOT_PIC } from '../../builtin/git'
 import { asyncForEach } from '../../helpers'
 import { Req, Res } from '../../types'
-import { WebhookEvent } from '@octokit/webhooks-types'
 import { processGithook, WebhookEventName } from '../../utils/githook'
+import { CALLBACKS } from '../../builtin/ml'
+import direct_message from './dm'
+import pay from './pay'
+import broadcast from './broadcast'
 
 /*
 hexdump -n 8 -e '4/4 "%08X" 1 "\n"' /dev/random
@@ -45,6 +47,7 @@ export interface Action {
   parent_id?: number
   bot_pic?: string
   only_owner?: boolean
+  only_user?: number
 }
 
 export async function processWebhook(req: Req, res: Res): Promise<void> {
@@ -323,4 +326,25 @@ export async function validateAction(a: Action): Promise<ChatAndOwner | void> {
     where: { id: theChat.tenant },
   })) as ContactRecord
   return { chat: theChat, owner }
+}
+
+export async function processMlCallback(req: Req, res: Res): Promise<void> {
+  const body = req.body.body
+  if (!body) {
+    return failure(res, 'no body')
+  }
+  const process_id = body.process_id
+  if (!process_id) {
+    return failure(res, 'no process_id')
+  }
+  const response = body.response
+  if (!response) {
+    return failure(res, 'no response')
+  }
+
+  if (CALLBACKS[process_id]) {
+    CALLBACKS[process_id](response)
+  }
+
+  success(res, { ok: true })
 }

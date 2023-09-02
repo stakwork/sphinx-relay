@@ -1,12 +1,12 @@
+import * as readLastLines from 'read-last-lines'
+import { Op } from 'sequelize'
 import * as Lightning from '../grpc/lightning'
 import { success, failure } from '../utils/res'
-import * as readLastLines from 'read-last-lines'
 import { nodeinfo } from '../utils/nodeinfo'
 import constants from '../constants'
 import { models, Contact, Chat } from '../models'
 import { loadConfig } from '../utils/config'
 import { getAppVersionsFromHub } from '../hub'
-import { Op } from 'sequelize'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 
@@ -262,5 +262,16 @@ export async function clearForTesting(req: Req, res) {
     success(res, { clean: true })
   } catch (e) {
     failure(res, e)
+  }
+}
+
+export const updateChannelPolicy = async (req: Req, res) => {
+  if (!req.owner) return failure(res, 'no owner')
+  try {
+    const { base_fee } = req.body
+    await Lightning.updateChannelPolicies(base_fee)
+    return success(res, 'updated successfully')
+  } catch (error) {
+    return failure(res, error)
   }
 }

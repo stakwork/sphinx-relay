@@ -17,13 +17,15 @@ import {
 } from '../utils/msg'
 import * as tribes from '../utils/tribes'
 import { tribeOwnerAutoConfirmation } from '../controllers/confirmations'
-import { typesToForward } from './receive'
-import * as intercept from './intercept'
 import constants from '../constants'
 import { logging, sphinxLogger } from '../utils/logger'
-import { Msg, MessageContent, ChatMember } from './interfaces'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
+import { getProxyRootPubkey, isProxy } from '../utils/proxy'
+import { ML_PREFIX } from '../builtin/ml'
+import { Msg, MessageContent, ChatMember } from './interfaces'
+import * as intercept from './intercept'
+import { typesToForward, receiveCoTenantMessage } from './receive'
 
 const config = loadConfig()
 
@@ -147,7 +149,7 @@ export async function sendMessage({
         sphinxLogger.info(`[Network] => isBotMsg`, logging.Network)
         // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
       }
-      if (msg.sender.role === constants.chat_roles.owner && msg.type === 0) {
+      if (msg.type === 0 || msg.type === constants.message_types.attachment) {
         const hiddenCmd = await interceptTribeMsgForHiddenCmds(msg, tenant)
         justMe = hiddenCmd ? hiddenCmd : justMe
       }
@@ -236,11 +238,21 @@ export async function sendMessage({
       }
 
       let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : ''
+      let coTenantDest = ''
+
+      if (isProxy() && isTribeOwner) {
+        const rootPubkey = await getProxyRootPubkey()
+        const arr = contact.routeHint.split(':')
+        if ((arr && arr[0] === rootPubkey) || rootPubkey === destkey) {
+          coTenantDest = `${destkey}`
+        }
+      }
 
       // sending a payment to one subscriber, buying a pic from OG poster
       // or boost to og poster
       if (isTribeOwner && amount && realSatsContactId === contactId) {
         mqttTopic = '' // FORCE KEYSEND!!!
+        coTenantDest = '' // FORCE KEYSEND!!!
         await recordLeadershipScore(tenant, amount, chat.id, contactId, type)
       }
 
@@ -259,7 +271,13 @@ export async function sendMessage({
         amt: Math.max(amount || 0, constants.min_sat_amount),
         route_hint: contact.routeHint || '',
       }
-      const r = await signAndSend(opts, sender, mqttTopic)
+      const r = await signAndSend(
+        opts,
+        sender,
+        mqttTopic,
+        undefined,
+        coTenantDest
+      )
       yes = r
     } catch (error) {
       sphinxLogger.error(`KEYSEND ERROR ${error}`)
@@ -300,7 +318,8 @@ export function signAndSend(
   opts: SignAndSendOpts,
   owner: { [k: string]: any },
   mqttTopic?: string,
-  replayingHistory?: boolean
+  replayingHistory?: boolean,
+  coTenantDest?: string
 ): Promise<boolean> {
   const ownerPubkey = owner.publicKey
   const ownerID = owner.id
@@ -322,11 +341,14 @@ export function signAndSend(
         This is because the tribe owner is acting as the gate to get
         the message through to the rest of the members, but sending
         to the other members in the chat should not cost sats      */
-      if (mqttTopic) {
+
+      if (coTenantDest) {
+        await receiveCoTenantMessage(coTenantDest, data)
+      } else if (mqttTopic) {
         await tribes.publish(
           mqttTopic,
           data,
-          ownerPubkey,
+          owner as Contact,
           () => {
             if (!replayingHistory) {
               if (mqttTopic) checkIfAutoConfirm(opts.data, ownerID)
@@ -533,15 +555,18 @@ async function interceptTribeMsgForHiddenCmds(
     const bots = (await models.ChatBot.findAll({
       where: { tenant, chatId: newChat.id },
     })) as ChatBotRecord[]
+
     const content = msg.message.content as string
-    const splitedContent = content.split(' ')
+    const splitedContent = (content && content.split(' ')) || []
     for (let i = 0; i < bots.length; i++) {
       const bot = bots[i]
-      if (
+
+      const isHidden =
         bot.botPrefix === splitedContent[0] &&
         bot.hiddenCommands &&
         JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
-      ) {
+      const isPersonal = bot.botPrefix === ML_PREFIX
+      if (isHidden || isPersonal) {
         await models.Message.update(
           {
             onlyOwner: true,

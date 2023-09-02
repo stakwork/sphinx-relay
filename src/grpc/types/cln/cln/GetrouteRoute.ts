@@ -14,7 +14,7 @@ export const _cln_GetrouteRoute_GetrouteRouteStyle = {
 export type _cln_GetrouteRoute_GetrouteRouteStyle = 'TLV' | 0
 
 export type _cln_GetrouteRoute_GetrouteRouteStyle__Output =
-  typeof _cln_GetrouteRoute_GetrouteRouteStyle[keyof typeof _cln_GetrouteRoute_GetrouteRouteStyle]
+  (typeof _cln_GetrouteRoute_GetrouteRouteStyle)[keyof typeof _cln_GetrouteRoute_GetrouteRouteStyle]
 
 export interface GetrouteRoute {
   id?: Buffer | Uint8Array | string

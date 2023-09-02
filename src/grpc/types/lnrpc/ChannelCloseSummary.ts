@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Initiator as _lnrpc_Initiator,
   Initiator__Output as _lnrpc_Initiator__Output,
@@ -8,7 +9,6 @@ import type {
   Resolution as _lnrpc_Resolution,
   Resolution__Output as _lnrpc_Resolution__Output,
 } from '../lnrpc/Resolution'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 
@@ -36,7 +36,7 @@ export type _lnrpc_ChannelCloseSummary_ClosureType =
   | 5
 
 export type _lnrpc_ChannelCloseSummary_ClosureType__Output =
-  typeof _lnrpc_ChannelCloseSummary_ClosureType[keyof typeof _lnrpc_ChannelCloseSummary_ClosureType]
+  (typeof _lnrpc_ChannelCloseSummary_ClosureType)[keyof typeof _lnrpc_ChannelCloseSummary_ClosureType]
 
 export interface ChannelCloseSummary {
   channel_point?: string

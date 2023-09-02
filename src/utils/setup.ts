@@ -1,3 +1,8 @@
+import { exec } from 'child_process'
+import * as fs from 'fs'
+import * as QRCode from 'qrcode'
+import fetch from 'node-fetch'
+import { Op } from 'sequelize'
 import * as Lightning from '../grpc/lightning'
 import {
   sequelize,
@@ -8,19 +13,14 @@ import {
   ChatMemberRecord,
   ChatRecord,
 } from '../models'
-import { exec } from 'child_process'
-import * as QRCode from 'qrcode'
 import * as gitinfo from '../utils/gitinfo'
-import * as fs from 'fs'
+import { isProxy, getProxyRootPubkey } from '../utils/proxy'
+import { logging, sphinxLogger } from '../utils/logger'
+import constants from '../constants'
 import { isClean } from './nodeinfo'
 import { getQR } from './connect'
 import { loadConfig } from './config'
 import migrate from './migrate'
-import { isProxy, getProxyRootPubkey } from '../utils/proxy'
-import { logging, sphinxLogger } from '../utils/logger'
-import fetch from 'node-fetch'
-import { Op } from 'sequelize'
-import constants from '../constants'
 
 const USER_VERSION = 7
 const config = loadConfig()

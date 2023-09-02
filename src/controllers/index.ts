@@ -1,5 +1,13 @@
+import rateLimit from 'express-rate-limit'
 import { models, Message } from '../models'
-import { proxyAdminMiddleware } from '../auth'
+import { proxyAdminMiddleware as pamid } from '../auth'
+import * as gitinfo from '../utils/gitinfo'
+import * as timers from '../utils/timers'
+import * as builtInBots from '../builtin'
+import constants from '../constants'
+import { failure } from '../utils/res'
+import { Req } from '../types'
+import { initializeCronJobsForCallRecordings } from '../builtin/utill/callRecording'
 import * as chats from './chats'
 import * as chatTribes from './chatTribes'
 import * as bots from './bots'
@@ -15,26 +23,18 @@ import * as uploads from './uploads'
 import * as confirmations from './confirmations'
 import * as actions from './botapi'
 import * as queries from './queries'
-import * as gitinfo from '../utils/gitinfo'
-import * as timers from '../utils/timers'
-import * as builtInBots from '../builtin'
 import * as admin from './admin'
-import constants from '../constants'
 import * as feed from './feed'
-import { failure } from '../utils/res'
 import * as auth from './auth'
 import * as personal from './api/personal'
 import * as lsats from './lsats'
-import { Req } from '../types'
 import * as action from './actionHistory'
 import * as feeds from './getFeeds'
 import * as contentFeedStatus from './contentFeedStatus'
-import { initializeCronJobsForCallRecordings } from '../builtin/utill/callRecording'
-import rateLimit from 'express-rate-limit'
 
 const limiter = rateLimit({
-  windowMs: 1000, // 15 minutes
-  max: 1, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  windowMs: 1000, // 1 second
+  max: 2, // Limit each IP to 2 requests per `window` (here, per 1 second)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
@@ -157,6 +157,7 @@ export async function set(app) {
   app.get('/query/onchain_address/:app', queries.queryOnchainAddress)
   app.get('/utxos', queries.listUTXOs)
 
+  app.post('/ml', actions.processMlCallback)
   app.post('/webhook', actions.processWebhook)
   app.post('/action', actions.processAction)
   app.get('/bots', bots.getBots)
@@ -213,11 +214,19 @@ export async function set(app) {
     contentFeedStatus.getContentFeedStatus
   )
 
+  app.get('/my_ip', (request, response) => response.send(request.ip))
+
   // open
   app.get('/has_admin', admin.hasAdmin)
   app.get('/initial_admin_pubkey', admin.initialAdminPubkey)
 
-  app.get('/my_ip', (request, response) => response.send(request.ip))
+  // following routes are only for proxy admin user (isAdmin=true)
+  app.get('/add_user', pamid, admin.addProxyUser)
+  app.get('/list_users', pamid, admin.listUsers)
+  app.post('/default_tribe/:id', pamid, admin.addDefaultJoinTribe)
+  app.delete('/default_tribe/:id', pamid, admin.removeDefaultJoinTribe)
+  app.get('/tribes', pamid, admin.listTribes)
+  app.get('/admin_balance', pamid, admin.adminBalance)
 
   // rate limit these routes:
   app.use(limiter)
@@ -243,13 +252,9 @@ export async function set(app) {
   app.post('/payment', payments.sendPayment)
 
   app.post('/subscriptions', subcriptions.createSubscription)
+  app.post('/update_channel_policy', details.updateChannelPolicy)
 
-  // following routes are only for proxy admin user (isAdmin=true)
-  app.use(proxyAdminMiddleware)
-  app.get('/add_user', admin.addProxyUser)
-  app.get('/list_users', admin.listUsers)
-  app.post('/default_tribe/:id', admin.addDefaultJoinTribe)
-  app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe)
+  app.post('/swarm_admin_register', admin.swarmAdminRegister)
 }
 
 const msgtypes = constants.message_types

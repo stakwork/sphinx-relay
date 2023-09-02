@@ -10,8 +10,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ACTIONS = exports.set = void 0;
+const express_rate_limit_1 = require("express-rate-limit");
 const models_1 = require("../models");
 const auth_1 = require("../auth");
+const gitinfo = require("../utils/gitinfo");
+const timers = require("../utils/timers");
+const builtInBots = require("../builtin");
+const constants_1 = require("../constants");
+const res_1 = require("../utils/res");
+const callRecording_1 = require("../builtin/utill/callRecording");
 const chats = require("./chats");
 const chatTribes = require("./chatTribes");
 const bots = require("./bots");
@@ -27,24 +34,17 @@ const uploads = require("./uploads");
 const confirmations = require("./confirmations");
 const actions = require("./botapi");
 const queries = require("./queries");
-const gitinfo = require("../utils/gitinfo");
-const timers = require("../utils/timers");
-const builtInBots = require("../builtin");
 const admin = require("./admin");
-const constants_1 = require("../constants");
 const feed = require("./feed");
-const res_1 = require("../utils/res");
 const auth = require("./auth");
 const personal = require("./api/personal");
 const lsats = require("./lsats");
 const action = require("./actionHistory");
 const feeds = require("./getFeeds");
 const contentFeedStatus = require("./contentFeedStatus");
-const callRecording_1 = require("../builtin/utill/callRecording");
-const express_rate_limit_1 = require("express-rate-limit");
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 1000,
-    max: 1,
+    max: 2,
     standardHeaders: true,
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
@@ -141,6 +141,7 @@ function set(app) {
         app.get('/test_clear', details.clearForTesting);
         app.get('/query/onchain_address/:app', queries.queryOnchainAddress);
         app.get('/utxos', queries.listUTXOs);
+        app.post('/ml', actions.processMlCallback);
         app.post('/webhook', actions.processWebhook);
         app.post('/action', actions.processAction);
         app.get('/bots', bots.getBots);
@@ -189,10 +190,17 @@ function set(app) {
         app.get('/content_feed_status', contentFeedStatus.getAllContentFeedStatus);
         app.put('/content_feed_status/:feed_id', contentFeedStatus.updateContentFeedStatus);
         app.get('/content_feed_status/:feed_id', contentFeedStatus.getContentFeedStatus);
+        app.get('/my_ip', (request, response) => response.send(request.ip));
         // open
         app.get('/has_admin', admin.hasAdmin);
         app.get('/initial_admin_pubkey', admin.initialAdminPubkey);
-        app.get('/my_ip', (request, response) => response.send(request.ip));
+        // following routes are only for proxy admin user (isAdmin=true)
+        app.get('/add_user', auth_1.proxyAdminMiddleware, admin.addProxyUser);
+        app.get('/list_users', auth_1.proxyAdminMiddleware, admin.listUsers);
+        app.post('/default_tribe/:id', auth_1.proxyAdminMiddleware, admin.addDefaultJoinTribe);
+        app.delete('/default_tribe/:id', auth_1.proxyAdminMiddleware, admin.removeDefaultJoinTribe);
+        app.get('/tribes', auth_1.proxyAdminMiddleware, admin.listTribes);
+        app.get('/admin_balance', auth_1.proxyAdminMiddleware, admin.adminBalance);
         // rate limit these routes:
         app.use(limiter);
         app.post('/messages', messages.sendMessage);
@@ -209,12 +217,8 @@ function set(app) {
         app.post('/invoices/cancel', invoices.cancelInvoice);
         app.post('/payment', payments.sendPayment);
         app.post('/subscriptions', subcriptions.createSubscription);
-        // following routes are only for proxy admin user (isAdmin=true)
-        app.use(auth_1.proxyAdminMiddleware);
-        app.get('/add_user', admin.addProxyUser);
-        app.get('/list_users', admin.listUsers);
-        app.post('/default_tribe/:id', admin.addDefaultJoinTribe);
-        app.delete('/default_tribe/:id', admin.removeDefaultJoinTribe);
+        app.post('/update_channel_policy', details.updateChannelPolicy);
+        app.post('/swarm_admin_register', admin.swarmAdminRegister);
     });
 }
 exports.set = set;

@@ -8,10 +8,10 @@ function clearTimer(t) {
   const name = makeName(t)
   if (name) clearTimeout(timerz[name])
 }
-export async function removeTimerByMsgId(msgId) {
-  const t = await models.Timer.findOne({ where: { msgId } })
+export async function removeTimerByMsgId(msgUuid: string) {
+  const t = await models.Timer.findOne({ where: { msgUuid } })
   clearTimer(t)
-  models.Timer.destroy({ where: { msgId } })
+  models.Timer.destroy({ where: { msgUuid } })
 }
 export async function removeTimersByContactId(contactId, tenant) {
   const ts = await models.Timer.findAll({
@@ -33,6 +33,7 @@ export async function addTimer({
   millis,
   receiver,
   msgId,
+  msgUuid,
   chatId,
   tenant,
 }) {
@@ -43,6 +44,7 @@ export async function addTimer({
     millis: when,
     receiver,
     msgId,
+    msgUuid,
     chatId,
     tenant,
   })) as Timer

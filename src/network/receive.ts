@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+import * as bolt11 from '@boltz/bolt11'
 import * as lndService from '../grpc/subscribe'
 import * as Lightning from '../grpc/lightning'
 import * as Greenlight from '../grpc/greenlight'
@@ -15,24 +17,25 @@ import {
   ChatMember,
   ChatMemberRecord,
   MessageRecord,
+  ChatBotRecord,
 } from '../models'
-import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
-import {
-  modifyPayloadAndSaveMediaKey,
-  purchaseFromOriginalSender,
-  sendFinalMemeIfFirstPurchaser,
-} from './modify'
 import { decryptMessage, encryptTribeBroadcast } from '../utils/msg'
-import { Op } from 'sequelize'
 import * as timers from '../utils/timers'
 import * as socket from '../utils/socket'
 import { sendNotification } from '../hub'
 import constants from '../constants'
 import * as jsonUtils from '../utils/json'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
-import * as bolt11 from '@boltz/bolt11'
 import { loadConfig } from '../utils/config'
 import { sphinxLogger, logging } from '../utils/logger'
+import { findBot } from '../builtin/utill'
+import { SpamGoneMeta } from '../types'
+import {
+  modifyPayloadAndSaveMediaKey,
+  purchaseFromOriginalSender,
+  sendFinalMemeIfFirstPurchaser,
+} from './modify'
+import { sendMessage, detectMentionsForTribeAdminSelf } from './send'
 import { Payload, AdminPayload } from './interfaces'
 
 const config = loadConfig()
@@ -144,6 +147,19 @@ async function onReceive(payload: Payload, dest: string) {
         where: { publicKey: payload.sender.pub_key, tenant },
       })) as Contact
 
+      let isSpam = false
+      //Check if message is spam
+      if (payload.type === constants.message_types.message) {
+        isSpam = await checkSpamList(chat, senderContact)
+        if (isSpam) {
+          //to be changes to a new message type spam
+          // payload.type = constants.message_types.delete
+
+          //This is temporary, till the app has spam message type updated
+          payload.message.content = ''
+        }
+      }
+
       // if (!senderContact) return console.log('=> no sender contact')
 
       const senderContactId = senderContact && senderContact.id
@@ -159,7 +175,7 @@ async function onReceive(payload: Payload, dest: string) {
         if (payload.message.amount < chat.pricePerMessage) {
           doAction = false
         }
-        if (chat.escrowAmount && senderContactId) {
+        if (chat.escrowAmount && senderContactId && !isSpam) {
           timers.addTimer({
             // pay them back
             amount: chat.escrowAmount,
@@ -168,6 +184,7 @@ async function onReceive(payload: Payload, dest: string) {
             msgId: payload.message.id,
             chatId: chat.id,
             tenant,
+            msgUuid: payload.message.uuid,
           })
         }
       }
@@ -249,7 +266,7 @@ async function onReceive(payload: Payload, dest: string) {
               chatId: chat.id,
             },
           })) as ChatMemberRecord
-          if (sender) {
+          if (sender && !isSpam) {
             await sender.update({ totalMessages: sender.totalMessages + 1 })
             if (payload.type === msgtypes.message) {
               const allMsg = (await models.Message.findAll({
@@ -515,6 +532,21 @@ export async function receiveMqttMessage(
   }
 }
 
+export async function receiveCoTenantMessage(
+  destination: string,
+  message: string
+): Promise<void> {
+  try {
+    // check topic is signed by sender?
+    const payload = await parseAndVerifyPayload(message)
+    if (!payload) return // skip it if not parsed
+    payload.network_type = constants.network_types.co_tenant
+    onReceive(payload, destination)
+  } catch (e) {
+    sphinxLogger.error('failed receiveCoTenantMessage', logging.Network)
+  }
+}
+
 export async function initTribesSubscriptions(): Promise<void> {
   tribes.connect(receiveMqttMessage)
 }
@@ -722,5 +754,32 @@ function weave(p) {
 async function asyncForEach(array, callback) {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array)
+  }
+}
+
+async function checkSpamList(
+  chat: ChatRecord,
+  contact: Contact
+): Promise<boolean> {
+  try {
+    const bot: ChatBotRecord = await findBot({
+      botPrefix: '/spam_gone',
+      tribe: chat,
+    })
+    if (!bot) {
+      return false
+    }
+    const meta: SpamGoneMeta = JSON.parse(bot.meta || `{}`)
+
+    if (meta.pubkeys && meta.pubkeys.length > 0) {
+      for (let i = 0; i < meta.pubkeys.length; i++) {
+        if (meta.pubkeys[i].pubkey === contact.publicKey) {
+          return true
+        }
+      }
+    }
+    return false
+  } catch (error) {
+    return false
   }
 }

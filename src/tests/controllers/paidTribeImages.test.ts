@@ -36,13 +36,13 @@ export async function paidTribeImages(t, node1, node2) {
   const image = greenSquare
   const price = 11
   const imageSent = await sendImage(t, node1, node2, image, tribe, price)
-  t.true(imageSent, 'message should have been sent')
+  t.true(!!imageSent, 'message should have been sent')
 
   //NODE2 SENDS AN IMAGE TO NODE1
   const image2 = pinkSquare
   const price2 = 12
   const imageSent2 = await sendImage(t, node2, node1, image2, tribe, price2)
-  t.true(imageSent2, 'message should have been sent')
+  t.true(!!imageSent2, 'message should have been sent')
 
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)

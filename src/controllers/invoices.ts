@@ -1,3 +1,6 @@
+import * as short from 'short-uuid'
+import * as bolt11 from '@boltz/bolt11'
+import { Response } from 'express'
 import { models, MessageRecord, ChatRecord } from '../models'
 import * as Lightning from '../grpc/lightning'
 import * as interfaces from '../grpc/interfaces'
@@ -7,16 +10,13 @@ import { decodePaymentRequest } from '../utils/decode'
 import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import { success, failure } from '../utils/res'
-import { sendConfirmation } from './confirmations'
 import * as network from '../network'
 import { Payload } from '../network'
-import * as short from 'short-uuid'
 import constants from '../constants'
-import * as bolt11 from '@boltz/bolt11'
 import { sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
-import { Response } from 'express'
 import { ChatPlusMembers } from '../network/send'
+import { sendConfirmation } from './confirmations'
 
 function stripLightningPrefix(s: string): string {
   if (s.toLowerCase().startsWith('lightning:')) return s.substring(10)
@@ -37,8 +37,10 @@ export const payInvoice = async (req: Req, res: Response): Promise<void> => {
     return
   }
   sphinxLogger.info(`[pay invoice] ${payment_request}`)
+  sphinxLogger.info(`[pay invoice] => from ${tenant}`)
 
   try {
+    sphinxLogger.info(`[pay invoice] => pubkey: ${req.owner.publicKey}`)
     const response = await Lightning.sendPayment(
       payment_request,
       req.owner.publicKey
@@ -209,9 +211,7 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
           msg
         )) as MessageRecord
 
-        success(res, jsonUtils.messageToJson(message, chat))
-
-        network.sendMessage({
+        await network.sendMessage({
           chat: chat as Partial<ChatPlusMembers>,
           sender: owner,
           type: constants.message_types.invoice,
@@ -220,6 +220,8 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
             invoice: message.paymentRequest,
           },
         })
+
+        success(res, jsonUtils.messageToJson(message, chat))
       }
     } catch (err) {
       sphinxLogger.error(`addInvoice error: ${err}`)

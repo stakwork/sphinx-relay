@@ -16,12 +16,14 @@ const helpers_1 = require("../helpers");
 const msg_1 = require("../utils/msg");
 const tribes = require("../utils/tribes");
 const confirmations_1 = require("../controllers/confirmations");
-const receive_1 = require("./receive");
-const intercept = require("./intercept");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
+const proxy_1 = require("../utils/proxy");
+const ml_1 = require("../builtin/ml");
+const intercept = require("./intercept");
+const receive_1 = require("./receive");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
@@ -91,7 +93,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     logger_1.sphinxLogger.info(`[Network] => isBotMsg`, logger_1.logging.Network);
                     // return // DO NOT FORWARD TO TRIBE, forwarded to bot instead?
                 }
-                if (msg.sender.role === constants_1.default.chat_roles.owner && msg.type === 0) {
+                if (msg.type === 0 || msg.type === constants_1.default.message_types.attachment) {
                     const hiddenCmd = yield interceptTribeMsgForHiddenCmds(msg, tenant);
                     justMe = hiddenCmd ? hiddenCmd : justMe;
                 }
@@ -170,10 +172,19 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     continue; // skip (for tribe owner broadcasting, not back to the sender)
                 }
                 let mqttTopic = networkType === 'mqtt' ? `${destkey}/${chatUUID}` : '';
+                let coTenantDest = '';
+                if ((0, proxy_1.isProxy)() && isTribeOwner) {
+                    const rootPubkey = yield (0, proxy_1.getProxyRootPubkey)();
+                    const arr = contact.routeHint.split(':');
+                    if ((arr && arr[0] === rootPubkey) || rootPubkey === destkey) {
+                        coTenantDest = `${destkey}`;
+                    }
+                }
                 // sending a payment to one subscriber, buying a pic from OG poster
                 // or boost to og poster
                 if (isTribeOwner && amount && realSatsContactId === contactId) {
                     mqttTopic = ''; // FORCE KEYSEND!!!
+                    coTenantDest = ''; // FORCE KEYSEND!!!
                     yield (0, msg_1.recordLeadershipScore)(tenant, amount, chat.id, contactId, type);
                 }
                 const m = yield (0, msg_1.personalizeMessage)(msg, contact, isTribeOwner);
@@ -188,7 +199,7 @@ function sendMessage({ type, chat, message, sender, amount, success, failure, sk
                     amt: Math.max(amount || 0, constants_1.default.min_sat_amount),
                     route_hint: contact.routeHint || '',
                 };
-                const r = yield signAndSend(opts, sender, mqttTopic);
+                const r = yield signAndSend(opts, sender, mqttTopic, undefined, coTenantDest);
                 yes = r;
             }
             catch (error) {
@@ -222,7 +233,7 @@ exports.sendMessage = sendMessage;
  * @param {boolean} [replayingHistory] - A flag indicating whether the message is being replayed from history.
  * @returns {Promise<boolean>} A promise that resolves with a boolean indicating the success or failure of the operation.
  */
-function signAndSend(opts, owner, mqttTopic, replayingHistory) {
+function signAndSend(opts, owner, mqttTopic, replayingHistory, coTenantDest) {
     const ownerPubkey = owner.publicKey;
     const ownerID = owner.id;
     return new Promise(function (resolve, reject) {
@@ -242,8 +253,11 @@ function signAndSend(opts, owner, mqttTopic, replayingHistory) {
                   This is because the tribe owner is acting as the gate to get
                   the message through to the rest of the members, but sending
                   to the other members in the chat should not cost sats      */
-                if (mqttTopic) {
-                    yield tribes.publish(mqttTopic, data, ownerPubkey, () => {
+                if (coTenantDest) {
+                    yield (0, receive_1.receiveCoTenantMessage)(coTenantDest, data);
+                }
+                else if (mqttTopic) {
+                    yield tribes.publish(mqttTopic, data, owner, () => {
                         if (!replayingHistory) {
                             if (mqttTopic)
                                 checkIfAutoConfirm(opts.data, ownerID);
@@ -419,12 +433,14 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 where: { tenant, chatId: newChat.id },
             }));
             const content = msg.message.content;
-            const splitedContent = content.split(' ');
+            const splitedContent = (content && content.split(' ')) || [];
             for (let i = 0; i < bots.length; i++) {
                 const bot = bots[i];
-                if (bot.botPrefix === splitedContent[0] &&
+                const isHidden = bot.botPrefix === splitedContent[0] &&
                     bot.hiddenCommands &&
-                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1])) {
+                    JSON.parse(bot.hiddenCommands).includes(splitedContent[1]);
+                const isPersonal = bot.botPrefix === ml_1.ML_PREFIX;
+                if (isHidden || isPersonal) {
                     yield models_1.models.Message.update({
                         onlyOwner: true,
                     }, { where: { uuid: msg.message.uuid, tenant } });

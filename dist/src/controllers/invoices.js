@@ -10,6 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.receiveInvoice = exports.getInvoice = exports.listInvoices = exports.createInvoice = exports.cancelInvoice = exports.payInvoice = void 0;
+const short = require("short-uuid");
+const bolt11 = require("@boltz/bolt11");
 const models_1 = require("../models");
 const Lightning = require("../grpc/lightning");
 const socket = require("../utils/socket");
@@ -18,12 +20,10 @@ const decode_1 = require("../utils/decode");
 const helpers = require("../helpers");
 const hub_1 = require("../hub");
 const res_1 = require("../utils/res");
-const confirmations_1 = require("./confirmations");
 const network = require("../network");
-const short = require("short-uuid");
 const constants_1 = require("../constants");
-const bolt11 = require("@boltz/bolt11");
 const logger_1 = require("../utils/logger");
+const confirmations_1 = require("./confirmations");
 function stripLightningPrefix(s) {
     if (s.toLowerCase().startsWith('lightning:'))
         return s.substring(10);
@@ -42,7 +42,9 @@ const payInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         return;
     }
     logger_1.sphinxLogger.info(`[pay invoice] ${payment_request}`);
+    logger_1.sphinxLogger.info(`[pay invoice] => from ${tenant}`);
     try {
+        logger_1.sphinxLogger.info(`[pay invoice] => pubkey: ${req.owner.publicKey}`);
         const response = yield Lightning.sendPayment(payment_request, req.owner.publicKey);
         logger_1.sphinxLogger.info(`[pay invoice data] ${JSON.stringify(response)}`);
         const message = (yield models_1.models.Message.findOne({
@@ -192,8 +194,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     msg.expirationDate = new Date(expiry);
                 }
                 const message = (yield models_1.models.Message.create(msg));
-                (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
-                network.sendMessage({
+                yield network.sendMessage({
                     chat: chat,
                     sender: owner,
                     type: constants_1.default.message_types.invoice,
@@ -202,6 +203,7 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         invoice: message.paymentRequest,
                     },
                 });
+                (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
             }
         }
         catch (err) {

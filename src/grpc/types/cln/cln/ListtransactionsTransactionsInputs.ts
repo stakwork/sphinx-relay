@@ -43,7 +43,7 @@ export type _cln_ListtransactionsTransactionsInputs_ListtransactionsTransactions
     | 10
 
 export type _cln_ListtransactionsTransactionsInputs_ListtransactionsTransactionsInputsType__Output =
-  typeof _cln_ListtransactionsTransactionsInputs_ListtransactionsTransactionsInputsType[keyof typeof _cln_ListtransactionsTransactionsInputs_ListtransactionsTransactionsInputsType]
+  (typeof _cln_ListtransactionsTransactionsInputs_ListtransactionsTransactionsInputsType)[keyof typeof _cln_ListtransactionsTransactionsInputs_ListtransactionsTransactionsInputsType]
 
 export interface ListtransactionsTransactionsInputs {
   txid?: Buffer | Uint8Array | string

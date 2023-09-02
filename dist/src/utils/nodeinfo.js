@@ -10,10 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isClean = exports.nodeinfo = exports.NodeType = void 0;
-const Lightning = require("../grpc/lightning");
 const publicIp = require("public-ip");
-const gitinfo = require("./gitinfo");
+const Lightning = require("../grpc/lightning");
 const models_1 = require("../models");
+const gitinfo = require("./gitinfo");
 const config_1 = require("./config");
 const logger_1 = require("./logger");
 const config = (0, config_1.loadConfig)();

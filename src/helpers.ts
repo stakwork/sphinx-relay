@@ -274,6 +274,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
   const date_string = dat.message.date
   const skip_payment_processing = dat.message.skipPaymentProcessing
   const reply_uuid = dat.message.replyUuid
+  const thread_uuid = dat.message.thread_uuid
   const parent_id = dat.message.parentId
   const purchaser_id = dat.message.purchaser
   const force_push = dat.message.push
@@ -362,6 +363,7 @@ export async function parseReceiveParams(payload: Payload): Promise<{
     msg_uuid,
     date_string,
     reply_uuid,
+    thread_uuid,
     parent_id,
     skip_payment_processing,
     purchaser_id,

@@ -10,20 +10,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.getHmacKey = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
-const models_1 = require("../models");
 const crypto = require("crypto");
+const sequelize_1 = require("sequelize");
+const moment = require("moment");
+const models_1 = require("../models");
 const socket = require("../utils/socket");
 const helpers = require("../helpers");
 const jsonUtils = require("../utils/json");
 const res_1 = require("../utils/res");
 const password_1 = require("../utils/password");
-const sequelize_1 = require("sequelize");
 const constants_1 = require("../constants");
 const tribes = require("../utils/tribes");
 const network = require("../network");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
-const moment = require("moment");
 const rsa = require("../crypto/rsa");
 const cert_1 = require("../utils/cert");
 const chatTribes_1 = require("./chatTribes");
@@ -232,21 +232,10 @@ const generateToken = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else {
         // done!
-        let isAdmin = true;
         if ((0, proxy_1.isProxy)()) {
-            const theAdmin = (yield models_1.models.Contact.findOne({
-                where: { isAdmin: true },
-            }));
-            // there can be only 1 admin
-            if (theAdmin) {
-                isAdmin = false;
-            }
             tribes.newSubscription(owner, network.receiveMqttMessage);
         }
-        if (isAdmin) {
-            logger_1.sphinxLogger.info('Admin signing up!!!');
-        }
-        yield owner.update({ authToken: hash, isAdmin });
+        yield owner.update({ authToken: hash });
     }
     (0, res_1.success)(res, {
         id: (owner && owner.id) || 0,
@@ -639,23 +628,23 @@ const getLatestContacts = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const tenant = req.owner.id;
     try {
         const dateToReturn = decodeURI(req.query.date);
+        /* eslint-disable import/namespace */
         const local = moment.utc(dateToReturn).local().toDate();
         const where = {
             updatedAt: { [sequelize_1.Op.gte]: local },
             tenant,
         };
-        const contacts = (yield models_1.models.Contact.findAll({
-            where,
-        }));
-        const invites = (yield models_1.models.Invite.findAll({
-            where,
-        }));
-        const chats = (yield models_1.models.Chat.findAll({
-            where,
-        }));
-        const subscriptions = (yield models_1.models.Subscription.findAll({
-            where,
-        }));
+        const clause = { where };
+        const limit = req.query.limit && parseInt(req.query.limit);
+        const offset = req.query.offset && parseInt(req.query.offset);
+        if ((limit || limit === 0) && (offset || offset === 0)) {
+            clause.limit = limit;
+            clause.offset = offset;
+        }
+        const contacts = (yield models_1.models.Contact.findAll(clause));
+        const invites = (yield models_1.models.Invite.findAll(clause));
+        const chats = (yield models_1.models.Chat.findAll(clause));
+        const subscriptions = (yield models_1.models.Subscription.findAll(clause));
         const contactsResponse = contacts.map((contact) => jsonUtils.contactToJson(contact));
         const invitesResponse = invites.map((invite) => jsonUtils.inviteToJson(invite));
         const subsResponse = subscriptions.map((s) => jsonUtils.subscriptionToJson(s));

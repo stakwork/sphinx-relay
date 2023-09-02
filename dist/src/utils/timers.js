@@ -19,11 +19,11 @@ function clearTimer(t) {
     if (name)
         clearTimeout(timerz[name]);
 }
-function removeTimerByMsgId(msgId) {
+function removeTimerByMsgId(msgUuid) {
     return __awaiter(this, void 0, void 0, function* () {
-        const t = yield models_1.models.Timer.findOne({ where: { msgId } });
+        const t = yield models_1.models.Timer.findOne({ where: { msgUuid } });
         clearTimer(t);
-        models_1.models.Timer.destroy({ where: { msgId } });
+        models_1.models.Timer.destroy({ where: { msgUuid } });
     });
 }
 exports.removeTimerByMsgId = removeTimerByMsgId;
@@ -47,7 +47,7 @@ function removeTimersByContactIdChatId(contactId, chatId, tenant) {
     });
 }
 exports.removeTimersByContactIdChatId = removeTimersByContactIdChatId;
-function addTimer({ amount, millis, receiver, msgId, chatId, tenant, }) {
+function addTimer({ amount, millis, receiver, msgId, msgUuid, chatId, tenant, }) {
     return __awaiter(this, void 0, void 0, function* () {
         const now = new Date().valueOf();
         const when = now + millis;
@@ -56,6 +56,7 @@ function addTimer({ amount, millis, receiver, msgId, chatId, tenant, }) {
             millis: when,
             receiver,
             msgId,
+            msgUuid,
             chatId,
             tenant,
         }));

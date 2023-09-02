@@ -26,7 +26,7 @@ export type _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType =
   | 5
 
 export type _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType__Output =
-  typeof _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType[keyof typeof _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType]
+  (typeof _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType)[keyof typeof _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType]
 
 export interface ListnodesNodesAddresses {
   item_type?: _cln_ListnodesNodesAddresses_ListnodesNodesAddressesType

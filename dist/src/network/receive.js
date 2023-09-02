@@ -9,7 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
+exports.parseKeysendInvoice = exports.initTribesSubscriptions = exports.receiveCoTenantMessage = exports.receiveMqttMessage = exports.initGrpcSubscriptions = exports.typesToReplay = exports.typesToSkipIfSkipBroadcastJoins = exports.typesToForward = void 0;
+const sequelize_1 = require("sequelize");
+const bolt11 = require("@boltz/bolt11");
 const lndService = require("../grpc/subscribe");
 const Lightning = require("../grpc/lightning");
 const Greenlight = require("../grpc/greenlight");
@@ -17,19 +19,18 @@ const controllers_1 = require("../controllers");
 const tribes = require("../utils/tribes");
 const signer = require("../utils/signer");
 const models_1 = require("../models");
-const send_1 = require("./send");
-const modify_1 = require("./modify");
 const msg_1 = require("../utils/msg");
-const sequelize_1 = require("sequelize");
 const timers = require("../utils/timers");
 const socket = require("../utils/socket");
 const hub_1 = require("../hub");
 const constants_1 = require("../constants");
 const jsonUtils = require("../utils/json");
 const proxy_1 = require("../utils/proxy");
-const bolt11 = require("@boltz/bolt11");
 const config_1 = require("../utils/config");
 const logger_1 = require("../utils/logger");
+const utill_1 = require("../builtin/utill");
+const modify_1 = require("./modify");
+const send_1 = require("./send");
 const config = (0, config_1.loadConfig)();
 /*
 delete type:
@@ -130,6 +131,17 @@ function onReceive(payload, dest) {
                 const senderContact = (yield models_1.models.Contact.findOne({
                     where: { publicKey: payload.sender.pub_key, tenant },
                 }));
+                let isSpam = false;
+                //Check if message is spam
+                if (payload.type === constants_1.default.message_types.message) {
+                    isSpam = yield checkSpamList(chat, senderContact);
+                    if (isSpam) {
+                        //to be changes to a new message type spam
+                        // payload.type = constants.message_types.delete
+                        //This is temporary, till the app has spam message type updated
+                        payload.message.content = '';
+                    }
+                }
                 // if (!senderContact) return console.log('=> no sender contact')
                 const senderContactId = senderContact && senderContact.id;
                 forwardedFromContactId = senderContactId;
@@ -145,7 +157,7 @@ function onReceive(payload, dest) {
                     if (payload.message.amount < chat.pricePerMessage) {
                         doAction = false;
                     }
-                    if (chat.escrowAmount && senderContactId) {
+                    if (chat.escrowAmount && senderContactId && !isSpam) {
                         timers.addTimer({
                             // pay them back
                             amount: chat.escrowAmount,
@@ -154,6 +166,7 @@ function onReceive(payload, dest) {
                             msgId: payload.message.id,
                             chatId: chat.id,
                             tenant,
+                            msgUuid: payload.message.uuid,
                         });
                     }
                 }
@@ -230,7 +243,7 @@ function onReceive(payload, dest) {
                                 chatId: chat.id,
                             },
                         }));
-                        if (sender) {
+                        if (sender && !isSpam) {
                             yield sender.update({ totalMessages: sender.totalMessages + 1 });
                             if (payload.type === msgtypes.message) {
                                 const allMsg = (yield models_1.models.Message.findAll({
@@ -469,6 +482,22 @@ function receiveMqttMessage(topic, message) {
     });
 }
 exports.receiveMqttMessage = receiveMqttMessage;
+function receiveCoTenantMessage(destination, message) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // check topic is signed by sender?
+            const payload = yield parseAndVerifyPayload(message);
+            if (!payload)
+                return; // skip it if not parsed
+            payload.network_type = constants_1.default.network_types.co_tenant;
+            onReceive(payload, destination);
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error('failed receiveCoTenantMessage', logger_1.logging.Network);
+        }
+    });
+}
+exports.receiveCoTenantMessage = receiveCoTenantMessage;
 function initTribesSubscriptions() {
     return __awaiter(this, void 0, void 0, function* () {
         tribes.connect(receiveMqttMessage);
@@ -685,6 +714,31 @@ function asyncForEach(array, callback) {
     return __awaiter(this, void 0, void 0, function* () {
         for (let index = 0; index < array.length; index++) {
             yield callback(array[index], index, array);
+        }
+    });
+}
+function checkSpamList(chat, contact) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const bot = yield (0, utill_1.findBot)({
+                botPrefix: '/spam_gone',
+                tribe: chat,
+            });
+            if (!bot) {
+                return false;
+            }
+            const meta = JSON.parse(bot.meta || `{}`);
+            if (meta.pubkeys && meta.pubkeys.length > 0) {
+                for (let i = 0; i < meta.pubkeys.length; i++) {
+                    if (meta.pubkeys[i].pubkey === contact.publicKey) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        catch (error) {
+            return false;
         }
     });
 }

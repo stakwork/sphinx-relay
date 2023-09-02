@@ -1,4 +1,5 @@
 import { loadProto } from '../grpc/proto'
+/* eslint-disable import/no-unresolved */
 import { SignerClient } from '../grpc/types/signrpc/Signer'
 import * as Lightning from '../grpc/lightning'
 import { loadConfig } from './config'

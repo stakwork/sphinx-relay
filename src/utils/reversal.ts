@@ -1,6 +1,6 @@
 import { models, MessageRecord, ChatRecord, ContactRecord } from '../models'
-import * as socket from './socket'
 import constants from '../constants'
+import * as socket from './socket'
 import * as jsonUtils from './json'
 
 interface ReversalInput {

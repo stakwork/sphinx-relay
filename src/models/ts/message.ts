@@ -29,4 +29,5 @@ export interface Message {
   replyUuid: string
   network_type: number
   tenant: number
+  thread_uuid: string
 }

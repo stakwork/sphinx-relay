@@ -19,7 +19,7 @@ export type _cln_ListpaysPays_ListpaysPaysStatus =
   | 2
 
 export type _cln_ListpaysPays_ListpaysPaysStatus__Output =
-  typeof _cln_ListpaysPays_ListpaysPaysStatus[keyof typeof _cln_ListpaysPays_ListpaysPaysStatus]
+  (typeof _cln_ListpaysPays_ListpaysPaysStatus)[keyof typeof _cln_ListpaysPays_ListpaysPaysStatus]
 
 export interface ListpaysPays {
   payment_hash?: Buffer | Uint8Array | string

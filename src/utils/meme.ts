@@ -1,7 +1,7 @@
 import * as moment from 'moment'
+import * as rp from 'request-promise'
 import { urlBase64FromBytes } from '../utils/ldat'
 import * as zbase32 from '../utils/zbase32'
-import * as rp from 'request-promise'
 import * as helpers from '../helpers'
 import { loadConfig } from '../utils/config'
 import * as Lightning from '../grpc/lightning'

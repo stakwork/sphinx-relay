@@ -22,6 +22,7 @@ const scopes_1 = require("./scopes");
 const hmac = require("./crypto/hmac");
 const fs = require("fs");
 const cert_1 = require("./utils/cert");
+const helpers_1 = require("./helpers");
 const moment = require("moment");
 const config = (0, config_1.loadConfig)();
 function unlocker(req, res) {
@@ -62,7 +63,7 @@ function unlocker(req, res) {
         if (hexMac) {
             (0, macaroon_1.setInMemoryMacaroon)(hexMac);
             (0, res_1.success)(res, 'success!');
-            yield sleep(100);
+            yield (0, helpers_1.sleep)(100);
             return true;
         }
         else {
@@ -73,6 +74,7 @@ function unlocker(req, res) {
 }
 exports.unlocker = unlocker;
 function hmacMiddleware(req, res, next) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         if (no_auth(req.path)) {
             next();
@@ -84,8 +86,12 @@ function hmacMiddleware(req, res, next) {
             next();
             return;
         }
+        if (!req.owner) {
+            next();
+            return;
+        }
         // opt-in feature
-        if (!req.owner.hmacKey) {
+        if (!((_a = req.owner) === null || _a === void 0 ? void 0 : _a.hmacKey)) {
             next();
             return;
         }
@@ -112,9 +118,9 @@ function proxyAdminMiddleware(req, res, next) {
             next();
             return;
         }
-        if (!req.owner)
+        if (!req.admin)
             return (0, res_1.unauthorized)(res);
-        if (!req.owner.isAdmin)
+        if (!req.admin.isAdmin)
             return (0, res_1.unauthorized)(res);
         if (!(0, proxy_1.isProxy)())
             return (0, res_1.unauthorized)(res);
@@ -140,7 +146,9 @@ function no_auth(path) {
         path == '/webhook' ||
         path == '/has_admin' ||
         path == '/initial_admin_pubkey' ||
-        path == '/my_ip');
+        path == '/my_ip' ||
+        path == '/ml' ||
+        path == '/swarm_admin_register');
 }
 function ownerMiddleware(req, res, next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -199,8 +207,9 @@ function ownerMiddleware(req, res, next) {
                 .createHash('sha256')
                 .update(token)
                 .digest('base64');
+            const tokenKey = x_admin_token ? 'adminToken' : 'authToken';
             owner = (yield models_1.models.Contact.findOne({
-                where: { authToken: hashedToken, isOwner: true },
+                where: { [tokenKey]: hashedToken, isOwner: true },
             }));
             if (x_admin_token) {
                 if (!owner.isAdmin) {
@@ -248,7 +257,12 @@ function ownerMiddleware(req, res, next) {
             }
             yield owner.update({ lastTimestamp: timestamp });
         }
-        req.owner = owner.dataValues;
+        if (x_admin_token) {
+            req.admin = owner.dataValues;
+        }
+        else {
+            req.owner = owner.dataValues;
+        }
         next();
     });
 }
@@ -285,10 +299,5 @@ function base64ToHex(str) {
 }
 exports.base64ToHex = base64ToHex;
 const atob = (a) => Buffer.from(a, 'base64').toString('binary');
-function sleep(ms) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    });
-}
 const b64regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$/;
 //# sourceMappingURL=auth.js.map

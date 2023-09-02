@@ -168,7 +168,7 @@ export async function tribe3Msgs(t, node1, node2, node3) {
 
   //NODE3 SENDS A TEXT MESSAGE IN TRIBE
   const text4 = randomText()
-  const options = { parent_id: 1 }
+  const options = { parent_id: 1, thread_uuid: 'thread_uuid' }
   let tribeMessage4 = await sendTribeMessage(t, node3, tribe, text4, options)
   const recivedMessageFromNode1 = await getCheckNewMsgs(
     t,
@@ -188,6 +188,14 @@ export async function tribe3Msgs(t, node1, node2, node3) {
   t.true(
     recivedMessageFromNode2.parent_id == options.parent_id,
     'node 2 gets message channel id'
+  )
+  t.true(
+    recivedMessageFromNode1.thread_uuid == options.thread_uuid,
+    'Node 1 gets message thread uuid'
+  )
+  t.true(
+    recivedMessageFromNode2.thread_uuid == options.thread_uuid,
+    'node 2 gets message thread uuid'
   )
   //CHECK THAT NODE3'S DECRYPTED MESSAGE IS SAME AS INPUT
   const n1check3 = await checkMessageDecryption(

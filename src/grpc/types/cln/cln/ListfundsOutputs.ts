@@ -25,7 +25,7 @@ export type _cln_ListfundsOutputs_ListfundsOutputsStatus =
   | 3
 
 export type _cln_ListfundsOutputs_ListfundsOutputsStatus__Output =
-  typeof _cln_ListfundsOutputs_ListfundsOutputsStatus[keyof typeof _cln_ListfundsOutputs_ListfundsOutputsStatus]
+  (typeof _cln_ListfundsOutputs_ListfundsOutputsStatus)[keyof typeof _cln_ListfundsOutputs_ListfundsOutputsStatus]
 
 export interface ListfundsOutputs {
   txid?: Buffer | Uint8Array | string

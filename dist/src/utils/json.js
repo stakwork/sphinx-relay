@@ -35,6 +35,8 @@ function contactToJson(contact) {
     const c = contact.dataValues || contact;
     if (c.authToken)
         delete c.authToken;
+    if (c.adminToken)
+        delete c.adminToken;
     return (0, case_1.toSnake)(c);
 }
 exports.contactToJson = contactToJson;

@@ -27,4 +27,7 @@ export default class Timer extends Model<Timer> {
 
   @Column
   tenant: number
+
+  @Column
+  msgUuid: string
 }

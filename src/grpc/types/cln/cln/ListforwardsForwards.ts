@@ -1,10 +1,10 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Amount as _cln_Amount,
   Amount__Output as _cln_Amount__Output,
 } from '../cln/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/cln/node.proto
 
@@ -26,7 +26,7 @@ export type _cln_ListforwardsForwards_ListforwardsForwardsStatus =
   | 3
 
 export type _cln_ListforwardsForwards_ListforwardsForwardsStatus__Output =
-  typeof _cln_ListforwardsForwards_ListforwardsForwardsStatus[keyof typeof _cln_ListforwardsForwards_ListforwardsForwardsStatus]
+  (typeof _cln_ListforwardsForwards_ListforwardsForwardsStatus)[keyof typeof _cln_ListforwardsForwards_ListforwardsForwardsStatus]
 
 // Original file: proto/cln/node.proto
 
@@ -42,7 +42,7 @@ export type _cln_ListforwardsForwards_ListforwardsForwardsStyle =
   | 1
 
 export type _cln_ListforwardsForwards_ListforwardsForwardsStyle__Output =
-  typeof _cln_ListforwardsForwards_ListforwardsForwardsStyle[keyof typeof _cln_ListforwardsForwards_ListforwardsForwardsStyle]
+  (typeof _cln_ListforwardsForwards_ListforwardsForwardsStyle)[keyof typeof _cln_ListforwardsForwards_ListforwardsForwardsStyle]
 
 export interface ListforwardsForwards {
   in_channel?: string

@@ -1,8 +1,8 @@
-import * as zbase32 from './zbase32'
 import * as Lightning from '../grpc/lightning'
+import { ContactRecord, models } from '../models'
+import * as zbase32 from './zbase32'
 import { loadConfig } from './config'
 import { sphinxLogger, logging } from './logger'
-import { ContactRecord, models } from '../models'
 
 const config = loadConfig()
 

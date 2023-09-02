@@ -1,7 +1,7 @@
 import { asyncForEach } from '../helpers'
 import { sequelize, models, Chat } from '../models'
-import { logging, sphinxLogger } from './logger'
 import constants from '../constants'
+import { logging, sphinxLogger } from './logger'
 
 async function migrateMuted() {
   try {
@@ -36,6 +36,8 @@ async function clearTransportTokens() {
 }
 
 export default async function migrate(): Promise<void> {
+  addTableColumn('sphinx_contacts', 'admin_token')
+
   addTableColumn('sphinx_contacts', 'last_timestamp', 'BIGINT')
   await clearTransportTokens()
   addTableColumn('sphinx_contacts', 'is_admin', 'BOOLEAN')
@@ -410,6 +412,10 @@ export default async function migrate(): Promise<void> {
   addTableColumn('sphinx_contacts', 'prune', 'INTEGER')
 
   addTableColumn('sphinx_messages', 'error_message', 'TEXT')
+
+  addTableColumn('sphinx_messages', 'thread_uuid', 'TEXT')
+
+  addTableColumn('sphinx_timers', 'msg_uuid', 'TEXT')
 }
 
 async function addTenant(tableName) {

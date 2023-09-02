@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.recordLeadershipScore = exports.encryptTribeBroadcast = exports.decryptMessage = exports.personalizeMessage = exports.fillmsg = void 0;
-const ldat_1 = require("./ldat");
 const rsa = require("../crypto/rsa");
 const constants_1 = require("../constants");
 const models = require("../models");
 const logger_1 = require("../utils/logger");
+const ldat_1 = require("./ldat");
 function addInRemoteText(full, contactId, isTribe) {
     const m = full && full.message;
     if (!(m && m.content))
@@ -119,6 +119,7 @@ function finishTermsAndReceipt(full, destkey, senderPubkey) {
 // this is only for tribes
 // DECRYPT EITHER STRING OR FIRST VAL IN OBJ
 function decryptMessage(full, chat) {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         if (!chat.groupPrivateKey)
             return full;
@@ -145,6 +146,17 @@ function decryptMessage(full, chat) {
             }
             const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey);
             obj.mediaKey = decMediaKey;
+        }
+        if (m.mediaTerms) {
+            const mediaToken = yield (0, ldat_1.tokenFromTerms)({
+                host: m.mediaTerms.host,
+                muid: m.mediaTerms.muid,
+                ttl: m.mediaTerms.ttl,
+                meta: m.mediaTerms.meta,
+                pubkey: (_a = full.sender) === null || _a === void 0 ? void 0 : _a.pub_key,
+                ownerPubkey: (_b = full.sender) === null || _b === void 0 ? void 0 : _b.pub_key,
+            });
+            obj.mediaToken = mediaToken;
         }
         // console.log("OBJ FILLED",fillmsg(full, obj))
         return fillmsg(full, obj);

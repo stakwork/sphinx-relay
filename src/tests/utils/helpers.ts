@@ -124,7 +124,7 @@ export async function getToken(t, node) {
 
 export function memeProtocol(host) {
   let p = 'https'
-  if (host.includes('localhost')) p = 'http'
+  if (host.includes('localhost') || host.includes('meme.sphinx')) p = 'http'
   return p
 }
 
@@ -142,4 +142,22 @@ export function makeJwtArgs(jwt, body) {
     headers: { 'x-jwt': jwt },
     body,
   }
+}
+
+export async function updateChannelPolicy(
+  t,
+  node: NodeConfig,
+  base_fee: number
+) {
+  const v = {
+    base_fee,
+  }
+  const r = await http.post(
+    node.external_ip + '/update_channel_policy',
+    makeArgs(node, v)
+  )
+
+  t.true(r.success, 'channel policy was updated successfully')
+
+  return r
 }

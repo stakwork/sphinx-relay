@@ -1,10 +1,15 @@
 import test from 'ava'
 
-import { randomText } from '../utils/helpers'
+import { randomText, sleep } from '../utils/helpers'
 import { createTribe, joinTribe } from '../utils/save'
-import { deleteTribe, leaveTribe } from '../utils/del'
-import { checkMessageDecryption, sendEscrowMsg } from '../utils/msg'
+import { deleteMessage, deleteTribe, leaveTribe } from '../utils/del'
+import {
+  checkMessageDecryption,
+  sendEscrowMsg,
+  sendTribeMessage,
+} from '../utils/msg'
 import nodes from '../nodes'
+import { getBalance, getCheckNewMsgs } from '../utils/get'
 
 /*
 npx ava src/tests/controllers/tribe3Escrow.test.ts --verbose --serial --timeout=2m
@@ -53,6 +58,39 @@ async function tribe3Escrow(t, node1, node2, node3) {
   t.true(
     n3check,
     "node3 (non-admin) should have read and decrypted node2's message"
+  )
+
+  const balBefore = await getBalance(t, node2)
+
+  //Bob sends message in a tribe
+  const text2 = randomText()
+  const msg = await sendTribeMessage(t, node2, tribe, text2, {
+    amount: tribe.escrow_amount + tribe.price_per_message,
+  })
+
+  //Admin tries to get sent message
+  const msg2 = await getCheckNewMsgs(t, node1, msg.uuid)
+
+  //Get Balance immediately ater a message is sent
+  const balImmediatelyAfter = await getBalance(t, node2)
+
+  //Delete Message by Admin
+  await deleteMessage(t, node1, msg2.id)
+
+  await sleep(tribe.escrow_millis + 5000)
+
+  //Get balance after escrow time
+  const balAfterEscrow = await getBalance(t, node2)
+
+  t.true(
+    balBefore - balImmediatelyAfter ===
+      tribe.escrow_amount + tribe.price_per_message + 3,
+    'Difference between balance before and after message should be equal to the sum of escrow and price_per_message'
+  )
+
+  t.true(
+    balAfterEscrow === balImmediatelyAfter,
+    'Balance after escrow should be equal to balance immediately after sending message'
   )
 
   //NODE2 LEAVES THE TRIBE

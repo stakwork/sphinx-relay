@@ -1,3 +1,5 @@
+import * as rp from 'request-promise'
+import * as short from 'short-uuid'
 import { models, Message, MediaKey } from '../models'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
@@ -5,14 +7,10 @@ import * as resUtils from '../utils/res'
 import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
 import * as Lightning from '../grpc/lightning'
-import * as rp from 'request-promise'
 import { parseLDAT, tokenFromTerms, urlBase64FromBytes } from '../utils/ldat'
 import * as meme from '../utils/meme'
 import * as zbase32 from '../utils/zbase32'
-import * as schemas from './schemas'
-import { sendConfirmation } from './confirmations'
 import * as network from '../network'
-import * as short from 'short-uuid'
 import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { failure } from '../utils/res'
@@ -20,6 +18,8 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { Req } from '../types'
 import { ChatPlusMembers } from '../network/send'
 import { errMsgString } from '../utils/errMsgString'
+import { sendConfirmation } from './confirmations'
+import * as schemas from './schemas'
 
 const config = loadConfig()
 
@@ -65,6 +65,7 @@ export const sendAttachmentMessage = async (req: Req, res) => {
       price, // IF AMOUNT>0 THEN do NOT sign or send receipt
       reply_uuid,
       parent_id,
+      thread_uuid,
     } = req.body
 
     sphinxLogger.info(['[send attachment]', req.body])
@@ -122,6 +123,7 @@ export const sendAttachmentMessage = async (req: Req, res) => {
     }
     if (reply_uuid) mm.replyUuid = reply_uuid
     if (parent_id) mm.parentId = parent_id
+    if (thread_uuid) mm.thread_uuid = thread_uuid
     const message: Message = (await models.Message.create(mm)) as Message
 
     sphinxLogger.info(['saved attachment msg from me', message.id])
@@ -144,6 +146,7 @@ export const sendAttachmentMessage = async (req: Req, res) => {
     }
     if (reply_uuid) msg.replyUuid = reply_uuid
     if (parent_id) msg.parentId = parent_id
+    if (thread_uuid) msg.thread_uuid = thread_uuid
     network.sendMessage({
       chat: chat as Partial<ChatPlusMembers>,
       sender: owner,
@@ -547,6 +550,7 @@ export const receiveAttachment = async (payload) => {
     msg_uuid,
     reply_uuid,
     parent_id,
+    thread_uuid,
     network_type,
     sender_photo_url,
     force_push,
@@ -576,6 +580,7 @@ export const receiveAttachment = async (payload) => {
   if (mediaType) msg.mediaType = mediaType
   if (reply_uuid) msg.replyUuid = reply_uuid
   if (parent_id) msg.parentId = parent_id
+  if (thread_uuid) msg.thread_uuid = thread_uuid
   if (person) msg.person = person
   const isTribe = chat_type === constants.chat_types.tribe
   if (isTribe) {

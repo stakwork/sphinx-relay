@@ -27,7 +27,7 @@ const auth_1 = require("./src/auth");
 const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
-const leadershipboard_1 = require("./src/leadershipboard");
+const leadershipboard_1 = require("./src/utils/leadershipboard");
 // force UTC time
 process.env.TZ = 'UTC';
 const env = process.env.NODE_ENV || 'development';

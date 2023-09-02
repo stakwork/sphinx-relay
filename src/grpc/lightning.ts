@@ -1,27 +1,33 @@
 import * as fs from 'fs'
-import * as grpc from '@grpc/grpc-js'
-import { loadProto } from './proto'
-import { LightningClient } from './types/lnrpc/Lightning'
-import { LightningClient as ProxyLightningClient } from './types/lnrpc_proxy/Lightning'
-import { NodeClient as GreenlightNodeClient } from './types/greenlight/Node'
-import { NodeClient } from './types/cln/cln/Node'
-import { RouterClient } from './types/routerrpc/Router'
-import { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
-import { sleep } from '../helpers'
-import * as sha from 'js-sha256'
 import * as crypto from 'crypto'
+import * as grpc from '@grpc/grpc-js'
+import * as sha from 'js-sha256'
+import * as secp256k1 from 'secp256k1'
+import * as short from 'short-uuid'
+import { sleep } from '../helpers'
 import constants from '../constants'
 import { getMacaroon } from '../utils/macaroon'
 import { loadConfig } from '../utils/config'
 import { isProxy, loadProxyLightning } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
-import * as interfaces from './interfaces'
 import * as zbase32 from '../utils/zbase32'
-import * as secp256k1 from 'secp256k1'
+import { Req } from '../types'
+import { loadProto } from './proto'
+/* eslint-disable import/no-unresolved */
+import { LightningClient } from './types/lnrpc/Lightning'
+/* eslint-disable import/no-unresolved */
+import { LightningClient as ProxyLightningClient } from './types/lnrpc_proxy/Lightning'
+/* eslint-disable import/no-unresolved */
+import { NodeClient as GreenlightNodeClient } from './types/greenlight/Node'
+/* eslint-disable import/no-unresolved */
+import { NodeClient } from './types/cln/cln/Node'
+/* eslint-disable import/no-unresolved */
+import { RouterClient } from './types/routerrpc/Router'
+/* eslint-disable import/no-unresolved */
+import { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
+import * as interfaces from './interfaces'
 import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
-import { Req } from '../types'
-import * as short from 'short-uuid'
 
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
@@ -521,7 +527,7 @@ export function loadRouter(): RouterClient {
   }
 }
 
-const MAX_MSG_LENGTH = 972 // 1146 - 20 ???
+const MAX_MSG_LENGTH = config.max_payload_len || 600 // 640 - 10 - 30(threading)
 export async function keysendMessage(
   opts: KeysendOpts,
   ownerPubkey?: string
@@ -535,7 +541,10 @@ export async function keysendMessage(
     if (!opts.data || typeof opts.data !== 'string') {
       return reject('string plz')
     }
-
+    sphinxLogger.info(
+      'keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH,
+      logging.Network
+    )
     if (opts.data.length < MAX_MSG_LENGTH) {
       try {
         const res = await keysend(opts, ownerPubkey)
@@ -1298,6 +1307,31 @@ export async function getInvoiceHandler(
     } catch (error) {
       sphinxLogger.error([error], logging.Lightning)
       throw error
+    }
+  })
+}
+
+export async function updateChannelPolicies(base_fee: number) {
+  sphinxLogger.info('update channel policy', logging.Lightning)
+  return new Promise(async (resolve, reject) => {
+    const lightning = await loadLightning()
+    if (isLND(lightning)) {
+      await lightning.UpdateChannelPolicy(
+        {
+          global: true,
+          base_fee_msat: convertToMsat(base_fee),
+          time_lock_delta: 18,
+        },
+        (err, response) => {
+          if (err) {
+            sphinxLogger.error(err, logging.Lightning)
+            reject(err)
+          } else {
+            resolve(response)
+            sphinxLogger.info('Channel policy updated successfully')
+          }
+        }
+      )
     }
   })
 }

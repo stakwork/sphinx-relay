@@ -9,24 +9,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInvoiceHandler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
+exports.updateChannelPolicies = exports.getInvoiceHandler = exports.getChanInfo = exports.channelBalance = exports.complexBalances = exports.openChannel = exports.connectPeer = exports.pendingChannels = exports.listChannels = exports.listPeers = exports.addInvoice = exports.getInfo = exports.verifyAscii = exports.verifyMessage = exports.verifyBytes = exports.signBuffer = exports.signMessage = exports.listAllPaymentsFull = exports.listPaymentsPaginated = exports.listAllPayments = exports.listAllInvoices = exports.listInvoices = exports.signAscii = exports.keysendMessage = exports.loadRouter = exports.keysend = exports.sendPayment = exports.newAddress = exports.UNUSED_NESTED_PUBKEY_HASH = exports.UNUSED_WITNESS_PUBKEY_HASH = exports.NESTED_PUBKEY_HASH = exports.WITNESS_PUBKEY_HASH = exports.queryRoute = exports.setLock = exports.getLock = exports.getHeaders = exports.unlockWallet = exports.loadWalletUnlocker = exports.loadLightning = exports.loadMtlsCredentials = exports.loadCredentials = exports.isCLN = exports.isGL = exports.isLND = exports.SPHINX_CUSTOM_RECORD_KEY = exports.LND_KEYSEND_KEY = void 0;
 const fs = require("fs");
-const grpc = require("@grpc/grpc-js");
-const proto_1 = require("./proto");
-const helpers_1 = require("../helpers");
-const sha = require("js-sha256");
 const crypto = require("crypto");
+const grpc = require("@grpc/grpc-js");
+const sha = require("js-sha256");
+const secp256k1 = require("secp256k1");
+const short = require("short-uuid");
+const helpers_1 = require("../helpers");
 const constants_1 = require("../constants");
 const macaroon_1 = require("../utils/macaroon");
 const config_1 = require("../utils/config");
 const proxy_1 = require("../utils/proxy");
 const logger_1 = require("../utils/logger");
-const interfaces = require("./interfaces");
 const zbase32 = require("../utils/zbase32");
-const secp256k1 = require("secp256k1");
+const proto_1 = require("./proto");
+const interfaces = require("./interfaces");
 const libhsmd_1 = require("./libhsmd");
 const greenlight_1 = require("./greenlight");
-const short = require("short-uuid");
 const config = (0, config_1.loadConfig)();
 const LND_IP = config.lnd_ip || 'localhost';
 const IS_LND = config.lightning_provider === 'LND';
@@ -461,7 +461,7 @@ function loadRouter() {
     }
 }
 exports.loadRouter = loadRouter;
-const MAX_MSG_LENGTH = 972; // 1146 - 20 ???
+const MAX_MSG_LENGTH = config.max_payload_len || 600; // 640 - 10 - 30(threading)
 function keysendMessage(opts, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('keysendMessage', logger_1.logging.Lightning);
@@ -471,6 +471,7 @@ function keysendMessage(opts, ownerPubkey) {
                 if (!opts.data || typeof opts.data !== 'string') {
                     return reject('string plz');
                 }
+                logger_1.sphinxLogger.info('keysendMessage MAX_MSG_LENGTH: ' + MAX_MSG_LENGTH, logger_1.logging.Network);
                 if (opts.data.length < MAX_MSG_LENGTH) {
                     try {
                         const res = yield keysend(opts, ownerPubkey);
@@ -1126,6 +1127,31 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
     });
 }
 exports.getInvoiceHandler = getInvoiceHandler;
+function updateChannelPolicies(base_fee) {
+    return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.info('update channel policy', logger_1.logging.Lightning);
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            const lightning = yield loadLightning();
+            if (isLND(lightning)) {
+                yield lightning.UpdateChannelPolicy({
+                    global: true,
+                    base_fee_msat: convertToMsat(base_fee),
+                    time_lock_delta: 18,
+                }, (err, response) => {
+                    if (err) {
+                        logger_1.sphinxLogger.error(err, logger_1.logging.Lightning);
+                        reject(err);
+                    }
+                    else {
+                        resolve(response);
+                        logger_1.sphinxLogger.info('Channel policy updated successfully');
+                    }
+                });
+            }
+        }));
+    });
+}
+exports.updateChannelPolicies = updateChannelPolicies;
 function convertMsatToSat(amount) {
     return Number(amount) / 1000;
 }

@@ -1,10 +1,10 @@
-import { tokenFromTerms } from './ldat'
 import * as rsa from '../crypto/rsa'
 import constants from '../constants'
 import { Msg, MessageContent, ChatContent } from '../network/interfaces'
 import * as models from '../models'
 import { ChatMemberRecord } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'
+import { tokenFromTerms } from './ldat'
 
 function addInRemoteText(full: Partial<Msg>, contactId, isTribe: boolean): Msg {
   const m = full && full.message
@@ -153,6 +153,17 @@ async function decryptMessage(
     }
     const decMediaKey = rsa.decrypt(chat.groupPrivateKey, mediaKey)
     obj.mediaKey = decMediaKey
+  }
+  if (m.mediaTerms) {
+    const mediaToken = await tokenFromTerms({
+      host: m.mediaTerms.host,
+      muid: m.mediaTerms.muid,
+      ttl: m.mediaTerms.ttl,
+      meta: m.mediaTerms.meta,
+      pubkey: full.sender?.pub_key,
+      ownerPubkey: full.sender?.pub_key,
+    })
+    obj.mediaToken = mediaToken
   }
 
   // console.log("OBJ FILLED",fillmsg(full, obj))

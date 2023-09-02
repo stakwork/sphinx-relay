@@ -20,7 +20,7 @@ export type _cln_ListforwardsRequest_ListforwardsStatus =
   | 3
 
 export type _cln_ListforwardsRequest_ListforwardsStatus__Output =
-  typeof _cln_ListforwardsRequest_ListforwardsStatus[keyof typeof _cln_ListforwardsRequest_ListforwardsStatus]
+  (typeof _cln_ListforwardsRequest_ListforwardsStatus)[keyof typeof _cln_ListforwardsRequest_ListforwardsStatus]
 
 export interface ListforwardsRequest {
   status?: _cln_ListforwardsRequest_ListforwardsStatus

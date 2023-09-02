@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTribeMessages = exports.sendDirectPayment = exports.sendTribeDirectPayment = exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.boostAsMessage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
+exports.decryptMessage = exports.getTribeMessages = exports.sendDirectPayment = exports.sendTribeDirectPayment = exports.getSpecificMsg = exports.getAllMessages = exports.sendMessage = exports.payStream = exports.appRejMember = exports.payInvoice = exports.sendInvoice = exports.sendTribeMessage = exports.sendEscrowMsg = exports.sendPayment = exports.sendImage = exports.boostAsMessage = exports.sendBoost = exports.checkMessageDecryption = exports.sendTribeMessageAndCheckDecryption = exports.sendMessageAndCheckDecryption = void 0;
 var sendMessageAndCheckDecryption_1 = require("./sendMessageAndCheckDecryption");
 Object.defineProperty(exports, "sendMessageAndCheckDecryption", { enumerable: true, get: function () { return sendMessageAndCheckDecryption_1.sendMessageAndCheckDecryption; } });
 var sendTribeMessageAndCheckDecryption_1 = require("./sendTribeMessageAndCheckDecryption");
@@ -37,4 +37,6 @@ Object.defineProperty(exports, "sendTribeDirectPayment", { enumerable: true, get
 Object.defineProperty(exports, "sendDirectPayment", { enumerable: true, get: function () { return sendTribeDirectpayment_1.sendDirectPayment; } });
 var getTribeMessages_1 = require("./getTribeMessages");
 Object.defineProperty(exports, "getTribeMessages", { enumerable: true, get: function () { return getTribeMessages_1.getTribeMessages; } });
+var decryptMsg_1 = require("./decryptMsg");
+Object.defineProperty(exports, "decryptMessage", { enumerable: true, get: function () { return decryptMsg_1.decryptMessage; } });
 //# sourceMappingURL=index.js.map

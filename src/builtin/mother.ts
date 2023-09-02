@@ -4,13 +4,14 @@
 import * as Sphinx from 'sphinx-bot'
 import { finalAction } from '../controllers/botapi'
 import { installBotAsTribeAdmin } from '../controllers/bots'
-import { models } from '../models'
+import { ChatRecord, models } from '../models'
 import fetch from 'node-fetch'
 import constants from '../constants'
 import { loadConfig } from '../utils/config'
 import { getTribeOwnersChatByUUID } from '../utils/tribes'
 import { sphinxLogger } from '../utils/logger'
 import { GITBOT_UUID, getOrCreateGitBot } from './git'
+import { ML_PREFIX, ML_BOTNAME } from './ml'
 
 const msg_types = Sphinx.MSG_TYPE
 
@@ -25,6 +26,8 @@ const builtinBots = [
   'kick',
   'sentiment',
   'jarvis',
+  'spam_gone',
+  ML_PREFIX.substring(1),
 ]
 
 // else just message type
@@ -44,6 +47,10 @@ const builtInBotMsgTypes = {
     constants.message_types.boost,
     constants.message_types.attachment,
   ],
+  [`${ML_PREFIX.substring(1)}`]: [
+    constants.message_types.message,
+    constants.message_types.attachment,
+  ],
 }
 
 const builtInHiddenCmd = {
@@ -51,6 +58,8 @@ const builtInHiddenCmd = {
   kick: ['hide', 'add', 'remove'],
   sentiment: ['threshold', 'timer', 'url'],
   jarvis: ['link', 'hide'],
+  spam_gone: ['add', 'list', 'remove'],
+  [`${ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind', 'add'],
 }
 
 const builtInBotNames = {
@@ -62,6 +71,8 @@ const builtInBotNames = {
   kick: 'KickBot',
   sentiment: 'SentimentBot',
   jarvis: 'JarvisBot',
+  spam_gone: 'SpamGoneBot',
+  [`${ML_PREFIX.substring(1)}`]: ML_BOTNAME,
 }
 
 export function init() {
@@ -89,13 +100,7 @@ export function init() {
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
           if (!(chat && chat.id))
             return sphinxLogger.error('=> motherbot no chat')
-          const existing = await models.ChatBot.findOne({
-            where: {
-              chatId: chat.id,
-              botPrefix: '/' + botName,
-              tenant: chat.tenant,
-            },
-          })
+          const existing = await checkBotExist(chat, botName)
           if (existing) {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')
@@ -126,6 +131,18 @@ export function init() {
             .setDescription(theName + ' has been installed!')
           message.channel.send({ embed })
         } else {
+          const chat = await getTribeOwnersChatByUUID(message.channel.id)
+          if (!(chat && chat.id))
+            return sphinxLogger.error('=> motherbot no chat')
+
+          // check if bot already exist in tribe
+          const existing = await checkBotExist(chat, botName)
+          if (existing) {
+            const embed = new Sphinx.MessageEmbed()
+              .setAuthor('MotherBot')
+              .setDescription(botName + ' already installed')
+            return message.channel.send({ embed })
+          }
           // bot from tribes registry
           const bot = await getBotByName(botName)
           if (bot && bot.uuid) {
@@ -245,5 +262,21 @@ async function getBotByName(name: string) {
     return null
   } catch (e) {
     return null
+  }
+}
+
+async function checkBotExist(chat: ChatRecord, botName: strinf) {
+  try {
+    const bot = await models.ChatBot.findOne({
+      where: {
+        chatId: chat.id,
+        botPrefix: '/' + botName,
+        tenant: chat.tenant,
+      },
+    })
+    return bot
+  } catch (error) {
+    sphinxLogger.error(`Error checking bot in tribe: ${error}`)
+    throw error
   }
 }

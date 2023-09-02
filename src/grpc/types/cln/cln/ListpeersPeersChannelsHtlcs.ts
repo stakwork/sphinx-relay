@@ -1,10 +1,10 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Amount as _cln_Amount,
   Amount__Output as _cln_Amount__Output,
 } from '../cln/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/cln/node.proto
 
@@ -18,7 +18,7 @@ export type _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirectio
   'IN' | 0 | 'OUT' | 1
 
 export type _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection__Output =
-  typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection[keyof typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection]
+  (typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection)[keyof typeof _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection]
 
 export interface ListpeersPeersChannelsHtlcs {
   direction?: _cln_ListpeersPeersChannelsHtlcs_ListpeersPeersChannelsHtlcsDirection

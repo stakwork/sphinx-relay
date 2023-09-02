@@ -10,22 +10,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBagdeChatBot = exports.addPatToGitBot = exports.receiveBotRes = exports.buildBotPayload = exports.postToBotServer = exports.receiveBotCmd = exports.receiveBotInstall = exports.botKeysend = exports.keysendBotCmd = exports.keysendBotInstall = exports.installBotAsTribeAdmin = exports.deleteBot = exports.createBot = exports.getBots = void 0;
-const tribes = require("../utils/tribes");
 const crypto = require("crypto");
-const models_1 = require("../models");
-const jsonUtils = require("../utils/json");
-const res_1 = require("../utils/res");
-const network = require("../network");
-const botapi_1 = require("./botapi");
-const socket = require("../utils/socket");
 const node_fetch_1 = require("node-fetch");
 const SphinxBot = require("sphinx-bot");
+const short = require("short-uuid");
+const socket = require("../utils/socket");
 const constants_1 = require("../constants");
 const logger_1 = require("../utils/logger");
-const short = require("short-uuid");
+const network = require("../network");
+const res_1 = require("../utils/res");
+const jsonUtils = require("../utils/json");
+const models_1 = require("../models");
+const tribes = require("../utils/tribes");
 const git_1 = require("../builtin/git");
 const rsa = require("../crypto/rsa");
 const cert_1 = require("../utils/cert");
+const botapi_1 = require("./botapi");
 /**
 
     getBots retrieves all the bots of a user
@@ -491,6 +491,8 @@ function buildBotPayload(msg, botPrefix) {
         amount: msg.message.amount,
         type: msg.type,
         media_key: msg.message.mediaKey,
+        media_token: msg.message.mediaToken,
+        media_type: msg.message.mediaType,
         member: {
             id: msg.sender.id ? msg.sender.id + '' : '0',
             nickname: msg.sender.alias,

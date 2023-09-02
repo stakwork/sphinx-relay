@@ -1,6 +1,6 @@
+import { Response } from 'express'
 import { ContentFeedStatusRecord, models } from '../models'
 import { Req } from '../types'
-import { Response } from 'express'
 import { success, failure } from '../utils/res'
 import { logging, sphinxLogger } from '../utils/logger'
 

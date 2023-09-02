@@ -20,6 +20,8 @@ const CallRecordingBot = require("./callRecording");
 const KickBot = require("./kick");
 const SentimentBot = require("./sentiment");
 const JarvisBot = require("./jarvis");
+const SpamGoneBot = require("./spamGone");
+const MlBot = require("./ml");
 const GitBot = require("./git");
 const bots_1 = require("../controllers/bots");
 Object.defineProperty(exports, "buildBotPayload", { enumerable: true, get: function () { return bots_1.buildBotPayload; } });
@@ -34,6 +36,8 @@ function init() {
         KickBot.init();
         SentimentBot.init();
         JarvisBot.init();
+        SpamGoneBot.init();
+        MlBot.init();
     });
 }
 exports.init = init;

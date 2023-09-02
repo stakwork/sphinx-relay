@@ -1,10 +1,10 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Amount as _cln_Amount,
   Amount__Output as _cln_Amount__Output,
 } from '../cln/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/cln/node.proto
 
@@ -15,7 +15,7 @@ export const _cln_WaitsendpayResponse_WaitsendpayStatus = {
 export type _cln_WaitsendpayResponse_WaitsendpayStatus = 'COMPLETE' | 0
 
 export type _cln_WaitsendpayResponse_WaitsendpayStatus__Output =
-  typeof _cln_WaitsendpayResponse_WaitsendpayStatus[keyof typeof _cln_WaitsendpayResponse_WaitsendpayStatus]
+  (typeof _cln_WaitsendpayResponse_WaitsendpayStatus)[keyof typeof _cln_WaitsendpayResponse_WaitsendpayStatus]
 
 export interface WaitsendpayResponse {
   id?: number | string | Long

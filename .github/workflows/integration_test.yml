@@ -47,6 +47,11 @@ jobs:
             'deleteMessages',
             'boostFail',
             'sphinxAuth',
+            'fees',
+            'externalBotApi',
+            'externalHostedBot',
+            'spamGoneBot',
+            'mlBot',
           ]
         node: [16]
     steps:
@@ -66,7 +71,7 @@ jobs:
           npm install && npm run build && docker build -t sphinxlightning/sphinx-relay .
       - name: Checkout stack
         run: |
-          git clone  https://github.com/stakwork/sphinx-stack.git stack
+          git clone https://github.com/stakwork/sphinx-stack.git stack
       - name: give permissions
         working-directory: ./stack
         run: |
@@ -75,13 +80,15 @@ jobs:
           chmod 777 -R ./lnd;
           chmod 777 -R ./proxy;
           chmod 777 -R ./cln;
+          echo '[]' > ./relay/botEnvVars.json;
+          git submodule update --init;
       - name: Check for NODES.json
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
           command: |
-            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml --project-dir ./stack up -d;
+            GITACTION_ENV=gitactionenv docker-compose -f ./stack/alts/proxy.yml -f ./stack/alts/bots.yml --project-dir ./stack up -d;
             sleep 240;
             docker ps
             docker logs meme.sphinx
@@ -93,6 +100,10 @@ jobs:
         with:
           source: 'stack/relay/NODES.json'
           target: 'relay/src/tests/configs/nodes.json'
+      - name: Sleep for 1 minutes
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '1m'
       - name: Run tests
         working-directory: ./relay
         run: npx ava src/tests/controllers/${{matrix.test-name}}.test.ts --verbose --serial --timeout=2m

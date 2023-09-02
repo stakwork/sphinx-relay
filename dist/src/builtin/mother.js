@@ -22,6 +22,7 @@ const config_1 = require("../utils/config");
 const tribes_1 = require("../utils/tribes");
 const logger_1 = require("../utils/logger");
 const git_1 = require("./git");
+const ml_1 = require("./ml");
 const msg_types = Sphinx.MSG_TYPE;
 const config = (0, config_1.loadConfig)();
 const builtinBots = [
@@ -33,6 +34,8 @@ const builtinBots = [
     'kick',
     'sentiment',
     'jarvis',
+    'spam_gone',
+    ml_1.ML_PREFIX.substring(1),
 ];
 // else just message type
 const builtInBotMsgTypes = {
@@ -51,12 +54,18 @@ const builtInBotMsgTypes = {
         constants_1.default.message_types.boost,
         constants_1.default.message_types.attachment,
     ],
+    [`${ml_1.ML_PREFIX.substring(1)}`]: [
+        constants_1.default.message_types.message,
+        constants_1.default.message_types.attachment,
+    ],
 };
 const builtInHiddenCmd = {
     callRecording: ['hide', 'update'],
     kick: ['hide', 'add', 'remove'],
     sentiment: ['threshold', 'timer', 'url'],
     jarvis: ['link', 'hide'],
+    spam_gone: ['add', 'list', 'remove'],
+    [`${ml_1.ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind', 'add'],
 };
 const builtInBotNames = {
     welcome: 'WelcomeBot',
@@ -67,6 +76,8 @@ const builtInBotNames = {
     kick: 'KickBot',
     sentiment: 'SentimentBot',
     jarvis: 'JarvisBot',
+    spam_gone: 'SpamGoneBot',
+    [`${ml_1.ML_PREFIX.substring(1)}`]: ml_1.ML_BOTNAME,
 };
 function init() {
     const client = new Sphinx.Client();
@@ -93,13 +104,7 @@ function init() {
                     const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
                     if (!(chat && chat.id))
                         return logger_1.sphinxLogger.error('=> motherbot no chat');
-                    const existing = yield models_1.models.ChatBot.findOne({
-                        where: {
-                            chatId: chat.id,
-                            botPrefix: '/' + botName,
-                            tenant: chat.tenant,
-                        },
-                    });
+                    const existing = yield checkBotExist(chat, botName);
                     if (existing) {
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('MotherBot')
@@ -131,6 +136,17 @@ function init() {
                     message.channel.send({ embed });
                 }
                 else {
+                    const chat = yield (0, tribes_1.getTribeOwnersChatByUUID)(message.channel.id);
+                    if (!(chat && chat.id))
+                        return logger_1.sphinxLogger.error('=> motherbot no chat');
+                    // check if bot already exist in tribe
+                    const existing = yield checkBotExist(chat, botName);
+                    if (existing) {
+                        const embed = new Sphinx.MessageEmbed()
+                            .setAuthor('MotherBot')
+                            .setDescription(botName + ' already installed');
+                        return message.channel.send({ embed });
+                    }
                     // bot from tribes registry
                     const bot = yield getBotByName(botName);
                     if (bot && bot.uuid) {
@@ -252,6 +268,24 @@ function getBotByName(name) {
         }
         catch (e) {
             return null;
+        }
+    });
+}
+function checkBotExist(chat, botName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const bot = yield models_1.models.ChatBot.findOne({
+                where: {
+                    chatId: chat.id,
+                    botPrefix: '/' + botName,
+                    tenant: chat.tenant,
+                },
+            });
+            return bot;
+        }
+        catch (error) {
+            logger_1.sphinxLogger.error(`Error checking bot in tribe: ${error}`);
+            throw error;
         }
     });
 }

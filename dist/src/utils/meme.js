@@ -11,9 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMediaToken = exports.lazyToken = void 0;
 const moment = require("moment");
+const rp = require("request-promise");
 const ldat_1 = require("../utils/ldat");
 const zbase32 = require("../utils/zbase32");
-const rp = require("request-promise");
 const helpers = require("../helpers");
 const config_1 = require("../utils/config");
 const Lightning = require("../grpc/lightning");

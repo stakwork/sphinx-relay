@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.leadershipBoardInterval = void 0;
-const models_1 = require("./models");
-const config_1 = require("./utils/config");
-const tribes_1 = require("./utils/tribes");
-const node_fetch_1 = require("node-fetch");
 const https = require("https");
+const node_fetch_1 = require("node-fetch");
+const models_1 = require("../models");
+const config_1 = require("./config");
+const tribes_1 = require("./tribes");
 const tribeAgent = new https.Agent({
     keepAlive: true,
 });

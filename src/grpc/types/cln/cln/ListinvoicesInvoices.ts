@@ -1,10 +1,10 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Amount as _cln_Amount,
   Amount__Output as _cln_Amount__Output,
 } from '../cln/Amount'
-import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/cln/node.proto
 
@@ -23,7 +23,7 @@ export type _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus =
   | 2
 
 export type _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus__Output =
-  typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus[keyof typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus]
+  (typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus)[keyof typeof _cln_ListinvoicesInvoices_ListinvoicesInvoicesStatus]
 
 export interface ListinvoicesInvoices {
   label?: string
