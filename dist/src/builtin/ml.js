@@ -43,7 +43,9 @@ function init() {
             }));
             const arr = (message.content && message.content.split(' ')) || [];
             const cmd = arr[1];
-            if ((isAdmin && arr[0] === exports.ML_PREFIX) || cmd === 'list') {
+            if ((isAdmin && arr[0] === exports.ML_PREFIX) ||
+                cmd === 'list' ||
+                cmd === 'help') {
                 switch (cmd) {
                     case 'url':
                         yield (0, ml_1.addUrl)(exports.ML_BOTNAME, exports.ML_PREFIX, tribe, message, arr);
@@ -61,7 +63,7 @@ function init() {
                         yield (0, ml_1.listModels)(exports.ML_PREFIX, tribe, message);
                         return;
                     default:
-                        (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message);
+                        (0, ml_1.defaultCommand)(exports.ML_BOTNAME, exports.ML_PREFIX, message, (isAdmin === null || isAdmin === void 0 ? void 0 : isAdmin.name) === 'Admin' || false);
                         return;
                 }
             }
@@ -111,7 +113,7 @@ function init() {
                     content = message.content.substring(modelName.length + 1);
                 }
                 else {
-                    (0, ml_1.mlBotResponse)('Specify model name by typing the @ sysmbol followed by model name immediately, without space. Use the command <strong>/ml list</strong> to see all available models', message);
+                    (0, ml_1.mlBotResponse)('Specify model name by typing the @ sysmbol followed by model name immediately, without space. Use the command "<strong>/ml list</strong>" to see all available models', message);
                     return;
                 }
                 meta = metaObj[modelName];

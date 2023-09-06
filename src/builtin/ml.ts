@@ -52,7 +52,11 @@ export function init() {
 
       const arr = (message.content && message.content.split(' ')) || []
       const cmd = arr[1]
-      if ((isAdmin && arr[0] === ML_PREFIX) || cmd === 'list') {
+      if (
+        (isAdmin && arr[0] === ML_PREFIX) ||
+        cmd === 'list' ||
+        cmd === 'help'
+      ) {
         switch (cmd) {
           case 'url':
             await addUrl(ML_BOTNAME, ML_PREFIX, tribe, message, arr)
@@ -70,7 +74,12 @@ export function init() {
             await listModels(ML_PREFIX, tribe, message)
             return
           default:
-            defaultCommand(ML_BOTNAME, ML_PREFIX, message)
+            defaultCommand(
+              ML_BOTNAME,
+              ML_PREFIX,
+              message,
+              isAdmin?.name === 'Admin' || false
+            )
             return
         }
       }
@@ -134,7 +143,7 @@ export function init() {
           content = message.content.substring(modelName.length + 1)
         } else {
           mlBotResponse(
-            'Specify model name by typing the @ sysmbol followed by model name immediately, without space. Use the command <strong>/ml list</strong> to see all available models',
+            'Specify model name by typing the @ sysmbol followed by model name immediately, without space. Use the command "<strong>/ml list</strong>" to see all available models',
             message
           )
           return

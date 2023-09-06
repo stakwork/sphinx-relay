@@ -113,26 +113,31 @@ function addKind(botName, botPrefix, tribe, messageObj, msgArray) {
     });
 }
 exports.addKind = addKind;
-function defaultCommand(botName, botPrefix, message) {
-    const embed = new Sphinx.MessageEmbed()
-        .setAuthor(botName)
-        .setTitle('Bot Commands:')
-        .addFields([
-        {
-            name: `Add URL to ${botName}`,
-            value: `${botPrefix} url {MODEL_NAME} {URL}`,
-        },
-        {
-            name: `Add API_KEY to ${botName}`,
-            value: `${botPrefix} api_key {MODEL_NAME} {API_KEY}`,
-        },
-        {
-            name: `Set content type`,
-            value: `${botPrefix} kind {MODEL_NAME} {text/image}`,
-        },
-    ])
-        .setOnlyOwner(true);
-    message.channel.send({ embed });
+function defaultCommand(botName, botPrefix, message, isAdmin) {
+    if (isAdmin) {
+        const embed = new Sphinx.MessageEmbed()
+            .setAuthor(botName)
+            .setTitle('Bot Commands:')
+            .addFields([
+            {
+                name: `Add URL to ${botName}`,
+                value: `${botPrefix} url {MODEL_NAME} {URL}`,
+            },
+            {
+                name: `Add API_KEY to ${botName}`,
+                value: `${botPrefix} api_key {MODEL_NAME} {API_KEY}`,
+            },
+            {
+                name: `Set content type`,
+                value: `${botPrefix} kind {MODEL_NAME} {text/image}`,
+            },
+        ])
+            .setOnlyOwner(true);
+        message.channel.send({ embed });
+    }
+    else {
+        mlBotResponse('Chat with AI models!<br/> To see available models, type “<strong>/ml list</strong>”. Send a message to a model by mentioning it, like “@llama hello”', message);
+    }
 }
 exports.defaultCommand = defaultCommand;
 function addModel(botName, botPrefix, tribe, messageObject, msgArr) {
