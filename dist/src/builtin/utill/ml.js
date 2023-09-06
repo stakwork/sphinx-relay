@@ -131,6 +131,10 @@ function defaultCommand(botName, botPrefix, message, isAdmin) {
                 name: `Set content type`,
                 value: `${botPrefix} kind {MODEL_NAME} {text/image}`,
             },
+            {
+                name: `List all models available`,
+                value: `${botPrefix} list`,
+            },
         ])
             .setOnlyOwner(true);
         message.channel.send({ embed });
