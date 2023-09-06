@@ -213,27 +213,39 @@ export async function addKind(
 export function defaultCommand(
   botName: string,
   botPrefix: string,
-  message: Sphinx.Message
+  message: Sphinx.Message,
+  isAdmin: boolean
 ) {
-  const embed = new Sphinx.MessageEmbed()
-    .setAuthor(botName)
-    .setTitle('Bot Commands:')
-    .addFields([
-      {
-        name: `Add URL to ${botName}`,
-        value: `${botPrefix} url {MODEL_NAME} {URL}`,
-      },
-      {
-        name: `Add API_KEY to ${botName}`,
-        value: `${botPrefix} api_key {MODEL_NAME} {API_KEY}`,
-      },
-      {
-        name: `Set content type`,
-        value: `${botPrefix} kind {MODEL_NAME} {text/image}`,
-      },
-    ])
-    .setOnlyOwner(true)
-  message.channel.send({ embed })
+  if (isAdmin) {
+    const embed = new Sphinx.MessageEmbed()
+      .setAuthor(botName)
+      .setTitle('Bot Commands:')
+      .addFields([
+        {
+          name: `Add URL to ${botName}`,
+          value: `${botPrefix} url {MODEL_NAME} {URL}`,
+        },
+        {
+          name: `Add API_KEY to ${botName}`,
+          value: `${botPrefix} api_key {MODEL_NAME} {API_KEY}`,
+        },
+        {
+          name: `Set content type`,
+          value: `${botPrefix} kind {MODEL_NAME} {text/image}`,
+        },
+        {
+          name: `List all models available`,
+          value: `${botPrefix} list`,
+        },
+      ])
+      .setOnlyOwner(true)
+    message.channel.send({ embed })
+  } else {
+    mlBotResponse(
+      'Chat with AI models!<br/> To see available models, type “<strong>/ml list</strong>”. Send a message to a model by mentioning it, like “@llama hello”',
+      message
+    )
+  }
 }
 
 export async function addModel(
