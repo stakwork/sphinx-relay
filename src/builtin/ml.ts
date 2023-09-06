@@ -134,7 +134,7 @@ export function init() {
           content = message.content.substring(modelName.length + 1)
         } else {
           mlBotResponse(
-            'Specify model name by typing the @ sysmbol followed by model name immediately, without space',
+            'Specify model name by typing the @ sysmbol followed by model name immediately, without space. Use the command <strong>/ml list</strong> to see all available models',
             message
           )
           return
