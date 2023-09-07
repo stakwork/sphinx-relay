@@ -214,6 +214,11 @@ export async function ownerMiddleware(req: Req, res: Res, next) {
       where: { [tokenKey]: hashedToken, isOwner: true },
     })) as ContactRecord
     if (x_admin_token) {
+      if (!owner) {
+        res.status(401)
+        res.end('Invalid credentials - no admin')
+        return
+      }
       if (!owner.isAdmin) {
         res.status(401)
         res.end('Invalid credentials - not admin')
