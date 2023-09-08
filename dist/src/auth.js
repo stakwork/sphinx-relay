@@ -212,6 +212,11 @@ function ownerMiddleware(req, res, next) {
                 where: { [tokenKey]: hashedToken, isOwner: true },
             }));
             if (x_admin_token) {
+                if (!owner) {
+                    res.status(401);
+                    res.end('Invalid credentials - no admin');
+                    return;
+                }
                 if (!owner.isAdmin) {
                     res.status(401);
                     res.end('Invalid credentials - not admin');
