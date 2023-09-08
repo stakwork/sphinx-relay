@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   MPPRecord as _lnrpc_MPPRecord,
   MPPRecord__Output as _lnrpc_MPPRecord__Output,
@@ -9,6 +8,7 @@ import type {
   AMPRecord as _lnrpc_AMPRecord,
   AMPRecord__Output as _lnrpc_AMPRecord__Output,
 } from '../lnrpc/AMPRecord'
+import type { Long } from '@grpc/proto-loader'
 
 export interface Hop {
   chan_id?: number | string | Long

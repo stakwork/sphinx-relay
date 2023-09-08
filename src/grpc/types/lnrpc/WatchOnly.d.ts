@@ -1,10 +1,10 @@
 // Original file: proto/walletunlocker.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   WatchOnlyAccount as _lnrpc_WatchOnlyAccount,
   WatchOnlyAccount__Output as _lnrpc_WatchOnlyAccount__Output,
 } from '../lnrpc/WatchOnlyAccount'
+import type { Long } from '@grpc/proto-loader'
 
 export interface WatchOnly {
   master_key_birthday_timestamp?: number | string | Long
