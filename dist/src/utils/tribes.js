@@ -39,31 +39,38 @@ function connect(onMessage) {
 exports.connect = connect;
 function initAndSubscribeTopics(onMessage) {
     return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.debug('initAndSubscribeTopics', logger_1.logging.Tribes);
         const host = getHost();
         try {
+            logger_1.sphinxLogger.debug(`contacts where isOwner true`, logger_1.logging.Tribes);
             const allOwners = (yield models_1.models.Contact.findAll({
                 where: { isOwner: true },
             }));
+            // We found no owners
             if (!(allOwners && allOwners.length))
                 return;
+            logger_1.sphinxLogger.debug(`looping all the owners and subscribing`, logger_1.logging.Tribes);
             yield (0, helpers_1.asyncForEach)(allOwners, (c) => __awaiter(this, void 0, void 0, function* () {
                 if (c.publicKey && c.publicKey.length === 66) {
                     // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
                     if ((0, proxy_1.isProxy)() && !c.authToken)
                         return;
+                    logger_1.sphinxLogger.debug(`lazyClient for ${c.publicKey}`, logger_1.logging.Tribes);
                     yield lazyClient(c, host, onMessage, allOwners);
-                    // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
                 }
             }));
             logger_1.sphinxLogger.info('[TRIBES] all CLIENTS + subscriptions complete!');
         }
         catch (e) {
-            logger_1.sphinxLogger.error(`TRIBES ERROR ${e}`);
+            logger_1.sphinxLogger.error(`TRIBES ERROR, initAndSubscribeTopics ${e}`);
         }
     });
 }
+// In this function we are initializing the mqtt client
+// for every user on this relay
 function initializeClient(contact, host, onMessage, xpubres, allOwners) {
     return __awaiter(this, void 0, void 0, function* () {
+        logger_1.sphinxLogger.debug(`Initializing client`, logger_1.logging.Tribes);
         return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
             let connected = false;
             function reconnect() {
@@ -72,7 +79,9 @@ function initializeClient(contact, host, onMessage, xpubres, allOwners) {
                         let signer = contact.publicKey;
                         if (xpubres && xpubres.pubkey)
                             signer = xpubres.pubkey;
+                        logger_1.sphinxLogger.debug(`Initializing client, genSignedTimestamp`, logger_1.logging.Tribes);
                         const pwd = yield genSignedTimestamp(signer);
+                        logger_1.sphinxLogger.debug(`Initializing client, finished genSignedTimestamp`, logger_1.logging.Tribes);
                         if (connected)
                             return;
                         const url = mqttURL(host);
@@ -114,20 +123,22 @@ function initializeClient(contact, host, onMessage, xpubres, allOwners) {
                                     // else just this contact (legacy)
                                     yield specialSubscribe(cl, contact);
                                 }
+                                // If we close the connection
                                 cl.on('close', function (e) {
                                     logger_1.sphinxLogger.info(`CLOSE ${e}`, logger_1.logging.Tribes);
-                                    // setTimeout(() => reconnect(), 2000);
                                     connected = false;
                                     // REMOVE FROM MAIN CLIENTS STATE
                                     if (CLIENTS[username] && CLIENTS[username][host]) {
                                         delete CLIENTS[username][host];
                                     }
                                 });
+                                // If there is an error on any connection
                                 cl.on('error', function (e) {
                                     logger_1.sphinxLogger.error(`error:  ${e.message}`, logger_1.logging.Tribes);
                                 });
+                                // message type what we do on a new message
                                 cl.on('message', function (topic, message) {
-                                    // console.log("============>>>>> GOT A MSG", topic, message)
+                                    logger_1.sphinxLogger.debug(`============>>>>> GOT A MSG ${topic} ${message}`, logger_1.logging.Tribes);
                                     if (onMessage)
                                         onMessage(topic, message);
                                 });
@@ -141,6 +152,7 @@ function initializeClient(contact, host, onMessage, xpubres, allOwners) {
                     }
                 });
             }
+            // retrying connection till sucessfull
             while (true) {
                 if (!connected) {
                     reconnect();
@@ -586,14 +598,24 @@ function deleteChannel({ id, host, owner_pubkey, }) {
     });
 }
 exports.deleteChannel = deleteChannel;
+// Creates a signed timestamp with the
+// hosts public key
 function genSignedTimestamp(ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
-        // console.log('genSignedTimestamp')
+        logger_1.sphinxLogger.debug(`genSignedTimestamp, start`, logger_1.logging.Tribes);
         const now = moment().unix();
+        logger_1.sphinxLogger.debug(`genSignedTimestamp, loading lightining`, logger_1.logging.Tribes);
         const lightining = yield LND.loadLightning();
-        const contact = (yield models_1.models.Contact.findOne({
-            where: { isOwner: true, publicKey: ownerPubkey },
-        }));
+        let contact;
+        try {
+            contact = (yield models_1.models.Contact.findOne({
+                where: { isOwner: true, publicKey: ownerPubkey },
+            }));
+        }
+        catch (e) {
+            logger_1.sphinxLogger.error(`genSignedTimestamp, failed to get contact ${e}`, logger_1.logging.Tribes);
+            throw e;
+        }
         const tsBytes = Buffer.from(now.toString(16), 'hex');
         const utf8Sign = LND.isCLN(lightining) && contact && contact.id === 1;
         let sig = '';
