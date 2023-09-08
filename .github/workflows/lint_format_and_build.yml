@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.ACTIONS_PAT }}
       - name: install npm dependencies
         run: npm i
       - name: lint, format, build and push automatic fixes
