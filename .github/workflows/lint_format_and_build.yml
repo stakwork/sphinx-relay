@@ -10,15 +10,6 @@ jobs:
     runs-on:
       - ubuntu-latest
     steps:
-      - name: Check Commit Message
-        id: commit-message-check
-        run: |
-          COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
-          if [[ $COMMIT_MESSAGE == *"[ci commit]"* ]]; then
-            echo "Commit message contains [ci commit], exiting workflow."
-            exit 0
-          fi
-        shell: bash
       - name: checkout
         uses: actions/checkout@v3
         with:
@@ -28,6 +19,11 @@ jobs:
         run: npm i
       - name: lint, format, build and push automatic fixes
         run: |
+          COMMIT_MESSAGE=$(git log --format=%B -n 1 ${{ github.sha }})
+          if [[ $COMMIT_MESSAGE == *"[ci commit]"* ]]; then
+            echo "Commit message contains [ci commit], exiting workflow."
+            exit 0
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           shopt -s globstar
