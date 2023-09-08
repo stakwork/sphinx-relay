@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   LightningAddress as _lnrpc_LightningAddress,
   LightningAddress__Output as _lnrpc_LightningAddress__Output,
 } from '../lnrpc/LightningAddress'
-import type { Long } from '@grpc/proto-loader'
 
 export interface ConnectPeerRequest {
   addr?: _lnrpc_LightningAddress | null
