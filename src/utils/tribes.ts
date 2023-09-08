@@ -54,23 +54,32 @@ export async function connect(
 async function initAndSubscribeTopics(
   onMessage: (topic: string, message: Buffer) => void
 ): Promise<void> {
+  sphinxLogger.debug('initAndSubscribeTopics', logging.Tribes)
+
   const host = getHost()
   try {
+    sphinxLogger.debug(`contacts where isOwner true`, logging.Tribes)
     const allOwners: Contact[] = (await models.Contact.findAll({
       where: { isOwner: true },
     })) as Contact[]
+
+    // We found no owners
     if (!(allOwners && allOwners.length)) return
+
+    sphinxLogger.debug(`looping all the owners and subscribing`, logging.Tribes)
     await asyncForEach(allOwners, async (c) => {
       if (c.publicKey && c.publicKey.length === 66) {
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
         if (isProxy() && !c.authToken) return
+
+        sphinxLogger.debug(`lazyClient for ${c.publicKey}`, logging.Tribes)
         await lazyClient(c, host, onMessage, allOwners)
-        // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
+
     sphinxLogger.info('[TRIBES] all CLIENTS + subscriptions complete!')
   } catch (e) {
-    sphinxLogger.error(`TRIBES ERROR ${e}`)
+    sphinxLogger.error(`TRIBES ERROR, initAndSubscribeTopics ${e}`)
   }
 }
 
@@ -79,6 +88,8 @@ interface LazyClientRes {
   isFresh: boolean
 }
 
+// In this function we are initializing the mqtt client
+// for every user on this relay
 async function initializeClient(
   contact: Contact,
   host: string,
@@ -86,23 +97,35 @@ async function initializeClient(
   xpubres?: XpubRes,
   allOwners?: Contact[]
 ): Promise<LazyClientRes> {
+  sphinxLogger.debug(`Initializing client`, logging.Tribes)
   return new Promise(async (resolve) => {
     let connected = false
     async function reconnect() {
       try {
         let signer = contact.publicKey
         if (xpubres && xpubres.pubkey) signer = xpubres.pubkey
+
+        sphinxLogger.debug(
+          `Initializing client, genSignedTimestamp`,
+          logging.Tribes
+        )
         const pwd = await genSignedTimestamp(signer)
+        sphinxLogger.debug(
+          `Initializing client, finished genSignedTimestamp`,
+          logging.Tribes
+        )
         if (connected) return
         const url = mqttURL(host)
         let username = contact.publicKey
         if (xpubres && xpubres.xpub) username = xpubres.xpub
+
         sphinxLogger.info(`connect with token: ${pwd}`, logging.Tribes)
         const cl = mqtt.connect(url, {
           username: username,
           password: pwd,
           reconnectPeriod: 0, // dont auto reconnect
         })
+
         sphinxLogger.info(`try to connect: ${url}`, logging.Tribes)
         cl.on('connect', async function () {
           // first check if its already connected to this host (in case it takes a long time)
@@ -133,22 +156,31 @@ async function initializeClient(
             await specialSubscribe(cl, contact)
           }
 
+          // If we close the connection
           cl.on('close', function (e) {
             sphinxLogger.info(`CLOSE ${e}`, logging.Tribes)
-            // setTimeout(() => reconnect(), 2000);
             connected = false
+
             // REMOVE FROM MAIN CLIENTS STATE
             if (CLIENTS[username] && CLIENTS[username][host]) {
               delete CLIENTS[username][host]
             }
           })
+
+          // If there is an error on any connection
           cl.on('error', function (e) {
             sphinxLogger.error(`error:  ${e.message}`, logging.Tribes)
           })
+
+          // message type what we do on a new message
           cl.on('message', function (topic, message) {
-            // console.log("============>>>>> GOT A MSG", topic, message)
+            sphinxLogger.debug(
+              `============>>>>> GOT A MSG ${topic} ${message}`,
+              logging.Tribes
+            )
             if (onMessage) onMessage(topic, message)
           })
+
           // new client! isFresh = true
           resolve({ client: cl, isFresh: true })
         })
@@ -156,6 +188,8 @@ async function initializeClient(
         sphinxLogger.error(`error initializing ${e}`, logging.Tribes)
       }
     }
+
+    // retrying connection till sucessfull
     while (true) {
       if (!connected) {
         reconnect()
@@ -688,13 +722,28 @@ export async function deleteChannel({
   }
 }
 
+// Creates a signed timestamp with the
+// hosts public key
 export async function genSignedTimestamp(ownerPubkey: string): Promise<string> {
-  // console.log('genSignedTimestamp')
+  sphinxLogger.debug(`genSignedTimestamp, start`, logging.Tribes)
   const now = moment().unix()
+
+  sphinxLogger.debug(`genSignedTimestamp, loading lightining`, logging.Tribes)
   const lightining = await LND.loadLightning()
-  const contact = (await models.Contact.findOne({
-    where: { isOwner: true, publicKey: ownerPubkey },
-  })) as ContactRecord
+
+  let contact
+  try {
+    contact = (await models.Contact.findOne({
+      where: { isOwner: true, publicKey: ownerPubkey },
+    })) as ContactRecord
+  } catch (e) {
+    sphinxLogger.error(
+      `genSignedTimestamp, failed to get contact ${e}`,
+      logging.Tribes
+    )
+    throw e
+  }
+
   const tsBytes = Buffer.from(now.toString(16), 'hex')
   const utf8Sign = LND.isCLN(lightining) && contact && contact.id === 1
   let sig = ''
