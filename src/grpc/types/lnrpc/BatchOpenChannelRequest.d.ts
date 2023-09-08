@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   BatchOpenChannel as _lnrpc_BatchOpenChannel,
   BatchOpenChannel__Output as _lnrpc_BatchOpenChannel__Output,
 } from '../lnrpc/BatchOpenChannel'
+import type { Long } from '@grpc/proto-loader'
 
 export interface BatchOpenChannelRequest {
   channels?: _lnrpc_BatchOpenChannel[]

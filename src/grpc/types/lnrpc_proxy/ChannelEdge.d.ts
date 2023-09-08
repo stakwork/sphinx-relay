@@ -1,10 +1,10 @@
 // Original file: proto/rpc_proxy.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   RoutingPolicy as _lnrpc_proxy_RoutingPolicy,
   RoutingPolicy__Output as _lnrpc_proxy_RoutingPolicy__Output,
 } from '../lnrpc_proxy/RoutingPolicy'
+import type { Long } from '@grpc/proto-loader'
 
 export interface ChannelEdge {
   channel_id?: number | string | Long
