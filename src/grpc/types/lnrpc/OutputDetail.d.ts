@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   OutputScriptType as _lnrpc_OutputScriptType,
   OutputScriptType__Output as _lnrpc_OutputScriptType__Output,
 } from '../lnrpc/OutputScriptType'
-import type { Long } from '@grpc/proto-loader'
 
 export interface OutputDetail {
   output_type?: _lnrpc_OutputScriptType
