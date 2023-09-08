@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   FeeLimit as _lnrpc_FeeLimit,
   FeeLimit__Output as _lnrpc_FeeLimit__Output,
@@ -21,6 +20,7 @@ import type {
   FeatureBit as _lnrpc_FeatureBit,
   FeatureBit__Output as _lnrpc_FeatureBit__Output,
 } from '../lnrpc/FeatureBit'
+import type { Long } from '@grpc/proto-loader'
 
 export interface QueryRoutesRequest {
   pub_key?: string
