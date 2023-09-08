@@ -25,14 +25,14 @@ jobs:
           npm run lint || echo -n
           npx prettier --config .prettierrc --ignore-path .prettierignore -w *.ts src/**/*.ts
           git add *.ts src
-          git commit -m 'Lint and format code' || echo -n
+          git commit -m '[skip ci] Lint and format code' || echo -n
           git push
           npm run build
           git add dist --force
-          git commit -m 'Automatic build' || echo -n
+          git commit -m '[skip ci] Automatic build' || echo -n
           git push
           bash grpc_gen_types.sh
           npm run build
           git add src/grpc/types src/grpc/proto.ts dist --force
-          git commit -m 'Update proto files and types' || echo -n
+          git commit -m '[skip ci] Update proto files and types' || echo -n
           git push
