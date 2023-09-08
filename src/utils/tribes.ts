@@ -54,23 +54,32 @@ export async function connect(
 async function initAndSubscribeTopics(
   onMessage: (topic: string, message: Buffer) => void
 ): Promise<void> {
+  sphinxLogger.debug('initAndSubscribeTopics', logging.Tribes)
+
   const host = getHost()
   try {
+    sphinxLogger.debug(`contacts where isOwner true`, logging.Tribes)
     const allOwners: Contact[] = (await models.Contact.findAll({
       where: { isOwner: true },
     })) as Contact[]
+
+    // We found no owners
     if (!(allOwners && allOwners.length)) return
+
+    sphinxLogger.debug(`looping all the owners and subscribing`, logging.Tribes)
     await asyncForEach(allOwners, async (c) => {
       if (c.publicKey && c.publicKey.length === 66) {
         // if is proxy and no auth token dont subscribe yet... will subscribe when signed up
         if (isProxy() && !c.authToken) return
+
+        sphinxLogger.debug(`lazyClient for ${c.publicKey}`, logging.Tribes)
         await lazyClient(c, host, onMessage, allOwners)
-        // await subExtraHostsForTenant(c.id, c.publicKey, onMessage) // 1 is the tenant id on non-proxy
       }
     })
+
     sphinxLogger.info('[TRIBES] all CLIENTS + subscriptions complete!')
   } catch (e) {
-    sphinxLogger.error(`TRIBES ERROR ${e}`)
+    sphinxLogger.error(`TRIBES ERROR, initAndSubscribeTopics ${e}`)
   }
 }
 
