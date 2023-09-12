@@ -20,15 +20,29 @@ const logger_1 = require("../../utils/logger");
 const index_1 = require("./index");
 function broadcast(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, content, bot_name, msg_uuid, reply_uuid, parent_id, bot_pic, only_owner, only_user, } = a;
+        const { amount, content, bot_name, msg_uuid, reply_uuid, parent_id, bot_pic, only_owner, only_user, only_pubkey, } = a;
         logger_1.sphinxLogger.info(`=> BOT BROADCAST`);
         const ret = yield (0, index_1.validateAction)(a);
         if (!ret)
             return;
         const { chat, owner } = ret;
         const tenant = owner.id;
-        if (only_user) {
-            chat.contactIds = `[${only_user}]`;
+        if (only_user || only_pubkey) {
+            if (only_user) {
+                chat.contactIds = `[${only_user}]`;
+            }
+            else {
+                try {
+                    const user = (yield models_1.models.Contact.findOne({
+                        where: { tenant, publicKey: only_pubkey },
+                    }));
+                    chat.contactIds = `[${user.id}]`;
+                }
+                catch (error) {
+                    logger_1.sphinxLogger.error(`=> ONLY_PUBKEY ERROR ${error}`, logger_1.logging.Bots);
+                    return;
+                }
+            }
         }
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
         const encryptedText = rsa.encrypt(chat.groupKey, content || '');
@@ -52,7 +66,7 @@ function broadcast(a) {
             updatedAt: date,
             senderAlias: alias,
             tenant,
-            onlyOwner: only_owner || only_user ? true : false,
+            onlyOwner: only_owner || only_user || only_pubkey ? true : false,
         };
         if (parent_id)
             msg.parentId = parent_id;

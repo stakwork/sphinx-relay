@@ -48,6 +48,7 @@ export interface Action {
   bot_pic?: string
   only_owner?: boolean
   only_user?: number
+  only_pubkey?: string
 }
 
 export async function processWebhook(req: Req, res: Res): Promise<void> {
@@ -171,6 +172,7 @@ export async function processAction(req: Req, res: Res): Promise<void> {
     reply_uuid,
     recipient_id,
     parent_id,
+    only_pubkey,
   } = body
 
   if (!bot_id) return failure(res, 'no bot_id')
@@ -204,6 +206,7 @@ export async function processAction(req: Req, res: Res): Promise<void> {
     reply_uuid: reply_uuid || '',
     parent_id: parent_id || 0,
     recipient_id: recipient_id ? parseInt(recipient_id) : 0,
+    only_pubkey: only_pubkey || '',
   }
 
   try {
