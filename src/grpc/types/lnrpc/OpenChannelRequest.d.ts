@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   FundingShim as _lnrpc_FundingShim,
   FundingShim__Output as _lnrpc_FundingShim__Output,
@@ -9,6 +8,7 @@ import type {
   CommitmentType as _lnrpc_CommitmentType,
   CommitmentType__Output as _lnrpc_CommitmentType__Output,
 } from '../lnrpc/CommitmentType'
+import type { Long } from '@grpc/proto-loader'
 
 export interface OpenChannelRequest {
   sat_per_vbyte?: number | string | Long
