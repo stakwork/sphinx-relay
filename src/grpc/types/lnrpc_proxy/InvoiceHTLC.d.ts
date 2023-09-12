@@ -1,10 +1,10 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   InvoiceHTLCState as _lnrpc_proxy_InvoiceHTLCState,
   InvoiceHTLCState__Output as _lnrpc_proxy_InvoiceHTLCState__Output,
 } from '../lnrpc_proxy/InvoiceHTLCState'
-import type { Long } from '@grpc/proto-loader'
 
 export interface InvoiceHTLC {
   chan_id?: number | string | Long

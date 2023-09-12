@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   CommitmentType as _lnrpc_CommitmentType,
   CommitmentType__Output as _lnrpc_CommitmentType__Output,
 } from '../lnrpc/CommitmentType'
-import type { Long } from '@grpc/proto-loader'
 
 export interface BatchOpenChannel {
   node_pubkey?: Buffer | Uint8Array | string
