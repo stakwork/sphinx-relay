@@ -321,7 +321,7 @@ export async function sendPayment(
     if (isProxy(lightning)) {
       const opts = {
         payment_request,
-        fee_limit: { fixed: 100 },
+        fee_limit: { percent: 7 },
       }
       lightning.sendPaymentSync(opts, (err, response) => {
         if (err || !response) {
