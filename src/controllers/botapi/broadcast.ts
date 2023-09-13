@@ -37,7 +37,7 @@ export default async function broadcast(a: Action): Promise<void> {
         const user = (await models.Contact.findOne({
           where: { tenant, publicKey: only_pubkey! },
         })) as ContactRecord
-        chat.contactIds = `[${user.id}]`
+        if (user) chat.contactIds = `[${user.id}]`
       } catch (error) {
         sphinxLogger.error(`=> ONLY_PUBKEY ERROR ${error}`, logging.Bots)
         return
