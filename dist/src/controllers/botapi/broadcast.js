@@ -36,7 +36,8 @@ function broadcast(a) {
                     const user = (yield models_1.models.Contact.findOne({
                         where: { tenant, publicKey: only_pubkey },
                     }));
-                    chat.contactIds = `[${user.id}]`;
+                    if (user)
+                        chat.contactIds = `[${user.id}]`;
                 }
                 catch (error) {
                     logger_1.sphinxLogger.error(`=> ONLY_PUBKEY ERROR ${error}`, logger_1.logging.Bots);
