@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Chain as _lnrpc_Chain,
   Chain__Output as _lnrpc_Chain__Output,
@@ -8,7 +9,6 @@ import type {
   Feature as _lnrpc_Feature,
   Feature__Output as _lnrpc_Feature__Output,
 } from '../lnrpc/Feature'
-import type { Long } from '@grpc/proto-loader'
 
 export interface GetInfoResponse {
   identity_pubkey?: string
