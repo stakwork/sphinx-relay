@@ -812,3 +812,26 @@ export const unblockContact = async (req: Req, res: Res): Promise<void> => {
   const contactId = parseInt(req.params.contact_id as string)
   switchBlock(res, req.owner.id, contactId, false)
 }
+
+export const getContactById = async (req: Req, res: Res): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  const tenant: number = req.owner.id
+  try {
+    const contactId = parseInt(req.params.contact_id as string)
+
+    if (!contactId) {
+      return failure(res, 'provide a valid contact id')
+    }
+    const contact: Contact = (await models.Contact.findOne({
+      where: { id: contactId, tenant },
+    })) as Contact
+
+    if (!contact) {
+      return failure(res, 'contact does not exist')
+    }
+    return success(res, jsonUtils.contactToJson(contact))
+  } catch (error) {
+    sphinxLogger.error(error, logging.DB)
+    return failure(res, error)
+  }
+}
