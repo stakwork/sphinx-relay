@@ -186,7 +186,7 @@ export async function receiveGroupKick(payload: Payload): Promise<void> {
  * @param {Response} res - The response object used to send the list of chats.
  * @returns {Promise<void>}
  */
-export async function getChats(req: Req, res: Response): Promise<void> {
+export async function getChats(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const chats: Chat[] = (await models.Chat.findAll({
@@ -204,7 +204,7 @@ export async function getChats(req: Req, res: Response): Promise<void> {
  * @param {Response} res - The response object used to send the updated chat.
  * @returns {Promise<void>}
  */
-export async function setNotifyLevel(req: Req, res: Response): Promise<void> {
+export async function setNotifyLevel(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const chatId = req.params['chat_id']
@@ -233,7 +233,7 @@ export async function setNotifyLevel(req: Req, res: Response): Promise<void> {
  * @param {Response} res - The response object used to send the updated chat.
  * @returns {Promise<void>}
  */
-export async function mute(req: Req, res: Response): Promise<void> {
+export async function mute(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -265,7 +265,7 @@ export async function mute(req: Req, res: Response): Promise<void> {
 
 // just add self here if tribes
 // or can u add contacts as members?
-export async function createGroupChat(req: Req, res: Response): Promise<void> {
+export async function createGroupChat(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -432,7 +432,7 @@ export async function createGroupChat(req: Req, res: Response): Promise<void> {
 }
 
 // only owner can do for tribe?
-export async function addGroupMembers(req: Req, res: Response): Promise<void> {
+export async function addGroupMembers(req: Req, res: Res): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -482,7 +482,7 @@ export async function addGroupMembers(req: Req, res: Response): Promise<void> {
   })
 }
 
-export const deleteChat = async (req: Req, res: Response): Promise<void> => {
+export const deleteChat = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
@@ -544,10 +544,7 @@ export const deleteChat = async (req: Req, res: Response): Promise<void> => {
   success(res, { chat_id: id })
 }
 
-export const addTribeMember = async (
-  req: Req,
-  res: Response
-): Promise<void> => {
+export const addTribeMember = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
   const { chat_id, pub_key, photo_url, route_hint, alias, contact_key } =

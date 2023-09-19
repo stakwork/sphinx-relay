@@ -143,7 +143,7 @@ export async function listUsers(req: Req, res: Res): Promise<void> {
   }
 }
 
-export async function listTribes(req: Req, res: Response): Promise<void> {
+export async function listTribes(req: Req, res: Res): Promise<void> {
   if (!req.admin) return failure(res, 'no owner')
   const tenant: number = req.admin.id
   const chats: Chat[] = (await models.Chat.findAll({

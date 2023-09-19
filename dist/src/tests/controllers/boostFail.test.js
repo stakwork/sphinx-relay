@@ -59,7 +59,7 @@ function boostFail(t, index1, index2, index3) {
         //NODE1 SENDS A BOOST ON NODE2'S MESSAGE
         //   const boost = await sendBoost(t, node1, node2, tribeMessage2, 11, tribe)
         const boost = yield (0, msg_1.boostAsMessage)(t, tribe, node1, tribeMessage2, 1100000000000);
-        t.true(boost.success);
+        t.false(boost.success);
         //Node 2 should not get the boost message, because the boost should fail
         const checkNode2 = yield (0, get_1.shouldNotGetNewMsgs)(t, node2, boost.response.uuid);
         t.true(checkNode2, 'Node2 should not receive the boost message');

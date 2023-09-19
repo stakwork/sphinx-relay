@@ -85,7 +85,7 @@ export async function boostFail(t, index1, index2, index3) {
     tribeMessage2,
     1100000000000
   )
-  t.true(boost.success)
+  t.false(boost.success)
 
   //Node 2 should not get the boost message, because the boost should fail
   const checkNode2 = await shouldNotGetNewMsgs(t, node2, boost.response.uuid)

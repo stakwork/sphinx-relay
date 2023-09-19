@@ -1,7 +1,10 @@
-export function errMsgString(error) {
+export function errMsgString(error: Error | string | null): string {
   let errMsg = ''
+  if (!error) return 'failure'
   if (typeof error === 'string') {
     errMsg = error
+  } else if (error.toString) {
+    errMsg = error.toString()
   } else {
     errMsg = error?.message
   }
