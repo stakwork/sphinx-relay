@@ -1,5 +1,5 @@
-import { sphinxLogger } from './logger'
 import { Res } from '../types'
+import { sphinxLogger } from './logger'
 
 function success(res: Res, json) {
   res.status(200)
