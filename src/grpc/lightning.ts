@@ -557,7 +557,7 @@ export async function keysendMessage(
     // too long! need to send serial
     const n = Math.ceil(opts.data.length / MAX_MSG_LENGTH)
     let success = false
-    let fail = false
+    let fail: Error | string | null = null
     let res: any = null
     const ts = new Date().valueOf()
     // WEAVE MESSAGE If TOO LARGE
@@ -579,15 +579,22 @@ export async function keysendMessage(
         await sleep(432)
       } catch (e) {
         sphinxLogger.error(e)
-        fail = true
+        fail = e
       }
     }
     if (success && !fail) {
       resolve(res)
     } else {
-      reject(new Error('fail'))
+      reject(new Error(keysendErrorString(fail)))
     }
   })
+}
+
+function keysendErrorString(e: any): string {
+  if (!e) return 'failed keysend'
+  if (typeof e === 'string') return e
+  if (e.toString) return e.toString()
+  return 'failed keysend'
 }
 
 export async function signAscii(

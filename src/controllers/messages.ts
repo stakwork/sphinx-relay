@@ -30,6 +30,7 @@ import { ChatPlusMembers } from '../network/send'
 import { getCacheMsg } from '../utils/tribes'
 import { loadConfig } from '../utils/config'
 import { onReceiveReversal } from '../utils/reversal'
+import { errMsgString } from '../utils/errMsgString'
 import { sendConfirmation } from './confirmations'
 
 interface ExtentedMessage extends Message {
@@ -485,6 +486,23 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
     amount: amount || 0,
     type: msgtype,
     message: msgToSend,
+    success: function () {
+      success(res, jsonUtils.messageToJson(message, chat))
+    },
+    failure: async function (error) {
+      const errMsg = errMsgString(error)
+      await message.update({
+        status: constants.statuses.failed,
+        errorMessage: errMsg,
+      })
+      res.status(400)
+      res.json({
+        success: false,
+        error: errMsg,
+        response: jsonUtils.messageToJson(message, chat),
+      })
+      res.end()
+    },
   }
   if (isTribeOwner && realSatsContactId) {
     sendMessageParams.realSatsContactId = realSatsContactId
@@ -497,7 +515,6 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
   // final send
   // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
   await network.sendMessage(sendMessageParams)
-  success(res, jsonUtils.messageToJson(message, chat))
 }
 
 /**
