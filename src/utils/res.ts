@@ -1,6 +1,7 @@
 import { sphinxLogger } from './logger'
+import { Res } from '../types'
 
-function success(res, json) {
+function success(res: Res, json) {
   res.status(200)
   res.json({
     success: true,
@@ -9,7 +10,7 @@ function success(res, json) {
   res.end()
 }
 
-function failure(res, e) {
+function failure(res: Res, e) {
   const errorMessage = (e && e.message) || e
   sphinxLogger.error(`--> failure: ${errorMessage}`)
   res.status(400)
@@ -20,7 +21,7 @@ function failure(res, e) {
   res.end()
 }
 
-function failureWithResponse(res, e, json) {
+function failureWithResponse(res: Res, e, json) {
   const errorMessage = (e && e.message) || e
   // sphinxLogger.error(`--> failure: ${errorMessage}`)
   res.status(400)
@@ -32,7 +33,7 @@ function failureWithResponse(res, e, json) {
   res.end()
 }
 
-function failure200(res, e) {
+function failure200(res: Res, e) {
   res.status(200)
   res.json({
     success: false,
@@ -41,7 +42,7 @@ function failure200(res, e) {
   res.end()
 }
 
-function unauthorized(res) {
+function unauthorized(res: Res) {
   res.status(401)
   res.json({ success: false, error: 'Invalid credentials' })
   res.end()
