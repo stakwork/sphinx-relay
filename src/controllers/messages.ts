@@ -18,7 +18,7 @@ import {
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
-import { failure, success } from '../utils/res'
+import { failure, success, failureWithResponse } from '../utils/res'
 import * as timers from '../utils/timers'
 import * as network from '../network'
 import { Payload } from '../network'
@@ -495,13 +495,7 @@ export const sendMessage = async (req: Req, res: Res): Promise<void> => {
         status: constants.statuses.failed,
         errorMessage: errMsg,
       })
-      res.status(400)
-      res.json({
-        success: false,
-        error: errMsg,
-        response: jsonUtils.messageToJson(message, chat),
-      })
-      res.end()
+      failureWithResponse(res, errMsg, jsonUtils.messageToJson(message, chat))
     },
   }
   if (isTribeOwner && realSatsContactId) {

@@ -20,6 +20,18 @@ function failure(res, e) {
   res.end()
 }
 
+function failureWithResponse(res, e, json) {
+  const errorMessage = (e && e.message) || e
+  // sphinxLogger.error(`--> failure: ${errorMessage}`)
+  res.status(400)
+  res.json({
+    success: false,
+    error: errorMessage,
+    response: json,
+  })
+  res.end()
+}
+
 function failure200(res, e) {
   res.status(200)
   res.json({
@@ -35,4 +47,4 @@ function unauthorized(res) {
   res.end()
 }
 
-export { success, failure, failure200, unauthorized }
+export { success, failure, failure200, unauthorized, failureWithResponse }
