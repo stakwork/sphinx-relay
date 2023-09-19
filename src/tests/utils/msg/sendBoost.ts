@@ -73,7 +73,14 @@ export async function boostAsMessage(t, tribe, node, replyMessage, amount) {
     message_price: 0,
   }
   //node1 sends a boost on node2's message
-  const msg = await http.post(node.external_ip + '/messages', makeArgs(node, v))
-  t.true(msg.success, 'msg should exist')
-  return msg
+  try {
+    const msg = await http.post(
+      node.external_ip + '/messages',
+      makeArgs(node, v)
+    )
+    t.true(msg.success, 'msg should exist')
+    return msg
+  } catch (error) {
+    return error.error
+  }
 }

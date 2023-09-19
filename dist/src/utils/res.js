@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unauthorized = exports.failure200 = exports.failure = exports.success = void 0;
+exports.failureWithResponse = exports.unauthorized = exports.failure200 = exports.failure = exports.success = void 0;
 const logger_1 = require("./logger");
 function success(res, json) {
     res.status(200);
@@ -22,6 +22,18 @@ function failure(res, e) {
     res.end();
 }
 exports.failure = failure;
+function failureWithResponse(res, e, json) {
+    const errorMessage = (e && e.message) || e;
+    // sphinxLogger.error(`--> failure: ${errorMessage}`)
+    res.status(400);
+    res.json({
+        success: false,
+        error: errorMessage,
+        response: json,
+    });
+    res.end();
+}
+exports.failureWithResponse = failureWithResponse;
 function failure200(res, e) {
     res.status(200);
     res.json({

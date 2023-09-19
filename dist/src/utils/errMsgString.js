@@ -3,8 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.errMsgString = void 0;
 function errMsgString(error) {
     let errMsg = '';
+    if (!error)
+        return 'failure';
     if (typeof error === 'string') {
         errMsg = error;
+    }
+    else if (error.toString) {
+        errMsg = error.toString();
     }
     else {
         errMsg = error === null || error === void 0 ? void 0 : error.message;

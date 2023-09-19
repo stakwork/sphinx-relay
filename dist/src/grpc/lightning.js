@@ -485,7 +485,7 @@ function keysendMessage(opts, ownerPubkey) {
                 // too long! need to send serial
                 const n = Math.ceil(opts.data.length / MAX_MSG_LENGTH);
                 let success = false;
-                let fail = false;
+                let fail = null;
                 let res = null;
                 const ts = new Date().valueOf();
                 // WEAVE MESSAGE If TOO LARGE
@@ -501,20 +501,29 @@ function keysendMessage(opts, ownerPubkey) {
                     }
                     catch (e) {
                         logger_1.sphinxLogger.error(e);
-                        fail = true;
+                        fail = e;
                     }
                 }
                 if (success && !fail) {
                     resolve(res);
                 }
                 else {
-                    reject(new Error('fail'));
+                    reject(new Error(keysendErrorString(fail)));
                 }
             });
         });
     });
 }
 exports.keysendMessage = keysendMessage;
+function keysendErrorString(e) {
+    if (!e)
+        return 'failed keysend';
+    if (typeof e === 'string')
+        return e;
+    if (e.toString)
+        return e.toString();
+    return 'failed keysend';
+}
 function signAscii(ascii, ownerPubkey) {
     return __awaiter(this, void 0, void 0, function* () {
         const sig = yield signMessage(ascii_to_hexa(ascii), ownerPubkey);

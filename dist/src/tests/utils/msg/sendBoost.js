@@ -65,9 +65,14 @@ function boostAsMessage(t, tribe, node, replyMessage, amount) {
             message_price: 0,
         };
         //node1 sends a boost on node2's message
-        const msg = yield http.post(node.external_ip + '/messages', (0, helpers_1.makeArgs)(node, v));
-        t.true(msg.success, 'msg should exist');
-        return msg;
+        try {
+            const msg = yield http.post(node.external_ip + '/messages', (0, helpers_1.makeArgs)(node, v));
+            t.true(msg.success, 'msg should exist');
+            return msg;
+        }
+        catch (error) {
+            return error.error;
+        }
     });
 }
 exports.boostAsMessage = boostAsMessage;

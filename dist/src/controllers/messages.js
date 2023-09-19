@@ -27,6 +27,7 @@ const logger_1 = require("../utils/logger");
 const tribes_1 = require("../utils/tribes");
 const config_1 = require("../utils/config");
 const reversal_1 = require("../utils/reversal");
+const errMsgString_1 = require("../utils/errMsgString");
 const confirmations_1 = require("./confirmations");
 // store all current running jobs in memory
 const jobs = {};
@@ -414,6 +415,19 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         amount: amount || 0,
         type: msgtype,
         message: msgToSend,
+        success: function () {
+            (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
+        },
+        failure: function (error) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const errMsg = (0, errMsgString_1.errMsgString)(error);
+                yield message.update({
+                    status: constants_1.default.statuses.failed,
+                    errorMessage: errMsg,
+                });
+                (0, res_1.failureWithResponse)(res, errMsg, jsonUtils.messageToJson(message, chat));
+            });
+        },
     };
     if (isTribeOwner && realSatsContactId) {
         sendMessageParams.realSatsContactId = realSatsContactId;
@@ -425,7 +439,6 @@ const sendMessage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // final send
     // console.log('==> FINAL SEND MSG PARAMS', sendMessageParams)
     yield network.sendMessage(sendMessageParams);
-    (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
 });
 exports.sendMessage = sendMessage;
 /**
