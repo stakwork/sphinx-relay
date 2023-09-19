@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   InvoiceHTLCState as _lnrpc_InvoiceHTLCState,
   InvoiceHTLCState__Output as _lnrpc_InvoiceHTLCState__Output,
@@ -9,6 +8,7 @@ import type {
   AMP as _lnrpc_AMP,
   AMP__Output as _lnrpc_AMP__Output,
 } from '../lnrpc/AMP'
+import type { Long } from '@grpc/proto-loader'
 
 export interface InvoiceHTLC {
   chan_id?: number | string | Long
