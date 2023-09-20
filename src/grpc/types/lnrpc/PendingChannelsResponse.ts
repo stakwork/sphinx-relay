@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   Initiator as _lnrpc_Initiator,
   Initiator__Output as _lnrpc_Initiator__Output,
@@ -13,6 +12,7 @@ import type {
   PendingHTLC as _lnrpc_PendingHTLC,
   PendingHTLC__Output as _lnrpc_PendingHTLC__Output,
 } from '../lnrpc/PendingHTLC'
+import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/lightning.proto
 
