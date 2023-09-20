@@ -128,13 +128,7 @@ const sendPayment = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 status: constants_1.default.statuses.failed,
                 errorMessage: errMsg,
             });
-            res.status(400);
-            res.json({
-                success: false,
-                error: errMsg,
-                response: jsonUtils.messageToJson(message, chat),
-            });
-            res.end();
+            (0, res_1.failureWithResponse)(res, errMsg, jsonUtils.messageToJson(message, chat));
         }),
     });
 });
