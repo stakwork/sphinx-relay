@@ -244,7 +244,7 @@ const purchase = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
             const errorMessage = (0, errMsgString_1.errMsgString)(error);
             yield message.update({ errorMessage, status: constants_1.default.statuses.failed });
-            resUtils.failure(res, errorMessage || error);
+            resUtils.failureWithResponse(res, errorMessage || error, jsonUtils.messageToJson(message, chat));
         }),
     });
 });
