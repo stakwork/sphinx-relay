@@ -163,7 +163,11 @@ export const sendAttachmentMessage = async (req: Req, res) => {
           errorMessage,
           status: constants.statuses.failed,
         })
-        return resUtils.failure(res, errorMessage || error)
+        return resUtils.failureWithResponse(
+          res,
+          errorMessage || error,
+          jsonUtils.messageToJson(message, chat)
+        )
       },
     })
   } catch (error) {
