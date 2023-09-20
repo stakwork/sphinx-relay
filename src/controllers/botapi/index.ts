@@ -173,6 +173,7 @@ export async function processAction(req: Req, res: Res): Promise<void> {
     recipient_id,
     parent_id,
     only_pubkey,
+    only_owner,
   } = body
 
   if (!bot_id) return failure(res, 'no bot_id')
@@ -207,6 +208,7 @@ export async function processAction(req: Req, res: Res): Promise<void> {
     parent_id: parent_id || 0,
     recipient_id: recipient_id ? parseInt(recipient_id) : 0,
     only_pubkey: only_pubkey || '',
+    only_owner: only_owner || false,
   }
 
   try {
