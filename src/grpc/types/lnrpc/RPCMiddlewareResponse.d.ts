@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   MiddlewareRegistration as _lnrpc_MiddlewareRegistration,
   MiddlewareRegistration__Output as _lnrpc_MiddlewareRegistration__Output,
@@ -8,7 +9,6 @@ import type {
   InterceptFeedback as _lnrpc_InterceptFeedback,
   InterceptFeedback__Output as _lnrpc_InterceptFeedback__Output,
 } from '../lnrpc/InterceptFeedback'
-import type { Long } from '@grpc/proto-loader'
 
 export interface RPCMiddlewareResponse {
   ref_msg_id?: number | string | Long
