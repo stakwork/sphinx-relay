@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   ChannelPoint as _lnrpc_ChannelPoint,
   ChannelPoint__Output as _lnrpc_ChannelPoint__Output,
 } from '../lnrpc/ChannelPoint'
-import type { Long } from '@grpc/proto-loader'
 
 export interface PolicyUpdateRequest {
   global?: boolean
