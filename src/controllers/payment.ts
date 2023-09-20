@@ -5,7 +5,7 @@ import { sendNotification } from '../hub'
 import * as socket from '../utils/socket'
 import * as jsonUtils from '../utils/json'
 import * as helpers from '../helpers'
-import { failure, success } from '../utils/res'
+import { failure, failureWithResponse, success } from '../utils/res'
 import { tokenFromTerms } from '../utils/ldat'
 import * as network from '../network'
 import { Payload } from '../network'
@@ -143,13 +143,7 @@ export const sendPayment = async (req: Req, res: Res): Promise<void> => {
         status: constants.statuses.failed,
         errorMessage: errMsg,
       })
-      res.status(400)
-      res.json({
-        success: false,
-        error: errMsg,
-        response: jsonUtils.messageToJson(message, chat),
-      })
-      res.end()
+      failureWithResponse(res, errMsg, jsonUtils.messageToJson(message, chat))
     },
   })
 }

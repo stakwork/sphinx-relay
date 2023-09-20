@@ -202,8 +202,13 @@ const createInvoice = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                         id: message.id,
                         invoice: message.paymentRequest,
                     },
+                    success: () => __awaiter(void 0, void 0, void 0, function* () {
+                        (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
+                    }),
+                    failure: (error) => __awaiter(void 0, void 0, void 0, function* () {
+                        (0, res_1.failureWithResponse)(res, error, jsonUtils.messageToJson(message, chat));
+                    }),
                 });
-                (0, res_1.success)(res, jsonUtils.messageToJson(message, chat));
             }
         }
         catch (err) {

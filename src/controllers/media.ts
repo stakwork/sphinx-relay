@@ -163,7 +163,11 @@ export const sendAttachmentMessage = async (req: Req, res) => {
           errorMessage,
           status: constants.statuses.failed,
         })
-        return resUtils.failure(res, errorMessage || error)
+        return resUtils.failureWithResponse(
+          res,
+          errorMessage || error,
+          jsonUtils.messageToJson(message, chat)
+        )
       },
     })
   } catch (error) {
@@ -259,7 +263,11 @@ export const purchase = async (req: Req, res) => {
     failure: async (error) => {
       const errorMessage = errMsgString(error)
       await message.update({ errorMessage, status: constants.statuses.failed })
-      resUtils.failure(res, errorMessage || error)
+      resUtils.failureWithResponse(
+        res,
+        errorMessage || error,
+        jsonUtils.messageToJson(message, chat)
+      )
     },
   })
 }
