@@ -9,7 +9,7 @@ import * as jsonUtils from '../utils/json'
 import { decodePaymentRequest } from '../utils/decode'
 import * as helpers from '../helpers'
 import { sendNotification } from '../hub'
-import { success, failure } from '../utils/res'
+import { success, failure, failureWithResponse } from '../utils/res'
 import * as network from '../network'
 import { Payload } from '../network'
 import constants from '../constants'
@@ -219,9 +219,17 @@ export const createInvoice = async (req: Req, res: Response): Promise<void> => {
             id: message.id,
             invoice: message.paymentRequest,
           },
+          success: async () => {
+            success(res, jsonUtils.messageToJson(message, chat))
+          },
+          failure: async (error) => {
+            failureWithResponse(
+              res,
+              error,
+              jsonUtils.messageToJson(message, chat)
+            )
+          },
         })
-
-        success(res, jsonUtils.messageToJson(message, chat))
       }
     } catch (err) {
       sphinxLogger.error(`addInvoice error: ${err}`)
