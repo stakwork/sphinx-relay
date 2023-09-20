@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.getHmacKey = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
+exports.getContactById = exports.unblockContact = exports.blockContact = exports.getLatestContacts = exports.receiveConfirmContactKey = exports.receiveContactKey = exports.deleteContact = exports.createContact = exports.exchangeKeys = exports.updateContact = exports.getHmacKey = exports.registerHmacKey = exports.generateToken = exports.generateOwnerWithExternalSigner = exports.getContactsForChat = exports.getContacts = void 0;
 const crypto = require("crypto");
 const sequelize_1 = require("sequelize");
 const moment = require("moment");
@@ -704,4 +704,27 @@ const unblockContact = (req, res) => __awaiter(void 0, void 0, void 0, function*
     switchBlock(res, req.owner.id, contactId, false);
 });
 exports.unblockContact = unblockContact;
+const getContactById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    const tenant = req.owner.id;
+    try {
+        const contactId = parseInt(req.params.contact_id);
+        if (!contactId) {
+            return (0, res_1.failure)(res, 'provide a valid contact id');
+        }
+        const contact = (yield models_1.models.Contact.findOne({
+            where: { id: contactId, tenant },
+        }));
+        if (!contact) {
+            return (0, res_1.failure)(res, 'contact does not exist');
+        }
+        return (0, res_1.success)(res, jsonUtils.contactToJson(contact));
+    }
+    catch (error) {
+        logger_1.sphinxLogger.error(error, logger_1.logging.DB);
+        return (0, res_1.failure)(res, error);
+    }
+});
+exports.getContactById = getContactById;
 //# sourceMappingURL=contacts.js.map
