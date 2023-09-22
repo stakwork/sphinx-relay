@@ -5,6 +5,8 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import constants from '../constants'
+import { Req } from '../types'
+import * as bolt11 from '@boltz/bolt11'
 
 export interface LsatRequestBody {
   paymentRequest: string
@@ -52,6 +54,16 @@ async function lsatAlreadyExists(lsat): Promise<boolean> {
   return false
 }
 
+function extractPubkeyAndPaymentHashFromPaymentRequest(
+  payment_request: string
+) {
+  const decodedPaymentRequest = bolt11.decode(payment_request)
+  const payment_hash =
+    (decodedPaymentRequest.tags.find((t) => t.tagName === 'payment_hash')
+      ?.data as string) || ('' as string)
+  return { payment_hash, public_key: decodedPaymentRequest.payeeNodeKey }
+}
+
 export async function payForLsat(
   paymentRequest: string
 ): Promise<string | void> {
@@ -73,7 +85,7 @@ export async function payForLsat(
 }
 
 export async function saveLsat(
-  req: RelayRequest,
+  req: Req,
   res: Response
 ): Promise<void | Response> {
   const tenant: number = req.owner.id
@@ -111,7 +123,22 @@ export async function saveLsat(
   let preimage: string | void
 
   try {
-    preimage = await payForLsat(paymentRequest)
+    //Decode payment request
+    const ownerPubkey = req.owner.publicKey
+    const { payment_hash, public_key } =
+      extractPubkeyAndPaymentHashFromPaymentRequest(paymentRequest)
+    //check if pubkey from request is the same with owner's pubkey
+    if (public_key !== ownerPubkey) {
+      preimage = await payForLsat(paymentRequest)
+    } else {
+      // search for invoice
+      const invoice = await Lightning.getInvoiceHandler(
+        payment_hash,
+        ownerPubkey,
+        true
+      )
+      preimage = invoice.preimage
+    }
   } catch (e) {
     sphinxLogger.error(
       ['[pay for lsat] Problem paying for lsat:', e],

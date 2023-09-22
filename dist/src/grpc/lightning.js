@@ -1069,7 +1069,7 @@ function ascii_to_hexa(str) {
     }
     return arr1.join('');
 }
-function getInvoiceHandler(payment_hash, ownerPubkey) {
+function getInvoiceHandler(payment_hash, ownerPubkey, showPreImage) {
     return __awaiter(this, void 0, void 0, function* () {
         logger_1.sphinxLogger.info('getInvoice', logger_1.logging.Lightning);
         const payment_hash_bytes = Buffer.from(payment_hash, 'hex');
@@ -1091,7 +1091,7 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
                                 settled: response === null || response === void 0 ? void 0 : response.settled,
                                 payment_request: response === null || response === void 0 ? void 0 : response.payment_request,
                                 payment_hash: response === null || response === void 0 ? void 0 : response.r_hash.toString('hex'),
-                                preimage: (response === null || response === void 0 ? void 0 : response.settled)
+                                preimage: (response === null || response === void 0 ? void 0 : response.settled) || showPreImage
                                     ? response === null || response === void 0 ? void 0 : response.r_preimage.toString('hex')
                                     : '',
                                 amount: convertMsatToSat(response.amt_paid),
@@ -1116,14 +1116,20 @@ function getInvoiceHandler(payment_hash, ownerPubkey) {
                                     amount: convertMsatToSat(((_a = res === null || res === void 0 ? void 0 : res.amount_received_msat) === null || _a === void 0 ? void 0 : _a.msat) || 0),
                                     settled: res.status.toLowerCase() === 'paid' ? true : false,
                                     payment_request: res.bolt11,
-                                    preimage: res.status.toLowerCase() === 'paid'
+                                    preimage: res.status.toLowerCase() === 'paid' || showPreImage
                                         ? res.payment_preimage.toString('hex')
                                         : '',
                                     payment_hash: res.payment_hash.toString('hex'),
                                 };
                                 resolve(invoice);
                             }
-                            resolve({});
+                            resolve({
+                                amount: 0,
+                                settled: false,
+                                payment_hash: '',
+                                payment_request: '',
+                                preimage: '',
+                            });
                         }
                     });
                 }
