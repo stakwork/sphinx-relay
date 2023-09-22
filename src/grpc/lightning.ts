@@ -28,6 +28,7 @@ import { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
 import * as interfaces from './interfaces'
 import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
+import { InvoiceRes } from '../types'
 
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'
@@ -1248,8 +1249,9 @@ function ascii_to_hexa(str) {
 
 export async function getInvoiceHandler(
   payment_hash: string,
-  ownerPubkey?: string
-) {
+  ownerPubkey?: string,
+  showPreImage?: boolean
+): Promise<InvoiceRes> {
   sphinxLogger.info('getInvoice', logging.Lightning)
   const payment_hash_bytes = Buffer.from(payment_hash, 'hex')
   return new Promise(async (resolve, reject) => {
@@ -1270,9 +1272,10 @@ export async function getInvoiceHandler(
                 settled: response?.settled,
                 payment_request: response?.payment_request,
                 payment_hash: response?.r_hash.toString('hex'),
-                preimage: response?.settled
-                  ? response?.r_preimage.toString('hex')
-                  : '',
+                preimage:
+                  response?.settled || showPreImage
+                    ? response?.r_preimage.toString('hex')
+                    : '',
                 amount: convertMsatToSat(response.amt_paid),
               }
               resolve(invoice)
@@ -1299,14 +1302,20 @@ export async function getInvoiceHandler(
                   settled: res.status.toLowerCase() === 'paid' ? true : false,
                   payment_request: res.bolt11,
                   preimage:
-                    res.status.toLowerCase() === 'paid'
+                    res.status.toLowerCase() === 'paid' || showPreImage
                       ? res.payment_preimage.toString('hex')
                       : '',
                   payment_hash: res.payment_hash.toString('hex'),
                 }
                 resolve(invoice)
               }
-              resolve({})
+              resolve({
+                amount: 0,
+                settled: false,
+                payment_hash: '',
+                payment_request: '',
+                preimage: '',
+              })
             }
           }
         )

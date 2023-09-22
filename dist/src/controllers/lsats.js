@@ -16,6 +16,7 @@ const logger_1 = require("../utils/logger");
 const res_1 = require("../utils/res");
 const Lightning = require("../grpc/lightning");
 const constants_1 = require("../constants");
+const bolt11 = require("@boltz/bolt11");
 /*
 interface LsatResponse {
   paymentRequest: string
@@ -46,6 +47,12 @@ function lsatAlreadyExists(lsat) {
             return true;
         return false;
     });
+}
+function extractPubkeyAndPaymentHashFromPaymentRequest(payment_request) {
+    var _a;
+    const decodedPaymentRequest = bolt11.decode(payment_request);
+    const payment_hash = ((_a = decodedPaymentRequest.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
+    return { payment_hash, public_key: decodedPaymentRequest.payeeNodeKey };
 }
 function payForLsat(paymentRequest) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -84,7 +91,18 @@ function saveLsat(req, res) {
         }
         let preimage;
         try {
-            preimage = yield payForLsat(paymentRequest);
+            //Decode payment request
+            const ownerPubkey = req.owner.publicKey;
+            const { payment_hash, public_key } = extractPubkeyAndPaymentHashFromPaymentRequest(paymentRequest);
+            //check if pubkey from request is the same with owner's pubkey
+            if (public_key !== ownerPubkey) {
+                preimage = yield payForLsat(paymentRequest);
+            }
+            else {
+                // search for invoice
+                const invoice = yield Lightning.getInvoiceHandler(payment_hash, ownerPubkey, true);
+                preimage = invoice.preimage;
+            }
         }
         catch (e) {
             logger_1.sphinxLogger.error(['[pay for lsat] Problem paying for lsat:', e], logger_1.logging.Lsat);

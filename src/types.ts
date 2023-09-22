@@ -25,3 +25,11 @@ export interface SpamGoneMeta {
     alias: string
   }[]
 }
+
+export interface InvoiceRes {
+  amount: number
+  payment_hash: string
+  settled: boolean
+  payment_request: string
+  preimage: string
+}
