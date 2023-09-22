@@ -11,7 +11,7 @@ import { loadConfig } from '../utils/config'
 import { isProxy, loadProxyLightning } from '../utils/proxy'
 import { logging, sphinxLogger } from '../utils/logger'
 import * as zbase32 from '../utils/zbase32'
-import { Req } from '../types'
+import { Req, InvoiceRes } from '../types'
 import { loadProto } from './proto'
 /* eslint-disable import/no-unresolved */
 import { LightningClient } from './types/lnrpc/Lightning'
@@ -28,7 +28,6 @@ import { WalletUnlockerClient } from './types/lnrpc/WalletUnlocker'
 import * as interfaces from './interfaces'
 import libhsmd from './libhsmd'
 import { get_greenlight_grpc_uri } from './greenlight'
-import { InvoiceRes } from '../types'
 
 const config = loadConfig()
 const LND_IP = config.lnd_ip || 'localhost'

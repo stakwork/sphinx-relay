@@ -1,12 +1,12 @@
 import { Lsat as LsatB } from 'lsat-js'
 import { Response, Request } from 'express'
+import * as bolt11 from '@boltz/bolt11'
 import { models, Lsat as LsatT } from '../models'
 import { logging, sphinxLogger } from '../utils/logger'
 import { failure, success } from '../utils/res'
 import * as Lightning from '../grpc/lightning'
 import constants from '../constants'
 import { Req } from '../types'
-import * as bolt11 from '@boltz/bolt11'
 
 export interface LsatRequestBody {
   paymentRequest: string
