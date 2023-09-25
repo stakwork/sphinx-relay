@@ -1,11 +1,10 @@
 import test from 'ava'
-import { iterate } from '../utils/helpers'
+import { iterate, sleep } from '../utils/helpers'
 import nodes from '../nodes'
 import { createTribe, joinTribe } from '../utils/save'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { sendImage } from '../utils/msg'
 import { greenSquare, pinkSquare } from '../utils/base64images'
-import { sleep } from '../../helpers'
 
 /*
 npx ava src/tests/controllers/tribeImages.test.ts --verbose --serial --timeout=2m
