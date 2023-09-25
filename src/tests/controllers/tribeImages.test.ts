@@ -5,6 +5,7 @@ import { createTribe, joinTribe } from '../utils/save'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { sendImage } from '../utils/msg'
 import { greenSquare, pinkSquare } from '../utils/base64images'
+import { sleep } from '../../helpers'
 
 /*
 npx ava src/tests/controllers/tribeImages.test.ts --verbose --serial --timeout=2m
@@ -43,6 +44,8 @@ export async function tribeImages(t, node1, node2) {
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)
   t.true(left2, 'node2 should leave tribe')
+
+  await sleep(2000)
 
   //NODE1 DELETES TRIBE
   let delTribe2 = await deleteTribe(t, node1, tribe)
