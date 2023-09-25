@@ -1,7 +1,7 @@
 import test, { ExecutionContext } from 'ava'
 import { deleteTribe, leaveTribe } from '../utils/del'
 import { createTribe, joinTribe, editTribe } from '../utils/save'
-import { iterate } from '../utils/helpers'
+import { iterate, sleep } from '../utils/helpers'
 import { getTribeId, getChats, getTribeByUuid } from '../utils/get'
 import nodes from '../nodes'
 
@@ -92,6 +92,8 @@ async function tribeEdit(t, node1, node2) {
   console.log('leave tribe')
   let left = await leaveTribe(t, node2, tribe)
   t.true(left, 'node2 should leave tribe')
+
+  await sleep(2000)
 
   //NODE1 DELETES THE TRIBE
   console.log('delete tribe')
