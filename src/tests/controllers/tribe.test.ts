@@ -2,7 +2,7 @@ import test, { ExecutionContext } from 'ava'
 import nodes from '../nodes'
 import { leaveTribe, deleteTribe } from '../utils/del'
 import { createTribe, joinTribe, updateProfile } from '../utils/save'
-import { randomText, iterate } from '../utils/helpers'
+import { randomText, iterate, sleep } from '../utils/helpers'
 import { NodeConfig } from '../types'
 import { sendTribeMessageAndCheckDecryption } from '../utils/msg'
 import { getCheckNewMsgs, getSelf } from '../utils/get'
@@ -61,6 +61,7 @@ async function tribeTest(
   let left = await leaveTribe(t, node2, tribe)
   t.true(left, 'node2 should leave tribe')
 
+  await sleep(2000)
   //NODE1 DELETES THE TRIBE
   let delTribe = await deleteTribe(t, node1, tribe)
   t.true(delTribe, 'node1 should delete tribe')

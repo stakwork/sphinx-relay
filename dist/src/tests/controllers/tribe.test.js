@@ -44,6 +44,7 @@ function tribeTest(t, node1, node2) {
         //NODE2 LEAVES THE TRIBE
         let left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left, 'node2 should leave tribe');
+        yield (0, helpers_1.sleep)(2000);
         //NODE1 DELETES THE TRIBE
         let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe, 'node1 should delete tribe');
