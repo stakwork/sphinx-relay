@@ -161,9 +161,14 @@ function getActiveLsat(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const tenant = req.owner.id;
         logger_1.sphinxLogger.info(`=> getActiveLsat`, logger_1.logging.Express);
+        const issuer = req.query.issuer;
+        const where = { tenant, status: 1 };
+        if (issuer) {
+            where['issuer'] = issuer;
+        }
         try {
             const lsat = (yield models_1.models.Lsat.findOne({
-                where: { tenant, status: 1 },
+                where,
             }));
             if (!lsat) {
                 return res
