@@ -1275,7 +1275,7 @@ export async function getInvoiceHandler(
                   response?.settled || showPreImage
                     ? response?.r_preimage.toString('hex')
                     : '',
-                amount: convertMsatToSat(response.amt_paid),
+                amount: response.amt_paid_sat,
               }
               resolve(invoice)
             }
