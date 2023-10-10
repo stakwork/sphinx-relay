@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   StreamAuth as _lnrpc_StreamAuth,
   StreamAuth__Output as _lnrpc_StreamAuth__Output,
@@ -8,7 +9,6 @@ import type {
   RPCMessage as _lnrpc_RPCMessage,
   RPCMessage__Output as _lnrpc_RPCMessage__Output,
 } from '../lnrpc/RPCMessage'
-import type { Long } from '@grpc/proto-loader'
 
 export interface RPCMiddlewareRequest {
   request_id?: number | string | Long
