@@ -205,9 +205,16 @@ export async function getActiveLsat(
 ): Promise<void | Response> {
   const tenant = req.owner.id
   sphinxLogger.info(`=> getActiveLsat`, logging.Express)
+  const issuer = req.query.issuer as string
+
+  const where = { tenant, status: 1 }
+
+  if (issuer) {
+    where['issuer'] = issuer
+  }
   try {
     const lsat: LsatT = (await models.Lsat.findOne({
-      where: { tenant, status: 1 },
+      where,
     })) as LsatT
     if (!lsat) {
       return res

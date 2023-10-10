@@ -48,17 +48,11 @@ function invoices(t, node1, node2) {
         //Create an Invoice by node 2
         yield helpers.sleep(1000);
         const createdInvoice2 = yield (0, invoices_1.createInvoice)(t, node2, 12, 'test invoice');
-        if (node1.alias === 'alice' && node2.alias === 'virtualNode0') {
-            console.log(createdInvoice2);
-        }
         const paymentRequest2 = createdInvoice2.response.invoice;
         t.truthy(paymentRequest2, 'Payment request should have been created');
         //Get Invoice details by node 2
         const invoiceDetail3 = yield (0, invoices_1.getInvoice)(t, node2, paymentRequest2);
         const invoicePaymentRequest2 = invoiceDetail3.response.payment_request;
-        if (node1.alias === 'alice' && node2.alias === 'virtualNode0') {
-            console.log(invoiceDetail3);
-        }
         t.truthy(invoicePaymentRequest2, `Payment request should exist for ${node2.alias} when testing with ${node1.alias}`);
         //Payment request gotten from getInvoice should equal payment request from create invoice
         t.true(paymentRequest2 === invoicePaymentRequest2, 'Payment request gotten from getInvoice should equal payment request from create invoice');
