@@ -118,6 +118,7 @@ export async function set(app) {
   app.get('/messages', messages.getMessages)
   app.delete('/message/:id', messages.deleteMessage)
   app.post('/messages/:chat_id/read', messages.readMessages)
+  app.post('/messages/:chat_id/toggleChatReadUnread', messages.toggleChatReadUnread)
   app.post('/messages/clear', messages.clearMessages)
   app.delete('/messages', messages.disappearingMessages)
   app.get('/message/:uuid', messages.getMessageByUuid)
