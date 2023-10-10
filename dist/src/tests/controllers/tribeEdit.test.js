@@ -76,6 +76,7 @@ function tribeEdit(t, node1, node2) {
         console.log('leave tribe');
         let left = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left, 'node2 should leave tribe');
+        yield (0, helpers_1.sleep)(2000);
         //NODE1 DELETES THE TRIBE
         console.log('delete tribe');
         let delTribe = yield (0, del_1.deleteTribe)(t, node1, tribe);

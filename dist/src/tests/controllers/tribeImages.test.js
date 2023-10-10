@@ -48,6 +48,7 @@ function tribeImages(t, node1, node2) {
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
+        yield (0, helpers_1.sleep)(2000);
         //NODE1 DELETES TRIBE
         let delTribe2 = yield (0, del_1.deleteTribe)(t, node1, tribe);
         t.true(delTribe2, 'node1 should delete tribe');

@@ -1,7 +1,7 @@
 import test, { ExecutionContext } from 'ava'
 import nodes from '../nodes'
 import { pinkSquare, greenSquare } from '../utils/base64images'
-import { iterate } from '../utils/helpers'
+import { iterate, sleep } from '../utils/helpers'
 import { sendImage } from '../utils/msg'
 import { leaveTribe, deleteTribe } from '../utils/del'
 import { createTribe, joinTribe } from '../utils/save'
@@ -47,6 +47,8 @@ export async function paidTribeImages(t, node1, node2) {
   //NODE2 LEAVES TRIBE
   let left2 = await leaveTribe(t, node2, tribe)
   t.true(left2, 'node2 should leave tribe')
+
+  await sleep(2000)
 
   //NODE1 DELETES TRIBE
   let delTribe2 = await deleteTribe(t, node1, tribe)
