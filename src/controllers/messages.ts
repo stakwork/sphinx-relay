@@ -810,7 +810,7 @@ export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> =>
   try{
     const requestBody = JSON.parse(req.rawBody);
       //We want to mark the chat as read
-    if (req.shouldMarkAsUnread === false) {
+    if (requestBody.shouldMarkAsUnread === false) {
       // Call the readMessages function with the same req and res objects
       const result = await readMessages(req, res);
       return result; // Exit the function after calling readMessages
