@@ -240,12 +240,24 @@ function getInvoice(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const payment_request = req.query.payment_request;
-        if (!payment_request) {
-            return (0, res_1.failure)(res, 'Invalid payment request');
+        let payment_hash = req.query.payment_hash;
+        if (!payment_request && !payment_hash) {
+            return (0, res_1.failure)(res, 'No payment request or hash');
+        }
+        if (!payment_hash) {
+            try {
+                const decodedPaymentRequest = bolt11.decode(payment_request);
+                payment_hash =
+                    ((_a = decodedPaymentRequest.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
+            }
+            catch (e) {
+                return (0, res_1.failure)(res, e);
+            }
+        }
+        if (!payment_hash) {
+            return (0, res_1.failure)(res, 'No payment hash');
         }
         try {
-            const decodedPaymentRequest = bolt11.decode(payment_request);
-            const payment_hash = ((_a = decodedPaymentRequest.tags.find((t) => t.tagName === 'payment_hash')) === null || _a === void 0 ? void 0 : _a.data) || '';
             const invoice = yield Lightning.getInvoiceHandler(payment_hash, req.owner.publicKey);
             return (0, res_1.success)(res, invoice);
         }

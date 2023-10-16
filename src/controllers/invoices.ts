@@ -258,15 +258,25 @@ export const listInvoices = async (req: Req, res: Response): Promise<void> => {
 export async function getInvoice(req: Req, res: Response): Promise<void> {
   if (!req.owner) return failure(res, 'no owner')
   const payment_request = req.query.payment_request as string
+  let payment_hash = req.query.payment_hash as string
 
-  if (!payment_request) {
-    return failure(res, 'Invalid payment request')
+  if (!payment_request && !payment_hash) {
+    return failure(res, 'No payment request or hash')
+  }
+  if (!payment_hash) {
+    try {
+      const decodedPaymentRequest = bolt11.decode(payment_request)
+      payment_hash =
+        (decodedPaymentRequest.tags.find((t) => t.tagName === 'payment_hash')
+          ?.data as string) || ('' as string)
+    } catch (e) {
+      return failure(res, e)
+    }
+  }
+  if (!payment_hash) {
+    return failure(res, 'No payment hash')
   }
   try {
-    const decodedPaymentRequest = bolt11.decode(payment_request)
-    const payment_hash =
-      (decodedPaymentRequest.tags.find((t) => t.tagName === 'payment_hash')
-        ?.data as string) || ('' as string)
     const invoice = await Lightning.getInvoiceHandler(
       payment_hash,
       req.owner.publicKey
