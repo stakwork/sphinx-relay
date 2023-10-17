@@ -51,6 +51,7 @@ export interface Message {
   cached?: boolean
   error_message?: string
   thread_uuid?: string
+  chat: Chat
 }
 
 export interface Chat {
@@ -81,4 +82,5 @@ export interface Chat {
   img: string
   meta: string
   pin: string
+  seen: number
 }

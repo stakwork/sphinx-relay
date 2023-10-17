@@ -52,6 +52,7 @@ jobs:
             'externalHostedBot',
             'spamGoneBot',
             'mlBot',
+            'markMessageUnread',
           ]
         node: [16]
     steps:
