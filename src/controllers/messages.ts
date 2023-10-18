@@ -806,7 +806,7 @@ Either makes all messages of a chat read or it marks the last message of the giv
 */
 export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
-
+  //
   try{
     const requestBody = JSON.parse(req.rawBody);
       //We want to mark the chat as read
