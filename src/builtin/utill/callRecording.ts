@@ -212,7 +212,7 @@ export async function sendToStakwork(
     },
     body: JSON.stringify({
       name: `${callId} file`,
-      workflow_id: 6173,
+      workflow_id: 12346,
       workflow_params: {
         set_var: {
           attributes: {
