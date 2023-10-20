@@ -58,7 +58,7 @@ const builtInHiddenCmd = {
   kick: ['hide', 'add', 'remove'],
   sentiment: ['threshold', 'timer', 'url'],
   jarvis: ['link', 'hide'],
-  spam_gone: ['add', 'list', 'remove'],
+  spam_gone: ['add', 'list', 'remove', 'help'],
   [`${ML_PREFIX.substring(1)}`]: ['url', 'api_key', 'kind', 'add'],
 }
 

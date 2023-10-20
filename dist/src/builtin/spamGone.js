@@ -66,7 +66,8 @@ function init() {
                             name: 'List all Pubkey on Spam_Gone list',
                             value: '/spam_gone list',
                         },
-                    ]);
+                    ])
+                        .setOnlyOwner(true);
                     message.channel.send({ embed });
                     return;
             }
