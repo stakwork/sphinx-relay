@@ -846,7 +846,6 @@ export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> =>
       resetNotifyTribeCount(parseInt(chat_id))
       await chat.update({ seen: false })
       success(res, {})
-      sendNotification(chat, '', 'badge', owner)
       socket.sendJson(
         {
           type: 'chat_unseen',
