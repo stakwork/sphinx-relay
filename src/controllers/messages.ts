@@ -804,16 +804,19 @@ Either makes all messages of a chat read or it marks the last message of the giv
 @param {Res} res - The response object used to send the updated chat information.
 @returns {Promise<void>} - An empty promise.
 */
-export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> => {
+export const toggleChatReadUnread = async (
+  req: Req,
+  res: Res
+): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   //
-  try{
-    const requestBody = JSON.parse(req.rawBody);
-      //We want to mark the chat as read
+  try {
+    const requestBody = JSON.parse(req.rawBody)
+    //We want to mark the chat as read
     if (requestBody.shouldMarkAsUnread === false) {
       // Call the readMessages function with the same req and res objects
-      const result = await readMessages(req, res);
-      return result; // Exit the function after calling readMessages
+      const result = await readMessages(req, res)
+      return result // Exit the function after calling readMessages
     }
 
     //we want to mark the last message + chat as unread
@@ -832,11 +835,11 @@ export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> =>
         tenant,
       },
       order: [['date', 'DESC']],
-    });
+    })
 
     // Update just the latest message found in the database to mark it as unseen
     if (latestMessage) {
-      await latestMessage.update({ seen: false });
+      await latestMessage.update({ seen: false })
     }
     //mark the chat as unseen
     const chat: Chat = (await models.Chat.findOne({
@@ -856,9 +859,10 @@ export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> =>
     } else {
       failure(res, 'no chat')
     }
-  }
-  catch(error){
-    return failureWithResponse(res, 'Invalid JSON body', { error: error.message });
+  } catch (error) {
+    return failureWithResponse(res, 'Invalid JSON body', {
+      error: error.message,
+    })
   }
 }
 
