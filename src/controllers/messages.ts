@@ -798,6 +798,71 @@ export const receiveDeleteMessage = async (payload: Payload): Promise<void> => {
 }
 
 /**
+Either makes all messages of a chat read or it marks the last message of the given chat as unread.
+
+@param {Req} req - The request object containing the chat ID.
+@param {Res} res - The response object used to send the updated chat information.
+@returns {Promise<void>} - An empty promise.
+*/
+export const toggleChatReadUnread = async (req: Req, res: Res): Promise<void> => {
+  if (!req.owner) return failure(res, 'no owner')
+  //
+  try{
+    const requestBody = JSON.parse(req.rawBody);
+      //We want to mark the chat as read
+    if (requestBody.shouldMarkAsUnread === false) {
+      // Call the readMessages function with the same req and res objects
+      const result = await readMessages(req, res);
+      return result; // Exit the function after calling readMessages
+    }
+
+    //we want to mark the last message + chat as unread
+    const chat_id = req.params.chat_id
+    const owner = req.owner
+    const tenant: number = owner.id
+
+    // Find the latest message that is not from the user and has been read
+    const latestMessage = await models.Message.findOne({
+      where: {
+        sender: {
+          [Op.ne]: owner.id,
+        },
+        chatId: chat_id,
+        [Op.or]: [{ seen: true }, { seen: null }],
+        tenant,
+      },
+      order: [['date', 'DESC']],
+    });
+
+    // Update just the latest message found in the database to mark it as unseen
+    if (latestMessage) {
+      await latestMessage.update({ seen: false });
+    }
+    //mark the chat as unseen
+    const chat: Chat = (await models.Chat.findOne({
+      where: { id: chat_id, tenant },
+    })) as Chat
+    if (chat) {
+      resetNotifyTribeCount(parseInt(chat_id))
+      await chat.update({ seen: false })
+      success(res, {})
+      socket.sendJson(
+        {
+          type: 'chat_unseen',
+          response: jsonUtils.chatToJson(chat),
+        },
+        tenant
+      )
+    } else {
+      failure(res, 'no chat')
+    }
+  }
+  catch(error){
+    return failureWithResponse(res, 'Invalid JSON body', { error: error.message });
+  }
+}
+
+/**
 Updates the messages in the specified chat to mark them as seen by the owner and sends a notification to the other chat members.
 
 @param {Req} req - The request object containing the chat ID.
