@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.disappearingMessages = exports.clearMessages = exports.readMessages = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = exports.getMessageByUuid = void 0;
+exports.initializeDeleteMessageCronJobs = exports.receiveVoip = exports.disappearingMessages = exports.clearMessages = exports.readMessages = exports.toggleChatReadUnread = exports.receiveDeleteMessage = exports.receiveRepayment = exports.receiveBoost = exports.receiveMessage = exports.sendMessage = exports.deleteMessage = exports.getMsgs = exports.getAllMessages = exports.getMessages = exports.getMessageByUuid = void 0;
 const sequelize_1 = require("sequelize");
 const underscore_1 = require("underscore");
 const short = require("short-uuid");
@@ -645,6 +645,69 @@ const receiveDeleteMessage = (payload) => __awaiter(void 0, void 0, void 0, func
     }, tenant);
 });
 exports.receiveDeleteMessage = receiveDeleteMessage;
+/**
+Either makes all messages of a chat read or it marks the last message of the given chat as unread.
+
+@param {Req} req - The request object containing the chat ID.
+@param {Res} res - The response object used to send the updated chat information.
+@returns {Promise<void>} - An empty promise.
+*/
+const toggleChatReadUnread = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.owner)
+        return (0, res_1.failure)(res, 'no owner');
+    //
+    try {
+        const requestBody = JSON.parse(req.rawBody);
+        //We want to mark the chat as read
+        if (requestBody.shouldMarkAsUnread === false) {
+            // Call the readMessages function with the same req and res objects
+            const result = yield (0, exports.readMessages)(req, res);
+            return result; // Exit the function after calling readMessages
+        }
+        //we want to mark the last message + chat as unread
+        const chat_id = req.params.chat_id;
+        const owner = req.owner;
+        const tenant = owner.id;
+        // Find the latest message that is not from the user and has been read
+        const latestMessage = yield models_1.models.Message.findOne({
+            where: {
+                sender: {
+                    [sequelize_1.Op.ne]: owner.id,
+                },
+                chatId: chat_id,
+                [sequelize_1.Op.or]: [{ seen: true }, { seen: null }],
+                tenant,
+            },
+            order: [['date', 'DESC']],
+        });
+        // Update just the latest message found in the database to mark it as unseen
+        if (latestMessage) {
+            yield latestMessage.update({ seen: false });
+        }
+        //mark the chat as unseen
+        const chat = (yield models_1.models.Chat.findOne({
+            where: { id: chat_id, tenant },
+        }));
+        if (chat) {
+            (0, hub_1.resetNotifyTribeCount)(parseInt(chat_id));
+            yield chat.update({ seen: false });
+            (0, res_1.success)(res, {});
+            socket.sendJson({
+                type: 'chat_unseen',
+                response: jsonUtils.chatToJson(chat),
+            }, tenant);
+        }
+        else {
+            (0, res_1.failure)(res, 'no chat');
+        }
+    }
+    catch (error) {
+        return (0, res_1.failureWithResponse)(res, 'Invalid JSON body', {
+            error: error.message,
+        });
+    }
+});
+exports.toggleChatReadUnread = toggleChatReadUnread;
 /**
 Updates the messages in the specified chat to mark them as seen by the owner and sends a notification to the other chat members.
 

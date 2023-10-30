@@ -75,14 +75,13 @@ function unreadMessages(t, index1, index2, index3) {
         yield (0, msg_1.readMessages)(node1, tribe);
         // Mark messaages as read here
         const tribeMessages1 = yield (0, msg_1.getTribeMessages)(t, node1, tribe);
-        t.true(tribeMessages1[0].seen === 1, 'last message should be read');
-        console.log(tribeMessages1.length);
+        t.true(tribeMessages1[0].chat.seen === 1, 'last message should be read');
         // check that we have less message
         // mark messages as unread
         yield (0, msg_1.markUnread)(node1, tribe);
         // check that we have more messages now
         const tribeMessages2 = yield (0, msg_1.getTribeMessages)(t, node1, tribe);
-        t.true(tribeMessages2[0].seen == 0, 'last message should be unread');
+        t.true(tribeMessages2[0].chat.seen === 0, 'last message should be unread');
         //NODE2 LEAVES TRIBE
         let left2 = yield (0, del_1.leaveTribe)(t, node2, tribe);
         t.true(left2, 'node2 should leave tribe');
