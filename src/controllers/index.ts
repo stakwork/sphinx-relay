@@ -60,6 +60,9 @@ export async function set(app) {
 
   // queries.startWatchingUTXOs();
 
+  // rate limit these routes:
+  app.use(limiter)
+
   app.get('/chats', chats.getChats)
   app.post('/group', chats.createGroupChat)
   app.put('/chats/:id', chats.updateChat)
@@ -92,8 +95,6 @@ export async function set(app) {
   app.delete('/contacts/:id', contacts.deleteContact)
   app.get('/latest_contacts', contacts.getLatestContacts)
   app.post('/generate_external', contacts.generateOwnerWithExternalSigner)
-  app.post('/hmac_key', contacts.registerHmacKey)
-  app.get('/hmac_key', contacts.getHmacKey)
   app.get('/contact/:contact_id', contacts.getContactById)
 
   app.post('/profile', personal.createPeopleProfile)
@@ -113,7 +114,6 @@ export async function set(app) {
   app.post('/remove_badge', personal.removeBadgeFromTribe)
   app.put('/reissue_badge', personal.reissueBadge)
 
-  app.get('/msgs', messages.getMsgs)
   app.get('/allmessages', messages.getAllMessages)
   app.get('/messages', messages.getMessages)
   app.delete('/message/:id', messages.deleteMessage)
@@ -233,8 +233,9 @@ export async function set(app) {
   app.get('/tribes', pamid, admin.listTribes)
   app.get('/admin_balance', pamid, admin.adminBalance)
 
-  // rate limit these routes:
-  app.use(limiter)
+  app.get('/msgs', messages.getMsgs)
+  app.post('/hmac_key', contacts.registerHmacKey)
+  app.get('/hmac_key', contacts.getHmacKey)
 
   app.post('/messages', messages.sendMessage)
 

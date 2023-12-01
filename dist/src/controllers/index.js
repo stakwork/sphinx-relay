@@ -63,6 +63,8 @@ function set(app) {
         // media.cycleMediaToken()
         timers.reloadTimers();
         // queries.startWatchingUTXOs();
+        // rate limit these routes:
+        app.use(limiter);
         app.get('/chats', chats.getChats);
         app.post('/group', chats.createGroupChat);
         app.put('/chats/:id', chats.updateChat);
@@ -89,8 +91,6 @@ function set(app) {
         app.delete('/contacts/:id', contacts.deleteContact);
         app.get('/latest_contacts', contacts.getLatestContacts);
         app.post('/generate_external', contacts.generateOwnerWithExternalSigner);
-        app.post('/hmac_key', contacts.registerHmacKey);
-        app.get('/hmac_key', contacts.getHmacKey);
         app.get('/contact/:contact_id', contacts.getContactById);
         app.post('/profile', personal.createPeopleProfile);
         app.delete('/profile', personal.deletePersonProfile);
@@ -108,7 +108,6 @@ function set(app) {
         app.get('/badge_per_tribe/:chat_id', personal.getBadgePerTribe);
         app.post('/remove_badge', personal.removeBadgeFromTribe);
         app.put('/reissue_badge', personal.reissueBadge);
-        app.get('/msgs', messages.getMsgs);
         app.get('/allmessages', messages.getAllMessages);
         app.get('/messages', messages.getMessages);
         app.delete('/message/:id', messages.deleteMessage);
@@ -203,8 +202,9 @@ function set(app) {
         app.delete('/default_tribe/:id', auth_1.proxyAdminMiddleware, admin.removeDefaultJoinTribe);
         app.get('/tribes', auth_1.proxyAdminMiddleware, admin.listTribes);
         app.get('/admin_balance', auth_1.proxyAdminMiddleware, admin.adminBalance);
-        // rate limit these routes:
-        app.use(limiter);
+        app.get('/msgs', messages.getMsgs);
+        app.post('/hmac_key', contacts.registerHmacKey);
+        app.get('/hmac_key', contacts.getHmacKey);
         app.post('/messages', messages.sendMessage);
         app.post('/contacts/:id/keys', contacts.exchangeKeys);
         app.post('/contacts', contacts.createContact);
