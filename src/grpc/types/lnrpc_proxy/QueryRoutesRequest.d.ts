@@ -1,5 +1,6 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   FeeLimit as _lnrpc_proxy_FeeLimit,
   FeeLimit__Output as _lnrpc_proxy_FeeLimit__Output,
@@ -20,7 +21,6 @@ import type {
   FeatureBit as _lnrpc_proxy_FeatureBit,
   FeatureBit__Output as _lnrpc_proxy_FeatureBit__Output,
 } from '../lnrpc_proxy/FeatureBit'
-import type { Long } from '@grpc/proto-loader'
 
 export interface QueryRoutesRequest {
   pub_key?: string

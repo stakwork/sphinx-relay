@@ -1,5 +1,6 @@
 // Original file: proto/walletkit.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   OutPoint as _lnrpc_OutPoint,
   OutPoint__Output as _lnrpc_OutPoint__Output,
@@ -8,7 +9,6 @@ import type {
   WitnessType as _walletrpc_WitnessType,
   WitnessType__Output as _walletrpc_WitnessType__Output,
 } from '../walletrpc/WitnessType'
-import type { Long } from '@grpc/proto-loader'
 
 export interface PendingSweep {
   outpoint?: _lnrpc_OutPoint | null
