@@ -44,7 +44,7 @@ const feeds = require("./getFeeds");
 const contentFeedStatus = require("./contentFeedStatus");
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 1000,
-    max: 2,
+    max: 10,
     standardHeaders: true,
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
