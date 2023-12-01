@@ -1,10 +1,10 @@
 // Original file: proto/rpc_proxy.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   ChannelUpdate as _lnrpc_proxy_ChannelUpdate,
   ChannelUpdate__Output as _lnrpc_proxy_ChannelUpdate__Output,
 } from '../lnrpc_proxy/ChannelUpdate'
+import type { Long } from '@grpc/proto-loader'
 
 // Original file: proto/rpc_proxy.proto
 
