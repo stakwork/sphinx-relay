@@ -98,9 +98,6 @@ function setupApp() {
       }
     }
 
-    // rate limit these routes:
-    app.use(limiter)
-
     app.use(helmet())
     app.use(
       express.json({
@@ -114,6 +111,9 @@ function setupApp() {
     if (logging.Express) {
       app.use(logger)
     }
+
+    app.use(limiter)
+
     app.use(
       cors({
         allowedHeaders: [

@@ -98,8 +98,6 @@ function setupApp() {
                 app.set('trust proxy', rate_limit_trust_proxy);
             }
         }
-        // rate limit these routes:
-        app.use(limiter);
         app.use(helmet());
         app.use(express.json({
             limit: '5MB',
@@ -112,6 +110,7 @@ function setupApp() {
         if (logger_1.logging.Express) {
             app.use(logger_1.default);
         }
+        app.use(limiter);
         app.use(cors({
             allowedHeaders: [
                 'X-Requested-With',
