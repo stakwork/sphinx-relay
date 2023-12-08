@@ -28,6 +28,7 @@ const grpc = require("./src/grpc/subscribe");
 const cert = require("./src/utils/cert");
 const config_1 = require("./src/utils/config");
 const leadershipboard_1 = require("./src/utils/leadershipboard");
+const express_rate_limit_1 = require("express-rate-limit");
 // force UTC time
 process.env.TZ = 'UTC';
 const env = process.env.NODE_ENV || 'development';
@@ -81,6 +82,12 @@ function finishSetup() {
         (0, setup_1.setupDone)();
     });
 }
+const limiter = (0, express_rate_limit_1.default)({
+    windowMs: 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 //
 function setupApp() {
     return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
@@ -91,6 +98,8 @@ function setupApp() {
                 app.set('trust proxy', rate_limit_trust_proxy);
             }
         }
+        // rate limit these routes:
+        app.use(limiter);
         app.use(helmet());
         app.use(express.json({
             limit: '5MB',

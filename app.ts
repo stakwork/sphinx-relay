@@ -25,6 +25,7 @@ import * as cert from './src/utils/cert'
 import { loadConfig } from './src/utils/config'
 import { Req } from './src/types'
 import { leadershipBoardInterval } from './src/utils/leadershipboard'
+import rateLimit from 'express-rate-limit'
 
 // force UTC time
 process.env.TZ = 'UTC'
@@ -78,6 +79,13 @@ async function finishSetup() {
   setupDone()
 }
 
+const limiter = rateLimit({
+  windowMs: 1000, // 1 second
+  max: 10, // Limit each IP to 2 requests per `window` (here, per 1 second)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+
 //
 function setupApp() {
   return new Promise(async (resolve) => {
@@ -89,6 +97,9 @@ function setupApp() {
         app.set('trust proxy', rate_limit_trust_proxy)
       }
     }
+
+    // rate limit these routes:
+    app.use(limiter)
 
     app.use(helmet())
     app.use(

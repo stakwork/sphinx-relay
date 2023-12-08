@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ACTIONS = exports.set = void 0;
-const express_rate_limit_1 = require("express-rate-limit");
 const models_1 = require("../models");
 const auth_1 = require("../auth");
 const gitinfo = require("../utils/gitinfo");
@@ -42,12 +41,6 @@ const lsats = require("./lsats");
 const action = require("./actionHistory");
 const feeds = require("./getFeeds");
 const contentFeedStatus = require("./contentFeedStatus");
-const limiter = (0, express_rate_limit_1.default)({
-    windowMs: 1000,
-    max: 10,
-    standardHeaders: true,
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-});
 function set(app) {
     return __awaiter(this, void 0, void 0, function* () {
         builtInBots.init();
@@ -63,8 +56,6 @@ function set(app) {
         // media.cycleMediaToken()
         timers.reloadTimers();
         // queries.startWatchingUTXOs();
-        // rate limit these routes:
-        app.use(limiter);
         app.get('/chats', chats.getChats);
         app.post('/group', chats.createGroupChat);
         app.put('/chats/:id', chats.updateChat);

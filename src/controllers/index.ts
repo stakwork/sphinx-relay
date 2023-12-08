@@ -1,4 +1,3 @@
-import rateLimit from 'express-rate-limit'
 import { models, Message } from '../models'
 import { proxyAdminMiddleware as pamid } from '../auth'
 import * as gitinfo from '../utils/gitinfo'
@@ -32,13 +31,6 @@ import * as action from './actionHistory'
 import * as feeds from './getFeeds'
 import * as contentFeedStatus from './contentFeedStatus'
 
-const limiter = rateLimit({
-  windowMs: 1000, // 1 second
-  max: 10, // Limit each IP to 2 requests per `window` (here, per 1 second)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-})
-
 export async function set(app) {
   builtInBots.init()
 
@@ -59,9 +51,6 @@ export async function set(app) {
   timers.reloadTimers()
 
   // queries.startWatchingUTXOs();
-
-  // rate limit these routes:
-  app.use(limiter)
 
   app.get('/chats', chats.getChats)
   app.post('/group', chats.createGroupChat)
