@@ -14,7 +14,7 @@
     "start-password": "USE_PASSWORD=true ts-node ./app.ts",
     "start-hosting": "HOSTING_PROVIDER=true ts-node ./app.ts",
     "prod": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && env NODE_ENV=production node dist/app.js",
-    "tsc": "rm -rf dist/ && npx tsc && cp -r public dist/public",
+    "tsc": "rm -rf dist/ && npx tsc",
     "dev": "rm -rf dist/ && tsc && cp -r public dist/public && node --inspect ./dist/app.js",
     "build-binaries": "rm -rf dist/ && tsc && cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && pkg . --target node12-alpine-x64,node12-macos-x64 --out-path binaries",
     "start-ecs": "cp config/app.json dist/config/app.json && cp config/config.json dist/config/config.json && export NODE_ENV=production && node --max-old-space-size=128 dist/app.js",

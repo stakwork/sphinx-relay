@@ -109,6 +109,7 @@ export const sendNotification = async (
   const notification: { [k: string]: string | number } = {
     chat_id: chat.id || 0,
     sound: '',
+    click_action: 'MAIN_ACTIVITY',
   }
   let chatIsMuted = chat.notify === constants.notify_levels.mute
   if (chat.notify === constants.notify_levels.mentions && !push) {

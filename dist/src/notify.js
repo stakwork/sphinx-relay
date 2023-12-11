@@ -71,6 +71,7 @@ const sendNotification = (chat, name, type, owner, amount, push) => __awaiter(vo
     const notification = {
         chat_id: chat.id || 0,
         sound: '',
+        click_action: 'MAIN_ACTIVITY',
     };
     let chatIsMuted = chat.notify === constants_1.default.notify_levels.mute;
     if (chat.notify === constants_1.default.notify_levels.mentions && !push) {
