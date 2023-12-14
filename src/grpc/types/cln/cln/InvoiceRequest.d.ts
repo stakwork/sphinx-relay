@@ -1,10 +1,10 @@
 // Original file: proto/cln/node.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   AmountOrAny as _cln_AmountOrAny,
   AmountOrAny__Output as _cln_AmountOrAny__Output,
 } from '../cln/AmountOrAny'
-import type { Long } from '@grpc/proto-loader'
 
 export interface InvoiceRequest {
   description?: string
