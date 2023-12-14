@@ -228,7 +228,6 @@ export async function clearForTesting(req: Req, res) {
   try {
     await models.Chat.destroy({ where: { tenant } })
     await models.Subscription.destroy({ where: { tenant } })
-    await models.Accounting.destroy({ where: { tenant } })
     await models.Bot.destroy({ where: { tenant } })
     await models.BotMember.destroy({ where: { tenant } })
     await models.ChatBot.destroy({ where: { tenant } })

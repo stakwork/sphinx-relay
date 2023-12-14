@@ -248,7 +248,6 @@ function clearForTesting(req, res) {
         try {
             yield models_1.models.Chat.destroy({ where: { tenant } });
             yield models_1.models.Subscription.destroy({ where: { tenant } });
-            yield models_1.models.Accounting.destroy({ where: { tenant } });
             yield models_1.models.Bot.destroy({ where: { tenant } });
             yield models_1.models.BotMember.destroy({ where: { tenant } });
             yield models_1.models.ChatBot.destroy({ where: { tenant } });
