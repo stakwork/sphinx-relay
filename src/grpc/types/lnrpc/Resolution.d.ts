@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   ResolutionType as _lnrpc_ResolutionType,
   ResolutionType__Output as _lnrpc_ResolutionType__Output,
@@ -13,6 +12,7 @@ import type {
   OutPoint as _lnrpc_OutPoint,
   OutPoint__Output as _lnrpc_OutPoint__Output,
 } from '../lnrpc/OutPoint'
+import type { Long } from '@grpc/proto-loader'
 
 export interface Resolution {
   resolution_type?: _lnrpc_ResolutionType
