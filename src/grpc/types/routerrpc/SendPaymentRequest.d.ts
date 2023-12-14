@@ -1,5 +1,6 @@
 // Original file: proto/router.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   RouteHint as _lnrpc_RouteHint,
   RouteHint__Output as _lnrpc_RouteHint__Output,
@@ -8,7 +9,6 @@ import type {
   FeatureBit as _lnrpc_FeatureBit,
   FeatureBit__Output as _lnrpc_FeatureBit__Output,
 } from '../lnrpc/FeatureBit'
-import type { Long } from '@grpc/proto-loader'
 
 export interface SendPaymentRequest {
   dest?: Buffer | Uint8Array | string
