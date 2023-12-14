@@ -1,10 +1,10 @@
 // Original file: proto/router.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   CircuitKey as _routerrpc_CircuitKey,
   CircuitKey__Output as _routerrpc_CircuitKey__Output,
 } from '../routerrpc/CircuitKey'
-import type { Long } from '@grpc/proto-loader'
 
 export interface ForwardHtlcInterceptRequest {
   incoming_circuit_key?: _routerrpc_CircuitKey | null

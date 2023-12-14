@@ -1,5 +1,6 @@
 // Original file: proto/walletunlocker.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   ChanBackupSnapshot as _lnrpc_ChanBackupSnapshot,
   ChanBackupSnapshot__Output as _lnrpc_ChanBackupSnapshot__Output,
@@ -8,7 +9,6 @@ import type {
   WatchOnly as _lnrpc_WatchOnly,
   WatchOnly__Output as _lnrpc_WatchOnly__Output,
 } from '../lnrpc/WatchOnly'
-import type { Long } from '@grpc/proto-loader'
 
 export interface InitWalletRequest {
   wallet_password?: Buffer | Uint8Array | string
