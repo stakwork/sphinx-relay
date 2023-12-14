@@ -224,7 +224,7 @@ async function asyncForEach(array, callback) {
 export async function clearForTesting(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
-
+  if (!tenant) return failure(res, 'no tenant')
   try {
     await models.Chat.destroy({ truncate: true, where: { tenant } })
     await models.Subscription.destroy({ truncate: true, where: { tenant } })

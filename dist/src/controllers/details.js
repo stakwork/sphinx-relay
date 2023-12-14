@@ -243,6 +243,8 @@ function clearForTesting(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
+        if (!tenant)
+            return (0, res_1.failure)(res, 'no tenant');
         try {
             yield models_1.models.Chat.destroy({ truncate: true, where: { tenant } });
             yield models_1.models.Subscription.destroy({ truncate: true, where: { tenant } });
