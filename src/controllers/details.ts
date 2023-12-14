@@ -226,16 +226,16 @@ export async function clearForTesting(req: Req, res) {
   const tenant: number = req.owner.id
   if (!tenant) return failure(res, 'no tenant')
   try {
-    await models.Chat.destroy({ truncate: true, where: { tenant } })
-    await models.Subscription.destroy({ truncate: true, where: { tenant } })
-    await models.Accounting.destroy({ truncate: true, where: { tenant } })
-    await models.Bot.destroy({ truncate: true, where: { tenant } })
-    await models.BotMember.destroy({ truncate: true, where: { tenant } })
-    await models.ChatBot.destroy({ truncate: true, where: { tenant } })
-    await models.Invite.destroy({ truncate: true, where: { tenant } })
-    await models.MediaKey.destroy({ truncate: true, where: { tenant } })
-    await models.Message.destroy({ truncate: true, where: { tenant } })
-    await models.Timer.destroy({ truncate: true, where: { tenant } })
+    await models.Chat.destroy({ where: { tenant } })
+    await models.Subscription.destroy({ where: { tenant } })
+    await models.Accounting.destroy({ where: { tenant } })
+    await models.Bot.destroy({ where: { tenant } })
+    await models.BotMember.destroy({ where: { tenant } })
+    await models.ChatBot.destroy({ where: { tenant } })
+    await models.Invite.destroy({ where: { tenant } })
+    await models.MediaKey.destroy({ where: { tenant } })
+    await models.Message.destroy({ where: { tenant } })
+    await models.Timer.destroy({ where: { tenant } })
     await models.Contact.destroy({
       where: {
         isOwner: { [Op.or]: [false, null] },

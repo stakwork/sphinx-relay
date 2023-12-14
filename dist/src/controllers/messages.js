@@ -760,7 +760,7 @@ const clearMessages = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!req.owner)
         return (0, res_1.failure)(res, 'no owner');
     const tenant = req.owner.id;
-    yield models_1.models.Message.destroy({ where: { tenant }, truncate: true });
+    yield models_1.models.Message.destroy({ where: { tenant } });
     (0, res_1.success)(res, {});
 });
 exports.clearMessages = clearMessages;

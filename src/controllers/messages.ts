@@ -924,7 +924,7 @@ export const clearMessages = async (req: Req, res: Res): Promise<void> => {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  await models.Message.destroy({ where: { tenant }, truncate: true })
+  await models.Message.destroy({ where: { tenant } })
 
   success(res, {})
 }

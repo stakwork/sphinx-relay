@@ -246,16 +246,16 @@ function clearForTesting(req, res) {
         if (!tenant)
             return (0, res_1.failure)(res, 'no tenant');
         try {
-            yield models_1.models.Chat.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.Subscription.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.Accounting.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.Bot.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.BotMember.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.ChatBot.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.Invite.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.MediaKey.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.Message.destroy({ truncate: true, where: { tenant } });
-            yield models_1.models.Timer.destroy({ truncate: true, where: { tenant } });
+            yield models_1.models.Chat.destroy({ where: { tenant } });
+            yield models_1.models.Subscription.destroy({ where: { tenant } });
+            yield models_1.models.Accounting.destroy({ where: { tenant } });
+            yield models_1.models.Bot.destroy({ where: { tenant } });
+            yield models_1.models.BotMember.destroy({ where: { tenant } });
+            yield models_1.models.ChatBot.destroy({ where: { tenant } });
+            yield models_1.models.Invite.destroy({ where: { tenant } });
+            yield models_1.models.MediaKey.destroy({ where: { tenant } });
+            yield models_1.models.Message.destroy({ where: { tenant } });
+            yield models_1.models.Timer.destroy({ where: { tenant } });
             yield models_1.models.Contact.destroy({
                 where: {
                     isOwner: { [sequelize_1.Op.or]: [false, null] },
