@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   ChannelPoint as _lnrpc_ChannelPoint,
   ChannelPoint__Output as _lnrpc_ChannelPoint__Output,
@@ -8,7 +9,6 @@ import type {
   RoutingPolicy as _lnrpc_RoutingPolicy,
   RoutingPolicy__Output as _lnrpc_RoutingPolicy__Output,
 } from '../lnrpc/RoutingPolicy'
-import type { Long } from '@grpc/proto-loader'
 
 export interface ChannelEdgeUpdate {
   chan_id?: number | string | Long
