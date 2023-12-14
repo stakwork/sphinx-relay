@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   WalletAccountBalance as _lnrpc_WalletAccountBalance,
   WalletAccountBalance__Output as _lnrpc_WalletAccountBalance__Output,
 } from '../lnrpc/WalletAccountBalance'
+import type { Long } from '@grpc/proto-loader'
 
 export interface WalletBalanceResponse {
   total_balance?: number | string | Long
