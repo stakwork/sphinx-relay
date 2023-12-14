@@ -258,7 +258,7 @@ function clearForTesting(req, res) {
             yield models_1.models.Timer.destroy({ truncate: true, where: { tenant } });
             yield models_1.models.Contact.destroy({
                 where: {
-                    isOwner: { [sequelize_1.Op.ne]: 1 },
+                    isOwner: { [sequelize_1.Op.or]: [false, null] },
                     tenant,
                 },
             });

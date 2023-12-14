@@ -238,7 +238,7 @@ export async function clearForTesting(req: Req, res) {
     await models.Timer.destroy({ truncate: true, where: { tenant } })
     await models.Contact.destroy({
       where: {
-        isOwner: { [Op.ne]: 1 },
+        isOwner: { [Op.or]: [false, null] },
         tenant,
       },
     })
