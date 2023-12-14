@@ -225,13 +225,6 @@ export async function clearForTesting(req: Req, res) {
   if (!req.owner) return failure(res, 'no owner')
   const tenant: number = req.owner.id
 
-  if (!config.allow_test_clearing) {
-    return failure(res, 'nope')
-  }
-  if (config.allow_test_clearing !== 'true') {
-    return failure(res, 'nope')
-  }
-
   try {
     await models.Chat.destroy({ truncate: true, where: { tenant } })
     await models.Subscription.destroy({ truncate: true, where: { tenant } })
