@@ -270,6 +270,8 @@ function clearForTesting(req, res) {
                 contactKey: '',
                 alias: '',
                 deviceId: '',
+                hmacKey: '',
+                pushKitToken: '',
             });
             (0, res_1.success)(res, { clean: true });
         }

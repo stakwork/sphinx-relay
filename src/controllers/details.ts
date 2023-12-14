@@ -250,6 +250,8 @@ export async function clearForTesting(req: Req, res) {
       contactKey: '',
       alias: '',
       deviceId: '',
+      hmacKey: '',
+      pushKitToken: '',
     })
     success(res, { clean: true })
   } catch (e) {
