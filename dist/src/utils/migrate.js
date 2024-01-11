@@ -208,9 +208,9 @@ function migrate() {
         try {
             logger_1.sphinxLogger.info('adding lsat table', logger_1.logging.DB);
             yield models_1.sequelize.query(`
-    CREATE TABLE sphinx_relay_lsats (
+    CREATE TABLE sphinx_lsats (
       id BIGINT NOT NULL PRIMARY KEY,
-      lsat_identifier TEXT,
+      identifier TEXT,
       created_at DATETIME,
       updated_at DATETIME,
       macaroon TEXT,

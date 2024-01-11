@@ -235,7 +235,7 @@ export default async function migrate(): Promise<void> {
     await sequelize.query(`
     CREATE TABLE sphinx_lsats (
       id BIGINT NOT NULL PRIMARY KEY,
-      lsat_identifier TEXT,
+      identifier TEXT,
       created_at DATETIME,
       updated_at DATETIME,
       macaroon TEXT,
