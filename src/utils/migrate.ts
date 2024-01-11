@@ -233,7 +233,7 @@ export default async function migrate(): Promise<void> {
   try {
     sphinxLogger.info('adding lsat table', logging.DB)
     await sequelize.query(`
-    CREATE TABLE sphinx_relay_lsats (
+    CREATE TABLE sphinx_lsats (
       id BIGINT NOT NULL PRIMARY KEY,
       lsat_identifier TEXT,
       created_at DATETIME,
