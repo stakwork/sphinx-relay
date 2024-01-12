@@ -155,6 +155,7 @@ export async function saveLsat(
   }
 
   try {
+    console.log('We are trying to save LSAT, means there was a database error')
     lsat.setPreimage(preimage)
     await models.Lsat.create({
       macaroon,
@@ -170,6 +171,7 @@ export async function saveLsat(
 
     return success(res, { lsat: lsat.toToken() })
   } catch (e) {
+    sphinxLogger.error(`Tobi logging error: ${JSON.stringify(e)}`)
     return failure(res, `failed to save lsat: ${e.message || e}`)
   }
 }
