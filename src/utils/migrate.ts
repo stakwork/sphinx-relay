@@ -247,7 +247,7 @@ export default async function migrate(): Promise<void> {
       tenant BIGINT
     )`)
   } catch (e) {
-    // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
+    sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
   }
 
   // Add status column to sphinx_lsats
