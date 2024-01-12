@@ -223,6 +223,7 @@ function migrate() {
     )`);
         }
         catch (e) {
+            console.log(JSON.stringify(e));
             logger_1.sphinxLogger.error(['problem adding lsat table:', e.message], logger_1.logging.DB);
         }
         // Add status column to sphinx_lsats
