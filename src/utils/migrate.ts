@@ -234,7 +234,7 @@ export default async function migrate(): Promise<void> {
     sphinxLogger.info('adding lsat table', logging.DB)
     await sequelize.query(`
     CREATE TABLE sphinx_lsats (
-      id BIGINT PRIMARY KEY AUTOINCREMENT,
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
       identifier TEXT,
       created_at DATETIME,
       updated_at DATETIME,
@@ -247,8 +247,7 @@ export default async function migrate(): Promise<void> {
       tenant BIGINT
     )`)
   } catch (e) {
-    console.log(JSON.stringify(e))
-    sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
+    // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
   }
 
   // Add status column to sphinx_lsats

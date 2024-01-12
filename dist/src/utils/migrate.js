@@ -209,7 +209,7 @@ function migrate() {
             logger_1.sphinxLogger.info('adding lsat table', logger_1.logging.DB);
             yield models_1.sequelize.query(`
     CREATE TABLE sphinx_lsats (
-      id BIGINT PRIMARY KEY AUTOINCREMENT,
+      id INTEGER PRIMARY KEY AUTOINCREMENT, 
       identifier TEXT,
       created_at DATETIME,
       updated_at DATETIME,
@@ -223,8 +223,7 @@ function migrate() {
     )`);
         }
         catch (e) {
-            console.log(JSON.stringify(e));
-            logger_1.sphinxLogger.error(['problem adding lsat table:', e.message], logger_1.logging.DB);
+            // sphinxLogger.error(['problem adding lsat table:', e.message], logging.DB)
         }
         // Add status column to sphinx_lsats
         addTableColumn('sphinx_lsats', 'status', 'INT');
