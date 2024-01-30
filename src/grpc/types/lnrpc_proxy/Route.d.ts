@@ -1,10 +1,10 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   Hop as _lnrpc_proxy_Hop,
   Hop__Output as _lnrpc_proxy_Hop__Output,
 } from '../lnrpc_proxy/Hop'
-import type { Long } from '@grpc/proto-loader'
 
 export interface Route {
   total_time_lock?: number

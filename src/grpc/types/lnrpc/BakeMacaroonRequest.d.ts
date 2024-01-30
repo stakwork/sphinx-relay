@@ -1,10 +1,10 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   MacaroonPermission as _lnrpc_MacaroonPermission,
   MacaroonPermission__Output as _lnrpc_MacaroonPermission__Output,
 } from '../lnrpc/MacaroonPermission'
-import type { Long } from '@grpc/proto-loader'
 
 export interface BakeMacaroonRequest {
   permissions?: _lnrpc_MacaroonPermission[]
