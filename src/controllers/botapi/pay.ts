@@ -62,6 +62,7 @@ export default async function pay(a: Action): Promise<void> {
       replyUuid: message.replyUuid,
       parentId: message.parentId || 0,
     },
+    amount: amount || 0,
     type: constants.message_types.boost,
     success: () => ({ success: true }),
     failure: async (e) => {

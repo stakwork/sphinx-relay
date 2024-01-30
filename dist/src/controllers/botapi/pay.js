@@ -65,6 +65,7 @@ function pay(a) {
                 replyUuid: message.replyUuid,
                 parentId: message.parentId || 0,
             },
+            amount: amount || 0,
             type: constants_1.default.message_types.boost,
             success: () => ({ success: true }),
             failure: (e) => __awaiter(this, void 0, void 0, function* () {
