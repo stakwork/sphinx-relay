@@ -25,7 +25,9 @@ export default async function pay(a: Action): Promise<void> {
   const msg: { [k: string]: string | number | Date } = {
     chatId: chat.id,
     uuid: msg_uuid || short.generate(),
-    type: constants.message_types.boost,
+    type: reply_uuid
+      ? constants.message_types.boost
+      : constants.message_types.direct_payment,
     sender: botContactId, // tribe owner is escrow holder
     amount: amount || 0,
     date: date,
@@ -40,7 +42,7 @@ export default async function pay(a: Action): Promise<void> {
   const message: Message = (await models.Message.create(msg)) as Message
   socket.sendJson(
     {
-      type: 'boost',
+      type: reply_uuid ? 'boost' : 'direct_payment',
       response: jsonUtils.messageToJson(message, chat, owner),
     },
     tenant
@@ -63,7 +65,9 @@ export default async function pay(a: Action): Promise<void> {
       parentId: message.parentId || 0,
     },
     amount: amount || 0,
-    type: constants.message_types.boost,
+    type: reply_uuid
+      ? constants.message_types.boost
+      : constants.message_types.direct_payment,
     success: () => ({ success: true }),
     failure: async (e) => {
       const errorMsg = errMsgString(e)

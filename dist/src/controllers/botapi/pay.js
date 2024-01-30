@@ -36,7 +36,9 @@ function pay(a) {
         const msg = {
             chatId: chat.id,
             uuid: msg_uuid || short.generate(),
-            type: constants_1.default.message_types.boost,
+            type: reply_uuid
+                ? constants_1.default.message_types.boost
+                : constants_1.default.message_types.direct_payment,
             sender: botContactId,
             amount: amount || 0,
             date: date,
@@ -51,7 +53,7 @@ function pay(a) {
             msg.parentId = parent_id;
         const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
-            type: 'boost',
+            type: reply_uuid ? 'boost' : 'direct_payment',
             response: jsonUtils.messageToJson(message, chat, owner),
         }, tenant);
         yield network.sendMessage({
@@ -66,7 +68,9 @@ function pay(a) {
                 parentId: message.parentId || 0,
             },
             amount: amount || 0,
-            type: constants_1.default.message_types.boost,
+            type: reply_uuid
+                ? constants_1.default.message_types.boost
+                : constants_1.default.message_types.direct_payment,
             success: () => ({ success: true }),
             failure: (e) => __awaiter(this, void 0, void 0, function* () {
                 const errorMsg = (0, errMsgString_1.errMsgString)(e);
