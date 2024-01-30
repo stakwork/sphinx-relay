@@ -6,10 +6,19 @@ import * as socket from '../../utils/socket'
 import constants from '../../constants'
 import { sphinxLogger } from '../../utils/logger'
 import { errMsgString } from '../../utils/errMsgString'
+import * as rsa from '../../crypto/rsa'
 import { Action, validateAction } from './index'
 
 export default async function pay(a: Action): Promise<void> {
-  const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a
+  const {
+    amount,
+    bot_name,
+    msg_uuid,
+    reply_uuid,
+    recipient_id,
+    parent_id,
+    content,
+  } = a
 
   sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
   if (!a.recipient_id) return sphinxLogger.error(`no recipient_id`)
@@ -19,6 +28,9 @@ export default async function pay(a: Action): Promise<void> {
   const tenant: number = owner.id
   const alias = bot_name || owner.alias
   const botContactId = -1
+  const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '')
+  const encryptedText = rsa.encrypt(chat.groupKey, content || '')
+  const textMap = { chat: encryptedText }
 
   const date = new Date()
   date.setMilliseconds(0)
@@ -37,6 +49,12 @@ export default async function pay(a: Action): Promise<void> {
     updatedAt: date,
     senderAlias: alias,
     tenant,
+    ...(reply_uuid
+      ? {}
+      : {
+          messageContent: encryptedForMeText,
+          remoteMessageContent: JSON.stringify(textMap),
+        }),
   }
   if (parent_id) msg.parentId = parent_id
   const message: Message = (await models.Message.create(msg)) as Message
