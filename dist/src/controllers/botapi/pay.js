@@ -17,10 +17,11 @@ const socket = require("../../utils/socket");
 const constants_1 = require("../../constants");
 const logger_1 = require("../../utils/logger");
 const errMsgString_1 = require("../../utils/errMsgString");
+const rsa = require("../../crypto/rsa");
 const index_1 = require("./index");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id } = a;
+        const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id, content, } = a;
         logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
         if (!a.recipient_id)
             return logger_1.sphinxLogger.error(`no recipient_id`);
@@ -31,27 +32,24 @@ function pay(a) {
         const tenant = owner.id;
         const alias = bot_name || owner.alias;
         const botContactId = -1;
+        const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
+        const encryptedText = rsa.encrypt(chat.groupKey, content || '');
+        const textMap = { chat: encryptedText };
         const date = new Date();
         date.setMilliseconds(0);
-        const msg = {
-            chatId: chat.id,
-            uuid: msg_uuid || short.generate(),
-            type: constants_1.default.message_types.boost,
-            sender: botContactId,
-            amount: amount || 0,
-            date: date,
-            status: constants_1.default.statuses.confirmed,
-            replyUuid: reply_uuid || '',
-            createdAt: date,
-            updatedAt: date,
-            senderAlias: alias,
-            tenant,
-        };
+        const msg = Object.assign({ chatId: chat.id, uuid: msg_uuid || short.generate(), type: reply_uuid
+                ? constants_1.default.message_types.boost
+                : constants_1.default.message_types.direct_payment, sender: botContactId, amount: amount || 0, date: date, status: constants_1.default.statuses.confirmed, replyUuid: reply_uuid || '', createdAt: date, updatedAt: date, senderAlias: alias, tenant }, (reply_uuid
+            ? {}
+            : {
+                messageContent: encryptedForMeText,
+                remoteMessageContent: JSON.stringify(textMap),
+            }));
         if (parent_id)
             msg.parentId = parent_id;
         const message = (yield models_1.models.Message.create(msg));
         socket.sendJson({
-            type: 'boost',
+            type: reply_uuid ? 'boost' : 'direct_payment',
             response: jsonUtils.messageToJson(message, chat, owner),
         }, tenant);
         yield network.sendMessage({
@@ -65,7 +63,10 @@ function pay(a) {
                 replyUuid: message.replyUuid,
                 parentId: message.parentId || 0,
             },
-            type: constants_1.default.message_types.boost,
+            amount: amount || 0,
+            type: reply_uuid
+                ? constants_1.default.message_types.boost
+                : constants_1.default.message_types.direct_payment,
             success: () => ({ success: true }),
             failure: (e) => __awaiter(this, void 0, void 0, function* () {
                 const errorMsg = (0, errMsgString_1.errMsgString)(e);
