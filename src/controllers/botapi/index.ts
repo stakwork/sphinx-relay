@@ -49,6 +49,7 @@ export interface Action {
   only_owner?: boolean
   only_user?: number
   only_pubkey?: string
+  recipient_pubkey?: string
 }
 
 export async function processWebhook(req: Req, res: Res): Promise<void> {
