@@ -1,6 +1,5 @@
 // Original file: proto/lightning.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   AddressType as _lnrpc_AddressType,
   AddressType__Output as _lnrpc_AddressType__Output,
@@ -9,6 +8,7 @@ import type {
   OutPoint as _lnrpc_OutPoint,
   OutPoint__Output as _lnrpc_OutPoint__Output,
 } from '../lnrpc/OutPoint'
+import type { Long } from '@grpc/proto-loader'
 
 export interface Utxo {
   address_type?: _lnrpc_AddressType
