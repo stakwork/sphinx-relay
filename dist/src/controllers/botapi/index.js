@@ -134,7 +134,7 @@ function processAction(req, res) {
                 return (0, res_1.failure)(res, 'failed to parse webhook body json');
             }
         }
-        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, only_pubkey, only_owner, } = body;
+        const { action, bot_id, bot_secret, pubkey, amount, content, chat_uuid, msg_uuid, reply_uuid, recipient_id, parent_id, only_pubkey, only_owner, recipient_pubkey, } = body;
         if (!bot_id)
             return (0, res_1.failure)(res, 'no bot_id');
         const bot = (yield models_1.models.Bot.findOne({ where: { id: bot_id } }));
@@ -169,6 +169,7 @@ function processAction(req, res) {
             recipient_id: recipient_id ? parseInt(recipient_id) : 0,
             only_pubkey: only_pubkey || '',
             only_owner: only_owner || false,
+            recipient_pubkey: recipient_pubkey || '',
         };
         try {
             const r = yield finalAction(a);

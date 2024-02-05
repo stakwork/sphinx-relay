@@ -21,10 +21,10 @@ const rsa = require("../../crypto/rsa");
 const index_1 = require("./index");
 function pay(a) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id, content, } = a;
+        const { amount, bot_name, msg_uuid, reply_uuid, recipient_id, parent_id, content, recipient_pubkey, } = a;
         logger_1.sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`);
-        if (!a.recipient_id)
-            return logger_1.sphinxLogger.error(`no recipient_id`);
+        if (!recipient_id && !recipient_pubkey)
+            return logger_1.sphinxLogger.error(`no recipient detail`);
         const ret = yield (0, index_1.validateAction)(a);
         if (!ret)
             return;
@@ -35,6 +35,26 @@ function pay(a) {
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
         const encryptedText = rsa.encrypt(chat.groupKey, content || '');
         const textMap = { chat: encryptedText };
+        let recipient_detail;
+        if (recipient_pubkey) {
+            try {
+                const user = (yield models_1.models.Contact.findOne({
+                    where: { tenant, publicKey: recipient_pubkey },
+                }));
+                if (!user) {
+                    logger_1.sphinxLogger.error(`=> RECIPIENT PUBKEY DOES NOT EXIST IN ADMIN RECORD`, logger_1.logging.Bots);
+                    return;
+                }
+                recipient_detail = user.id;
+            }
+            catch (error) {
+                logger_1.sphinxLogger.error(`=> RECIPIENT PUBKEY ERROR ${error}`, logger_1.logging.Bots);
+                return;
+            }
+        }
+        else {
+            recipient_detail = recipient_id;
+        }
         const date = new Date();
         date.setMilliseconds(0);
         const msg = Object.assign({ chatId: chat.id, uuid: msg_uuid || short.generate(), type: reply_uuid
@@ -77,7 +97,7 @@ function pay(a) {
                 return logger_1.sphinxLogger.error(e);
             }),
             isForwarded: true,
-            realSatsContactId: recipient_id,
+            realSatsContactId: recipient_detail,
         });
     });
 }

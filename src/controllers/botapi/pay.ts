@@ -1,10 +1,10 @@
 import * as short from 'short-uuid'
 import * as network from '../../network'
-import { models, Message } from '../../models'
+import { models, Message, ContactRecord } from '../../models'
 import * as jsonUtils from '../../utils/json'
 import * as socket from '../../utils/socket'
 import constants from '../../constants'
-import { sphinxLogger } from '../../utils/logger'
+import { logging, sphinxLogger } from '../../utils/logger'
 import { errMsgString } from '../../utils/errMsgString'
 import * as rsa from '../../crypto/rsa'
 import { Action, validateAction } from './index'
@@ -18,10 +18,12 @@ export default async function pay(a: Action): Promise<void> {
     recipient_id,
     parent_id,
     content,
+    recipient_pubkey,
   } = a
 
   sphinxLogger.info(`=> BOT PAY ${JSON.stringify(a, null, 2)}`)
-  if (!a.recipient_id) return sphinxLogger.error(`no recipient_id`)
+  if (!recipient_id && !recipient_pubkey)
+    return sphinxLogger.error(`no recipient detail`)
   const ret = await validateAction(a)
   if (!ret) return
   const { chat, owner } = ret
@@ -31,6 +33,28 @@ export default async function pay(a: Action): Promise<void> {
   const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '')
   const encryptedText = rsa.encrypt(chat.groupKey, content || '')
   const textMap = { chat: encryptedText }
+  let recipient_detail
+
+  if (recipient_pubkey) {
+    try {
+      const user = (await models.Contact.findOne({
+        where: { tenant, publicKey: recipient_pubkey },
+      })) as ContactRecord
+      if (!user) {
+        sphinxLogger.error(
+          `=> RECIPIENT PUBKEY DOES NOT EXIST IN ADMIN RECORD`,
+          logging.Bots
+        )
+        return
+      }
+      recipient_detail = user.id
+    } catch (error) {
+      sphinxLogger.error(`=> RECIPIENT PUBKEY ERROR ${error}`, logging.Bots)
+      return
+    }
+  } else {
+    recipient_detail = recipient_id
+  }
 
   const date = new Date()
   date.setMilliseconds(0)
@@ -96,6 +120,6 @@ export default async function pay(a: Action): Promise<void> {
       return sphinxLogger.error(e)
     },
     isForwarded: true,
-    realSatsContactId: recipient_id,
+    realSatsContactId: recipient_detail,
   })
 }
