@@ -1,10 +1,10 @@
 // Original file: proto/rpc_proxy.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   MPPRecord as _lnrpc_proxy_MPPRecord,
   MPPRecord__Output as _lnrpc_proxy_MPPRecord__Output,
 } from '../lnrpc_proxy/MPPRecord'
-import type { Long } from '@grpc/proto-loader'
 
 export interface Hop {
   chan_id?: number | string | Long
