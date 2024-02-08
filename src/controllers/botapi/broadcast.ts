@@ -30,18 +30,34 @@ export default async function broadcast(a: Action): Promise<void> {
   const tenant: number = owner.id
 
   if (only_user || only_pubkey) {
-    if (only_user) {
-      chat.contactIds = `[${only_user}]`
-    } else {
-      try {
-        const user = (await models.Contact.findOne({
-          where: { tenant, publicKey: only_pubkey! },
-        })) as ContactRecord
-        if (user) chat.contactIds = `[${user.id}]`
-      } catch (error) {
-        sphinxLogger.error(`=> ONLY_PUBKEY ERROR ${error}`, logging.Bots)
+    if (only_pubkey) {
+      const pubkeysArray = only_pubkey.split(',')
+      const userIds: number[] = []
+
+      for (let i = 0; i < pubkeysArray.length; i++) {
+        const publicKey = pubkeysArray[i]
+        try {
+          const user = (await models.Contact.findOne({
+            where: { tenant, publicKey },
+          })) as ContactRecord
+          if (user) userIds.push(user.id)
+        } catch (error) {
+          sphinxLogger.error(
+            `=> ERROR GETTING USER WITH THIS PUBKEY ${publicKey} ${error}`,
+            logging.Bots
+          )
+        }
+      }
+      if (userIds.length === 0) {
+        sphinxLogger.error(
+          `=> USERS WITH PUBKEYS PROVIDED DO NOT EXIST`,
+          logging.Bots
+        )
         return
       }
+      chat.contactIds = JSON.stringify([...userIds])
+    } else {
+      chat.contactIds = `[${only_user}]`
     }
   }
 

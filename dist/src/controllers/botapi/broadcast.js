@@ -28,21 +28,30 @@ function broadcast(a) {
         const { chat, owner } = ret;
         const tenant = owner.id;
         if (only_user || only_pubkey) {
-            if (only_user) {
-                chat.contactIds = `[${only_user}]`;
-            }
-            else {
-                try {
-                    const user = (yield models_1.models.Contact.findOne({
-                        where: { tenant, publicKey: only_pubkey },
-                    }));
-                    if (user)
-                        chat.contactIds = `[${user.id}]`;
+            if (only_pubkey) {
+                const pubkeysArray = only_pubkey.split(',');
+                const userIds = [];
+                for (let i = 0; i < pubkeysArray.length; i++) {
+                    const publicKey = pubkeysArray[i];
+                    try {
+                        const user = (yield models_1.models.Contact.findOne({
+                            where: { tenant, publicKey },
+                        }));
+                        if (user)
+                            userIds.push(user.id);
+                    }
+                    catch (error) {
+                        logger_1.sphinxLogger.error(`=> ERROR GETTING USER WITH THIS PUBKEY ${publicKey} ${error}`, logger_1.logging.Bots);
+                    }
                 }
-                catch (error) {
-                    logger_1.sphinxLogger.error(`=> ONLY_PUBKEY ERROR ${error}`, logger_1.logging.Bots);
+                if (userIds.length === 0) {
+                    logger_1.sphinxLogger.error(`=> USERS WITH PUBKEYS PROVIDED DO NOT EXIST`, logger_1.logging.Bots);
                     return;
                 }
+                chat.contactIds = JSON.stringify([...userIds]);
+            }
+            else {
+                chat.contactIds = `[${only_user}]`;
             }
         }
         const encryptedForMeText = rsa.encrypt(owner.contactKey, content || '');
