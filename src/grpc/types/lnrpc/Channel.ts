@@ -1,5 +1,6 @@
 // Original file: proto/lightning.proto
 
+import type { Long } from '@grpc/proto-loader'
 import type {
   HTLC as _lnrpc_HTLC,
   HTLC__Output as _lnrpc_HTLC__Output,
@@ -12,7 +13,6 @@ import type {
   ChannelConstraints as _lnrpc_ChannelConstraints,
   ChannelConstraints__Output as _lnrpc_ChannelConstraints__Output,
 } from '../lnrpc/ChannelConstraints'
-import type { Long } from '@grpc/proto-loader'
 
 export interface Channel {
   active?: boolean
