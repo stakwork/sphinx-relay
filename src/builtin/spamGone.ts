@@ -63,6 +63,7 @@ export function init() {
                 value: '/spam_gone list',
               },
             ])
+            .setOnlyOwner(true)
           message.channel.send({ embed })
           return
       }
