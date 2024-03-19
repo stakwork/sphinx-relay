@@ -417,6 +417,7 @@ export async function editTribe(req: Req, res: Res): Promise<void | Response> {
     jitsi_server,
     stakwork_api_key,
     stakwork_webhook,
+    second_brain_url,
   } = req.body
   const { id } = req.params
 
@@ -501,6 +502,7 @@ export async function editTribe(req: Req, res: Res): Promise<void | Response> {
     if (jitsi_server) obj.jitsiServer = jitsi_server
     if (stakwork_api_key) obj.stakworkApiKey = stakwork_api_key
     if (stakwork_webhook) obj.stakworkWebhook = stakwork_webhook
+    if (second_brain_url) obj.secondBrainUrl = second_brain_url
     if (Object.keys(obj).length > 0) {
       await chat.update(obj)
     }
@@ -945,7 +947,8 @@ export async function createTribeChatParams(
   meme_server_location: string,
   jitsi_server: string,
   stakwork_api_key: string,
-  stakwork_webhook: string
+  stakwork_webhook: string,
+  second_brain_url: string
 ): Promise<{ [k: string]: any }> {
   const date = new Date()
   date.setMilliseconds(0)
@@ -988,6 +991,7 @@ export async function createTribeChatParams(
     jitsiServer: jitsi_server || '',
     stakworkApiKey: stakwork_api_key || '',
     stakworkWebhook: stakwork_webhook || '',
+    secondBrainUrl: second_brain_url || '',
   }
 }
 

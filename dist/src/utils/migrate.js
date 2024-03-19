@@ -379,6 +379,7 @@ function migrate() {
         addTableColumn('sphinx_messages', 'error_message', 'TEXT');
         addTableColumn('sphinx_messages', 'thread_uuid', 'TEXT');
         addTableColumn('sphinx_timers', 'msg_uuid', 'TEXT');
+        addTableColumn('sphinx_chats', 'second_brain_url', 'TEXT');
     });
 }
 exports.default = migrate;

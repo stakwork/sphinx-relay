@@ -371,7 +371,7 @@ function editTribe(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, second_brain_url, } = req.body;
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
@@ -468,6 +468,8 @@ function editTribe(req, res) {
                 obj.stakworkApiKey = stakwork_api_key;
             if (stakwork_webhook)
                 obj.stakworkWebhook = stakwork_webhook;
+            if (second_brain_url)
+                obj.secondBrainUrl = second_brain_url;
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);
             }
@@ -843,7 +845,7 @@ exports.replayChatHistory = replayChatHistory;
  * @param {Object} [profile_filters] - The profile filters for the chat.
  * @returns {Promise<Object>} - An object containing the tribe chat parameters.
  */
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin, profile_filters, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin, profile_filters, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, second_brain_url) {
     return __awaiter(this, void 0, void 0, function* () {
         const date = new Date();
         date.setMilliseconds(0);
@@ -885,6 +887,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             jitsiServer: jitsi_server || '',
             stakworkApiKey: stakwork_api_key || '',
             stakworkWebhook: stakwork_webhook || '',
+            secondBrainUrl: second_brain_url || '',
         };
     });
 }
