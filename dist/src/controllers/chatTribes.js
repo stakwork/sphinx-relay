@@ -371,7 +371,7 @@ function editTribe(req, res) {
         if (!req.owner)
             return (0, res_1.failure)(res, 'no owner');
         const tenant = req.owner.id;
-        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, } = req.body;
+        const { name, price_per_message, price_to_join, escrow_amount, escrow_millis, img, description, tags, unlisted, app_url, feed_url, feed_type, pin, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, second_brain_url, } = req.body;
         const { id } = req.params;
         if (!id)
             return (0, res_1.failure)(res, 'group id is required');
@@ -468,6 +468,8 @@ function editTribe(req, res) {
                 obj.stakworkApiKey = stakwork_api_key;
             if (stakwork_webhook)
                 obj.stakworkWebhook = stakwork_webhook;
+            if (second_brain_url)
+                obj.secondBrainUrl = second_brain_url;
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);
             }
