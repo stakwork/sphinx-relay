@@ -289,6 +289,7 @@ export async function createGroupChat(req: Req, res: Res): Promise<void> {
     jitsi_server,
     stakwork_api_key,
     stakwork_webhook,
+    second_brain_url,
   } = req.body
 
   let { profile_filters } = req.body
@@ -353,7 +354,8 @@ export async function createGroupChat(req: Req, res: Res): Promise<void> {
       meme_server_location,
       jitsi_server,
       stakwork_api_key,
-      stakwork_webhook
+      stakwork_webhook,
+      second_brain_url
     )) as Chat
     if (chatParams.uuid) {
       // publish to tribe server

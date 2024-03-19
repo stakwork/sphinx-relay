@@ -843,7 +843,7 @@ exports.replayChatHistory = replayChatHistory;
  * @param {Object} [profile_filters] - The profile filters for the chat.
  * @returns {Promise<Object>} - An object containing the tribe chat parameters.
  */
-function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin, profile_filters, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook) {
+function createTribeChatParams(owner, contactIds, name, img, price_per_message, price_to_join, escrow_amount, escrow_millis, unlisted, is_private, app_url, feed_url, feed_type, tenant, pin, profile_filters, call_recording, meme_server_location, jitsi_server, stakwork_api_key, stakwork_webhook, second_brain_url) {
     return __awaiter(this, void 0, void 0, function* () {
         const date = new Date();
         date.setMilliseconds(0);
@@ -885,6 +885,7 @@ function createTribeChatParams(owner, contactIds, name, img, price_per_message, 
             jitsiServer: jitsi_server || '',
             stakworkApiKey: stakwork_api_key || '',
             stakworkWebhook: stakwork_webhook || '',
+            secondBrainUrl: second_brain_url || '',
         };
     });
 }
