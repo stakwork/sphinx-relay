@@ -433,6 +433,7 @@ export interface TribeInterface {
   owner_route_hint: string
   pin: string
   profile_filters?: string
+  second_brain_url?: string
 }
 
 export async function declare({
@@ -457,6 +458,7 @@ export async function declare({
   owner_route_hint,
   pin,
   profile_filters,
+  second_brain_url,
 }: TribeInterface): Promise<void> {
   try {
     let protocol = 'https'
@@ -484,6 +486,7 @@ export async function declare({
         owner_route_hint: owner_route_hint || '',
         pin: pin || '',
         profile_filters,
+        second_brain_url,
       }),
       headers: { 'Content-Type': 'application/json' },
     })
