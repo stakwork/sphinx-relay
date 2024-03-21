@@ -426,6 +426,7 @@ function editTribe(req, res) {
                     owner_pubkey: owner.publicKey,
                     pin: pin || '',
                     profile_filters: profile_filters || '',
+                    second_brain_url,
                 });
             }
             catch (e) {

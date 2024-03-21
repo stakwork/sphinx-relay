@@ -522,6 +522,7 @@ export async function edit({
   owner_pubkey,
   pin,
   profile_filters,
+  second_brain_url,
 }: TribeInterface): Promise<void> {
   try {
     const token = await genSignedTimestamp(owner_pubkey)
@@ -549,6 +550,7 @@ export async function edit({
         owner_route_hint: owner_route_hint || '',
         pin: pin || '',
         profile_filters,
+        second_brain_url,
       }),
       headers: { 'Content-Type': 'application/json' },
     })
