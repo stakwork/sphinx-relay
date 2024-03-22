@@ -1,10 +1,10 @@
 // Original file: proto/walletkit.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   TxTemplate as _walletrpc_TxTemplate,
   TxTemplate__Output as _walletrpc_TxTemplate__Output,
 } from '../walletrpc/TxTemplate'
+import type { Long } from '@grpc/proto-loader'
 
 export interface FundPsbtRequest {
   psbt?: Buffer | Uint8Array | string

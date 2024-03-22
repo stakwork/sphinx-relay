@@ -1,10 +1,10 @@
 // Original file: proto/walletkit.proto
 
-import type { Long } from '@grpc/proto-loader'
 import type {
   TxOut as _signrpc_TxOut,
   TxOut__Output as _signrpc_TxOut__Output,
 } from '../signrpc/TxOut'
+import type { Long } from '@grpc/proto-loader'
 
 export interface SendOutputsRequest {
   sat_per_kw?: number | string | Long
