@@ -474,6 +474,7 @@ export async function editTribe(req: Req, res: Res): Promise<void | Response> {
         owner_pubkey: owner.publicKey,
         pin: pin || '',
         profile_filters: profile_filters || '',
+        second_brain_url,
       })
     } catch (e) {
       okToUpdate = false

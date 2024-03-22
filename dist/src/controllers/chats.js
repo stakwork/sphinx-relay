@@ -326,6 +326,7 @@ function createGroupChat(req, res) {
                         owner_route_hint: owner.routeHint || '',
                         pin: pin || '',
                         profile_filters: profile_filters || '',
+                        second_brain_url: second_brain_url || '',
                     });
                 }
                 catch (e) {

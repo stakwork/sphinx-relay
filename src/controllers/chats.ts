@@ -382,6 +382,7 @@ export async function createGroupChat(req: Req, res: Res): Promise<void> {
           owner_route_hint: owner.routeHint || '',
           pin: pin || '',
           profile_filters: profile_filters || '',
+          second_brain_url: second_brain_url || '',
         })
       } catch (e) {
         sphinxLogger.error(`=> couldnt create tribe ${e}`)
