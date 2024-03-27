@@ -24,6 +24,7 @@ const proxy_1 = require("../utils/proxy");
 const ml_1 = require("../builtin/ml");
 const intercept = require("./intercept");
 const receive_1 = require("./receive");
+const mother_1 = require("../builtin/mother");
 const config = (0, config_1.loadConfig)();
 /**
  * Sends a message to a chat.
@@ -423,18 +424,32 @@ function compareAliases(alias1, alias2) {
     });
     return match;
 }
+function updateMessageToIsOnlyOwner(uuid, tenant) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield models_1.models.Message.update({
+            onlyOwner: true,
+        }, { where: { uuid, tenant } });
+    });
+}
 function interceptTribeMsgForHiddenCmds(msg, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
         const hideAllCommandsBot = ['/kick'];
         try {
+            const content = msg.message.content;
+            const splitedContent = (content && content.split(' ')) || [];
+            if (splitedContent[0] === '/bot') {
+                if (mother_1.adminsOnlyBot.includes(splitedContent[2])) {
+                    yield updateMessageToIsOnlyOwner(msg.message.uuid, tenant);
+                    return true;
+                }
+                return false;
+            }
             const newChat = (yield models_1.models.Chat.findOne({
                 where: { uuid: msg.chat.uuid },
             }));
             const bots = (yield models_1.models.ChatBot.findAll({
                 where: { tenant, chatId: newChat.id },
             }));
-            const content = msg.message.content;
-            const splitedContent = (content && content.split(' ')) || [];
             for (let i = 0; i < bots.length; i++) {
                 const bot = bots[i];
                 const isHidden = bot.botPrefix === splitedContent[0] &&
@@ -443,9 +458,7 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 const isPersonal = bot.botPrefix === ml_1.ML_PREFIX ||
                     hideAllCommandsBot.includes(bot.botPrefix);
                 if (isHidden || isPersonal) {
-                    yield models_1.models.Message.update({
-                        onlyOwner: true,
-                    }, { where: { uuid: msg.message.uuid, tenant } });
+                    yield updateMessageToIsOnlyOwner(msg.message.uuid, tenant);
                     return true;
                 }
             }

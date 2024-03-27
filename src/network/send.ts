@@ -26,6 +26,7 @@ import { ML_PREFIX } from '../builtin/ml'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import * as intercept from './intercept'
 import { typesToForward, receiveCoTenantMessage } from './receive'
+import { adminsOnlyBot } from '../builtin/mother'
 
 const config = loadConfig()
 
@@ -543,12 +544,32 @@ function compareAliases(alias1: string, alias2: string): boolean {
   return match
 }
 
+async function updateMessageToIsOnlyOwner(uuid: string, tenant: number) {
+  await models.Message.update(
+    {
+      onlyOwner: true,
+    },
+    { where: { uuid, tenant } }
+  )
+}
+
 async function interceptTribeMsgForHiddenCmds(
   msg: Msg,
   tenant: number
 ): Promise<boolean> {
   const hideAllCommandsBot = ['/kick']
   try {
+    const content = msg.message.content as string
+
+    const splitedContent = (content && content.split(' ')) || []
+
+    if (splitedContent[0] === '/bot') {
+      if (adminsOnlyBot.includes(splitedContent[2])) {
+        await updateMessageToIsOnlyOwner(msg.message.uuid, tenant)
+        return true
+      }
+      return false
+    }
     const newChat = (await models.Chat.findOne({
       where: { uuid: msg.chat.uuid },
     })) as ChatRecord
@@ -557,8 +578,6 @@ async function interceptTribeMsgForHiddenCmds(
       where: { tenant, chatId: newChat.id },
     })) as ChatBotRecord[]
 
-    const content = msg.message.content as string
-    const splitedContent = (content && content.split(' ')) || []
     for (let i = 0; i < bots.length; i++) {
       const bot = bots[i]
 
@@ -570,13 +589,7 @@ async function interceptTribeMsgForHiddenCmds(
         bot.botPrefix === ML_PREFIX ||
         hideAllCommandsBot.includes(bot.botPrefix)
       if (isHidden || isPersonal) {
-        await models.Message.update(
-          {
-            onlyOwner: true,
-          },
-          { where: { uuid: msg.message.uuid, tenant } }
-        )
-
+        await updateMessageToIsOnlyOwner(msg.message.uuid, tenant)
         return true
       }
     }
