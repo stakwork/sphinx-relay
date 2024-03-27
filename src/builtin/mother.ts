@@ -75,6 +75,8 @@ const builtInBotNames = {
   [`${ML_PREFIX.substring(1)}`]: ML_BOTNAME,
 }
 
+export const adminsOnlyBot = ['kick']
+
 export function init() {
   const client = new Sphinx.Client()
   client.login('_', finalAction)
@@ -105,6 +107,7 @@ export function init() {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')
               .setDescription(botName + ' already installed')
+              .setOnlyOwner(adminsOnlyBot.includes(botName) || false)
             return message.channel.send({ embed })
           }
           const msgTypes = builtInBotMsgTypes[botName] || [
@@ -129,6 +132,7 @@ export function init() {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')
             .setDescription(theName + ' has been installed!')
+            .setOnlyOwner(adminsOnlyBot.includes(botName) || false)
           message.channel.send({ embed })
         } else {
           const chat = await getTribeOwnersChatByUUID(message.channel.id)
@@ -141,6 +145,7 @@ export function init() {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')
               .setDescription(botName + ' already installed')
+              .setOnlyOwner(adminsOnlyBot.includes(botName) || false)
             return message.channel.send({ embed })
           }
           // bot from tribes registry
@@ -155,6 +160,7 @@ export function init() {
             const embed = new Sphinx.MessageEmbed()
               .setAuthor('MotherBot')
               .setDescription('No bot with that name')
+              .setOnlyOwner(adminsOnlyBot.includes(botName) || false)
             message.channel.send({ embed })
           }
         }
@@ -178,11 +184,13 @@ export function init() {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')
             .setDescription(botName2 + ' has been removed')
+            .setOnlyOwner(adminsOnlyBot.includes(botName2) || false)
           return message.channel.send({ embed })
         } else {
           const embed = new Sphinx.MessageEmbed()
             .setAuthor('MotherBot')
             .setDescription('Cant find a bot by that name')
+            .setOnlyOwner(adminsOnlyBot.includes(botName2) || false)
           return message.channel.send({ embed })
         }
 

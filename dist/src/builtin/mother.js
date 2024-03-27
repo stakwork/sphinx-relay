@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.init = void 0;
+exports.init = exports.adminsOnlyBot = void 0;
 // import * as SphinxBot from '../../../sphinx-bot'
 const Sphinx = require("sphinx-bot");
 const botapi_1 = require("../controllers/botapi");
@@ -79,6 +79,7 @@ const builtInBotNames = {
     spam_gone: 'SpamGoneBot',
     [`${ml_1.ML_PREFIX.substring(1)}`]: ml_1.ML_BOTNAME,
 };
+exports.adminsOnlyBot = ['kick'];
 function init() {
     const client = new Sphinx.Client();
     client.login('_', botapi_1.finalAction);
@@ -108,7 +109,8 @@ function init() {
                     if (existing) {
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('MotherBot')
-                            .setDescription(botName + ' already installed');
+                            .setDescription(botName + ' already installed')
+                            .setOnlyOwner(exports.adminsOnlyBot.includes(botName) || false);
                         return message.channel.send({ embed });
                     }
                     const msgTypes = builtInBotMsgTypes[botName] || [
@@ -132,7 +134,8 @@ function init() {
                     const theName = builtInBotNames[botName] || 'Bot';
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')
-                        .setDescription(theName + ' has been installed!');
+                        .setDescription(theName + ' has been installed!')
+                        .setOnlyOwner(exports.adminsOnlyBot.includes(botName) || false);
                     message.channel.send({ embed });
                 }
                 else {
@@ -144,7 +147,8 @@ function init() {
                     if (existing) {
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('MotherBot')
-                            .setDescription(botName + ' already installed');
+                            .setDescription(botName + ' already installed')
+                            .setOnlyOwner(exports.adminsOnlyBot.includes(botName) || false);
                         return message.channel.send({ embed });
                     }
                     // bot from tribes registry
@@ -159,7 +163,8 @@ function init() {
                     else {
                         const embed = new Sphinx.MessageEmbed()
                             .setAuthor('MotherBot')
-                            .setDescription('No bot with that name');
+                            .setDescription('No bot with that name')
+                            .setOnlyOwner(exports.adminsOnlyBot.includes(botName) || false);
                         message.channel.send({ embed });
                     }
                 }
@@ -182,13 +187,15 @@ function init() {
                     yield existing2.destroy();
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')
-                        .setDescription(botName2 + ' has been removed');
+                        .setDescription(botName2 + ' has been removed')
+                        .setOnlyOwner(exports.adminsOnlyBot.includes(botName2) || false);
                     return message.channel.send({ embed });
                 }
                 else {
                     const embed = new Sphinx.MessageEmbed()
                         .setAuthor('MotherBot')
-                        .setDescription('Cant find a bot by that name');
+                        .setDescription('Cant find a bot by that name')
+                        .setOnlyOwner(exports.adminsOnlyBot.includes(botName2) || false);
                     return message.channel.send({ embed });
                 }
             case 'search':
