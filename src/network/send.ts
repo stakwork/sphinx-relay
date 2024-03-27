@@ -547,6 +547,7 @@ async function interceptTribeMsgForHiddenCmds(
   msg: Msg,
   tenant: number
 ): Promise<boolean> {
+  const hideAllCommandsBot = ['/kick']
   try {
     const newChat = (await models.Chat.findOne({
       where: { uuid: msg.chat.uuid },
@@ -565,7 +566,9 @@ async function interceptTribeMsgForHiddenCmds(
         bot.botPrefix === splitedContent[0] &&
         bot.hiddenCommands &&
         JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
-      const isPersonal = bot.botPrefix === ML_PREFIX
+      const isPersonal =
+        bot.botPrefix === ML_PREFIX ||
+        hideAllCommandsBot.includes(bot.botPrefix)
       if (isHidden || isPersonal) {
         await models.Message.update(
           {

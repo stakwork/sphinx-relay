@@ -425,6 +425,7 @@ function compareAliases(alias1, alias2) {
 }
 function interceptTribeMsgForHiddenCmds(msg, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
+        const hideAllCommandsBot = ['/kick'];
         try {
             const newChat = (yield models_1.models.Chat.findOne({
                 where: { uuid: msg.chat.uuid },
@@ -439,7 +440,8 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 const isHidden = bot.botPrefix === splitedContent[0] &&
                     bot.hiddenCommands &&
                     JSON.parse(bot.hiddenCommands).includes(splitedContent[1]);
-                const isPersonal = bot.botPrefix === ml_1.ML_PREFIX;
+                const isPersonal = bot.botPrefix === ml_1.ML_PREFIX ||
+                    hideAllCommandsBot.includes(bot.botPrefix);
                 if (isHidden || isPersonal) {
                     yield models_1.models.Message.update({
                         onlyOwner: true,
