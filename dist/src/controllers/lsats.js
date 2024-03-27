@@ -114,6 +114,7 @@ function saveLsat(req, res) {
             return (0, res_1.failure)(res, 'invoice could not be paid');
         }
         try {
+            console.log('We are trying to save LSAT, means there was a database error');
             lsat.setPreimage(preimage);
             yield models_1.models.Lsat.create({
                 macaroon,
@@ -129,6 +130,7 @@ function saveLsat(req, res) {
             return (0, res_1.success)(res, { lsat: lsat.toToken() });
         }
         catch (e) {
+            logger_1.sphinxLogger.error(`Tobi logging error: ${JSON.stringify(e)}`);
             return (0, res_1.failure)(res, `failed to save lsat: ${e.message || e}`);
         }
     });
