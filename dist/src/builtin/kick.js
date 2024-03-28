@@ -168,7 +168,8 @@ function init() {
                         },
                         { name: 'Help', value: '/kick help' },
                     ])
-                        .setThumbnail(botSVG);
+                        .setThumbnail(botSVG)
+                        .setOnlyOwner(true);
                     message.channel.send({ embed });
                     return;
             }
