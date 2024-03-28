@@ -23,10 +23,10 @@ import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
 import { ML_PREFIX } from '../builtin/ml'
+import { adminsOnlyBot } from '../builtin/mother'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import * as intercept from './intercept'
 import { typesToForward, receiveCoTenantMessage } from './receive'
-import { adminsOnlyBot } from '../builtin/mother'
 
 const config = loadConfig()
 
