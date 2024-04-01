@@ -22,7 +22,6 @@ import { logging, sphinxLogger } from '../utils/logger'
 import { loadConfig } from '../utils/config'
 import { errMsgString } from '../utils/errMsgString'
 import { getProxyRootPubkey, isProxy } from '../utils/proxy'
-import { ML_PREFIX } from '../builtin/ml'
 import { adminsOnlyBot } from '../builtin/mother'
 import { Msg, MessageContent, ChatMember } from './interfaces'
 import * as intercept from './intercept'
@@ -557,11 +556,16 @@ async function interceptTribeMsgForHiddenCmds(
   msg: Msg,
   tenant: number
 ): Promise<boolean> {
-  const hideAllCommandsBot = ['/kick']
+  const hideAllCommandsBot = ['/kick', '/ml']
   try {
     const content = msg.message.content as string
 
     const splitedContent = (content && content.split(' ')) || []
+    if (splitedContent.length < 1) return false
+    // must be a "/" bot command
+    if (!splitedContent[0].startsWith('/')) {
+      return false
+    }
 
     if (splitedContent[0] === '/bot') {
       if (adminsOnlyBot.includes(splitedContent[2])) {
@@ -585,10 +589,10 @@ async function interceptTribeMsgForHiddenCmds(
         bot.botPrefix === splitedContent[0] &&
         bot.hiddenCommands &&
         JSON.parse(bot.hiddenCommands).includes(splitedContent[1])
-      const isPersonal =
-        bot.botPrefix === ML_PREFIX ||
+      const isDefaultHide =
+        bot.botPrefix === splitedContent[0] &&
         hideAllCommandsBot.includes(bot.botPrefix)
-      if (isHidden || isPersonal) {
+      if (isHidden || isDefaultHide) {
         await updateMessageToIsOnlyOwner(msg.message.uuid, tenant)
         return true
       }

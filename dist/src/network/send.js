@@ -21,7 +21,6 @@ const logger_1 = require("../utils/logger");
 const config_1 = require("../utils/config");
 const errMsgString_1 = require("../utils/errMsgString");
 const proxy_1 = require("../utils/proxy");
-const ml_1 = require("../builtin/ml");
 const mother_1 = require("../builtin/mother");
 const intercept = require("./intercept");
 const receive_1 = require("./receive");
@@ -433,10 +432,16 @@ function updateMessageToIsOnlyOwner(uuid, tenant) {
 }
 function interceptTribeMsgForHiddenCmds(msg, tenant) {
     return __awaiter(this, void 0, void 0, function* () {
-        const hideAllCommandsBot = ['/kick'];
+        const hideAllCommandsBot = ['/kick', '/ml'];
         try {
             const content = msg.message.content;
             const splitedContent = (content && content.split(' ')) || [];
+            if (splitedContent.length < 1)
+                return false;
+            // must be a "/" bot command
+            if (!splitedContent[0].startsWith('/')) {
+                return false;
+            }
             if (splitedContent[0] === '/bot') {
                 if (mother_1.adminsOnlyBot.includes(splitedContent[2])) {
                     yield updateMessageToIsOnlyOwner(msg.message.uuid, tenant);
@@ -455,9 +460,9 @@ function interceptTribeMsgForHiddenCmds(msg, tenant) {
                 const isHidden = bot.botPrefix === splitedContent[0] &&
                     bot.hiddenCommands &&
                     JSON.parse(bot.hiddenCommands).includes(splitedContent[1]);
-                const isPersonal = bot.botPrefix === ml_1.ML_PREFIX ||
+                const isDefaultHide = bot.botPrefix === splitedContent[0] &&
                     hideAllCommandsBot.includes(bot.botPrefix);
-                if (isHidden || isPersonal) {
+                if (isHidden || isDefaultHide) {
                     yield updateMessageToIsOnlyOwner(msg.message.uuid, tenant);
                     return true;
                 }
