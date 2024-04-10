@@ -491,8 +491,8 @@ export async function editTribe(req: Req, res: Res): Promise<void | Response> {
     if (escrow_amount || escrow_amount === 0) obj.escrowAmount = escrow_amount
     if (escrow_millis || escrow_millis === 0) obj.escrowMillis = escrow_millis
     if (unlisted || unlisted === false) obj.unlisted = unlisted
-    if (app_url) obj.appUrl = app_url
-    if (feed_url) obj.feedUrl = feed_url
+    if (app_url || app_url === '') obj.appUrl = app_url
+    if (feed_url || feed_url === '') obj.feedUrl = feed_url
     if (feed_type) obj.feedType = feed_type
     if (req.body.private || req.body.private === false)
       obj.private = req.body.private
@@ -503,7 +503,8 @@ export async function editTribe(req: Req, res: Res): Promise<void | Response> {
     if (jitsi_server) obj.jitsiServer = jitsi_server
     if (stakwork_api_key) obj.stakworkApiKey = stakwork_api_key
     if (stakwork_webhook) obj.stakworkWebhook = stakwork_webhook
-    if (second_brain_url) obj.secondBrainUrl = second_brain_url
+    if (second_brain_url || second_brain_url === '')
+      obj.secondBrainUrl = second_brain_url
     if (Object.keys(obj).length > 0) {
       await chat.update(obj)
     }

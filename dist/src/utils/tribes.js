@@ -436,7 +436,7 @@ function edit({ uuid, host, name, description, tags, img, price_per_message, pri
                     owner_route_hint: owner_route_hint || '',
                     pin: pin || '',
                     profile_filters,
-                    second_brain_url,
+                    second_brain_url: second_brain_url || '',
                 }),
                 headers: { 'Content-Type': 'application/json' },
             });
