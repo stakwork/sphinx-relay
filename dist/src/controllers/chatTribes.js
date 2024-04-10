@@ -449,9 +449,9 @@ function editTribe(req, res) {
                 obj.escrowMillis = escrow_millis;
             if (unlisted || unlisted === false)
                 obj.unlisted = unlisted;
-            if (app_url)
+            if (app_url || app_url === '')
                 obj.appUrl = app_url;
-            if (feed_url)
+            if (feed_url || feed_url === '')
                 obj.feedUrl = feed_url;
             if (feed_type)
                 obj.feedType = feed_type;
@@ -469,7 +469,7 @@ function editTribe(req, res) {
                 obj.stakworkApiKey = stakwork_api_key;
             if (stakwork_webhook)
                 obj.stakworkWebhook = stakwork_webhook;
-            if (second_brain_url)
+            if (second_brain_url || second_brain_url === '')
                 obj.secondBrainUrl = second_brain_url;
             if (Object.keys(obj).length > 0) {
                 yield chat.update(obj);

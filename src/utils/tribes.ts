@@ -550,7 +550,7 @@ export async function edit({
         owner_route_hint: owner_route_hint || '',
         pin: pin || '',
         profile_filters,
-        second_brain_url,
+        second_brain_url: second_brain_url || '',
       }),
       headers: { 'Content-Type': 'application/json' },
     })
