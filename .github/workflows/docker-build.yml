@@ -46,20 +46,12 @@ jobs:
         run: |
           echo $RELEASE_TAG
           echo ${{ env.RELEASE_TAG }}
-      - name: Build Docker image
+      - name: Run Docker buildx
         run: |
           docker buildx build \
+          --cache-from "type=local,src=/tmp/.buildx-cache" \
           --cache-to "type=local,dest=/tmp/.buildx-cache" \
           --platform linux/amd64,linux/arm64/v8,linux/arm/v7 \
-          --load \
-          --tag "sphinx-relay:temp" \
-          ./
-      - name: Tag and push Docker image with specific version tag
-        run: |
-          docker tag "sphinx-relay:temp" "${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:${{ env.RELEASE_TAG }}"
-          docker push "${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:${{ env.RELEASE_TAG }}"
-
-      - name: Tag and push Docker image with latest tag
-        run: |
-          docker tag "sphinx-relay:temp" "${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:latest"
-          docker push "${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:latest"
+          --tag "${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:${{ env.RELEASE_TAG }}" \
+          --tag "${{ secrets.DOCKER_HUB_USER }}/sphinx-relay:latest" \
+          --output "type=registry" ./
