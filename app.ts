@@ -5,7 +5,7 @@ import * as cors from 'cors'
 import * as https from 'https'
 import * as http from 'http'
 import logger, { logging, sphinxLogger } from './src/utils/logger'
-import { pingHubInterval, checkInvitesHubInterval } from './src/hub'
+import { checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
 import {
   setupDatabase,
@@ -47,7 +47,7 @@ async function start() {
   mainSetup()
   // // IF NOT UNLOCK, go ahead and start this now
   if (config.hub_api_url && !config.unlock) {
-    pingHubInterval(30000)
+    //pingHubInterval(30000)
     genUsersInterval(60000)
   }
 }
@@ -73,7 +73,7 @@ async function finishSetup() {
   }
   if (config.unlock) {
     // IF UNLOCK, start this only after unlocked!
-    pingHubInterval(15000)
+    //pingHubInterval(15000)
   }
   leadershipBoardInterval(1800000)
   setupDone()
