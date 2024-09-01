@@ -96,7 +96,7 @@
     "secure-random": "^1.1.2",
     "sequelize": "^5.19.3",
     "sequelize-cli": "^5.5.1",
-    "sequelize-typescript": "^1.1.0",
+    "sequelize-typescript": "^2.1.6",
     "short-uuid": "^3.1.1",
     "sjcl": "^1.0.8",
     "socket.io": "^4.4.1",
