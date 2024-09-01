@@ -45,7 +45,7 @@
     "@scout_apm/scout-apm": "^0.1.10",
     "async": "^2.6.4",
     "async-lock": "^1.2.2",
-    "axios": "^0.21.1",
+    "axios": "^1.6.0",
     "base-64": "^1.0.0",
     "bitcoin-address-validation": "^1.0.2",
     "blgr": "^0.2.0",
