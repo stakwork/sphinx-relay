@@ -17,6 +17,8 @@ info:
 tags:
   - name: Tribes
     description: Everything about your Tribes
+  - name: Contacts
+    description: Everything about your contacts
   - name: Authentication 
     description: Endpoints to enable and to use relay's authenticated endpoints 
 paths:
@@ -220,6 +222,141 @@ paths:
                    request_transport_key:
                      type: string 
            description: Success
+  /contacts:
+    get:
+      tags:
+        - Contacts
+      summary: Get contacts, chats, and subscriptions
+      description: Get the authenticated owner's contacts, chats, and subscriptions.
+      operationId: getContacts
+      parameters:
+        - description: Owner authentication token. Either this, x-transport-token, or x-jwt is required.
+          in: header
+          name: x-user-token
+          required: false
+          schema:
+            type: string
+        - description: Encrypted transport token. Either this, x-user-token, or x-jwt is required.
+          in: header
+          name: x-transport-token
+          required: false
+          schema:
+            type: string
+        - description: JWT authentication token. Either this, x-user-token, or x-transport-token is required.
+          in: header
+          name: x-jwt
+          required: false
+          schema:
+            type: string
+        - description: Set to false to exclude contacts created from groups.
+          in: query
+          name: from_group
+          required: false
+          schema:
+            type: string
+            enum:
+              - 'false'
+        - description: Set to include to return unmet paid-meet contacts.
+          in: query
+          name: unmet
+          required: false
+          schema:
+            type: string
+            enum:
+              - include
+      responses:
+        '200':
+          description: Contacts, chats, and subscriptions for the authenticated owner.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  response:
+                    type: object
+                    properties:
+                      contacts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            route_hint:
+                              type: string
+                            public_key:
+                              type: string
+                            node_alias:
+                              type: string
+                            alias:
+                              type: string
+                            photo_url:
+                              type: string
+                            private_photo:
+                              type: boolean
+                            is_owner:
+                              type: boolean
+                            deleted:
+                              type: boolean
+                            remote_id:
+                              type: integer
+                            status:
+                              type: integer
+                            contact_key:
+                              type: string
+                            device_id:
+                              type: string
+                            created_at:
+                              type: string
+                              format: date-time
+                            updated_at:
+                              type: string
+                              format: date-time
+                            from_group:
+                              type: boolean
+                            notification_sound:
+                              type: string
+                            last_active:
+                              type: string
+                              format: date-time
+                            tip_amount:
+                              type: integer
+                            tenant:
+                              type: integer
+                            price_to_meet:
+                              type: integer
+                            unmet:
+                              type: boolean
+                            blocked:
+                              type: boolean
+                            hmac_key:
+                              type: string
+                            person_uuid:
+                              type: string
+                            last_timestamp:
+                              type: integer
+                            is_admin:
+                              type: boolean
+                            push_kit_token:
+                              type: string
+                            prune:
+                              type: integer
+                            invite:
+                              type: object
+                      chats:
+                        type: array
+                        items:
+                          type: object
+                      subscriptions:
+                        type: array
+                        items:
+                          type: object
+        '400':
+          description: Failure, for example when no owner is found.
+        '401':
+          description: Missing or invalid credentials.
   /contacts/tokens:
     post:
       tags:
@@ -251,4 +388,3 @@ paths:
                   description: Owners pubkey.
                   type: string
               type: object
-
