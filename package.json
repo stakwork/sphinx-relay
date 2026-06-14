@@ -6,7 +6,7 @@
   "test": "jest",
   "scripts": {
     "test-unit": "jest ./src/tests/unit_tests",
-    "test": "ava",
+    "test": "ts-node ./testing/check-integration-env.ts && ava",
     "docker-dev": "nodemon ./app.js",
     "build": "tsc",
     "start-ts": "ts-node ./app.ts",
