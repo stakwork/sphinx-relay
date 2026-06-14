@@ -25,4 +25,5 @@ export interface Headers {
 export interface RequestArgs {
   headers: Headers
   body: RequestBody
+  timeout?: number
 }

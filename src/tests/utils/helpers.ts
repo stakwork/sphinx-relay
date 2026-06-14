@@ -5,6 +5,10 @@ import { NodeConfig, RequestArgs, RequestBody } from '../types'
 import { config } from '../config'
 import * as hmac from '../../crypto/hmac'
 
+export const TEST_HTTP_TIMEOUT_MS = Number(
+  process.env.SPHINX_TEST_HTTP_TIMEOUT_MS || 10000
+)
+
 export const makeArgs = (
   node: NodeConfig,
   body: RequestBody = {},
@@ -27,7 +31,7 @@ export const makeArgs = (
   } else {
     headers['x-user-token'] = node.authToken
   }
-  return { body, headers }
+  return { body, headers, timeout: TEST_HTTP_TIMEOUT_MS }
 }
 
 export const makeRelayRequest = async (
@@ -100,7 +104,9 @@ export async function getToken(t, node) {
 
   const protocol = memeProtocol(config.memeHost)
   //get authentication challenge from meme server
-  const r = await http.get(`${protocol}://${config.memeHost}/ask`)
+  const r = await http.get(`${protocol}://${config.memeHost}/ask`, {
+    timeout: TEST_HTTP_TIMEOUT_MS,
+  })
   t.truthy(r, 'r should exist')
   t.truthy(r.challenge, 'r.challenge should exist')
 
@@ -115,6 +121,7 @@ export async function getToken(t, node) {
   //get server token
   const r3 = await http.post(`${protocol}://${config.memeHost}/verify`, {
     form: { id: r.id, sig: r2.response.sig, pubkey: node.pubkey },
+    timeout: TEST_HTTP_TIMEOUT_MS,
   })
   t.truthy(r3, 'r3 should exist')
   t.truthy(r3.token, 'r3.token should exist')
@@ -141,6 +148,7 @@ export function makeJwtArgs(jwt, body) {
   return {
     headers: { 'x-jwt': jwt },
     body,
+    timeout: TEST_HTTP_TIMEOUT_MS,
   }
 }
 

@@ -48,5 +48,11 @@ Once you've done the above, you can run the tests with [ava](https://github.com/
 npm run test
 ```
 
+`npm run test` first checks that every relay in `src/tests/configs/nodes.json`
+responds to `/contacts`. If the stack is not ready, it fails before starting
+AVA and prints the unreachable node aliases. Use `SPHINX_TEST_ENV_TIMEOUT_MS`
+to adjust the readiness timeout and `SPHINX_TEST_HTTP_TIMEOUT_MS` to adjust
+the per-request timeout used by test helpers.
+
 The tests expect both the relay server and sphinx-stack from the setup steps above
 to be running.
