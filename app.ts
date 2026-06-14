@@ -4,7 +4,11 @@ import * as cookieParser from 'cookie-parser'
 import * as cors from 'cors'
 import * as https from 'https'
 import * as http from 'http'
-import logger, { logging, sphinxLogger } from './src/utils/logger'
+import logger, {
+  installConsoleTimestampPrefix,
+  logging,
+  sphinxLogger,
+} from './src/utils/logger'
 import { checkInvitesHubInterval } from './src/hub'
 import { genUsersInterval } from './src/utils/proxy'
 import {
@@ -29,6 +33,7 @@ import rateLimit from 'express-rate-limit'
 
 // force UTC time
 process.env.TZ = 'UTC'
+installConsoleTimestampPrefix()
 
 const env = process.env.NODE_ENV || 'development'
 const config = loadConfig()

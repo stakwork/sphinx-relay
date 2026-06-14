@@ -8,6 +8,40 @@ const config = loadConfig()
 
 const blgrLogger = new blgr(config.logging_level)
 const tsFormat = (ts) => moment(ts).format('YYYY-MM-DD HH:mm:ss').trim()
+const consoleTimestampFlag = '__sphinxConsoleTimestampsInstalled'
+const consoleMethods: Array<'debug' | 'error' | 'info' | 'log' | 'warn'> = [
+  'debug',
+  'error',
+  'info',
+  'log',
+  'warn',
+]
+const timestampedConsoleLineRegex =
+  /^(?:\x1b\[[0-9;]*m)*(?:-> \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}:|\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/
+
+function alreadyTimestamped(arg: any): boolean {
+  return typeof arg === 'string' && timestampedConsoleLineRegex.test(arg)
+}
+
+function timestampConsoleArgs(args: any[], ts: Date = new Date()): any[] {
+  if (args.length > 0 && alreadyTimestamped(args[0])) return args
+
+  const prefix = `-> ${tsFormat(ts)}:`
+  if (typeof args[0] === 'string') return [`${prefix} ${args[0]}`, ...args.slice(1)]
+
+  return [prefix, ...args]
+}
+
+function installConsoleTimestampPrefix() {
+  const consoleState = console as Console & { [key: string]: boolean | undefined }
+  if (consoleState[consoleTimestampFlag]) return
+
+  consoleState[consoleTimestampFlag] = true
+  consoleMethods.forEach((method) => {
+    const original = console[method].bind(console)
+    console[method] = (...args: any[]) => original(...timestampConsoleArgs(args))
+  })
+}
 
 const logger = expressWinston.logger({
   transports: [new winston.transports.Console()],
@@ -132,4 +166,4 @@ const sphinxLogger = {
   spam: sphinxLoggerSpam,
 }
 
-export { logging, sphinxLogger }
+export { installConsoleTimestampPrefix, logging, sphinxLogger, timestampConsoleArgs }
